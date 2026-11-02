@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://d4soxyul74t3"]
+
+[ext_resource type="PackedScene" uid="uid://ceoq6hv771dqh" path="res://scenes/bodies/gravity_body.tscn" id="1_t700u"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_t700u"]
+
+[node name="BigAssPlanet" unique_id=213988570 instance=ExtResource("1_t700u")]
+mass = 1.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." index="0" unique_id=1276215937]
+transform = Transform3D(171.705, 0, 0, 0, 171.705, 0, 0, 0, 171.705, 0, 0, 0)
+shape = SubResource("SphereShape3D_t700u")
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="CollisionShape3D" index="0" unique_id=1860115016]
