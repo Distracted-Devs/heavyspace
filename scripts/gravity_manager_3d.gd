@@ -71,26 +71,20 @@ func _step_locked(body: Body3D, dt: float) -> void:
 	var r := offset.length()
 	if r < 0.001:
 		return
+	var dir := offset / r
+
+	# Rest length: the distance the spring wants to hold.
+	if body.lock_rest_length < 0.0:
+		body.lock_rest_length = r
 
 	var rel_vel := body.velocity - parent.velocity
-	var speed := rel_vel.length() # preserved
-	if speed < 0.001:
-		# Nothing to orbit with; just match the parent.
-		body.velocity = parent.velocity
-		return
+	var radial_speed := rel_vel.dot(dir) # + moving away, - moving closer
+	var stretch := r - body.lock_rest_length
 
-	# The orbit plane's normal. The sign of this axis keeps the spin direction.
-	var axis := offset.cross(rel_vel)
-	if axis.length_squared() < 0.000001:
-		# Velocity is purely radial, so the plane is undefined. Pick any
-		# axis perpendicular to the offset.
-		var helper := Vector3.UP if absf(offset.normalized().dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
-		axis = offset.cross(helper)
-	axis = axis.normalized()
+	# Spring + damper along the line to the parent (acceleration, so mass-independent).
+	var accel := -(body.spring_stiffness * stretch + body.spring_damping * radial_speed) * dir
 
-	# Rotate around the parent by the arc length travelled this step
-	var new_offset := offset.rotated(axis, speed * dt / r)
-	var tangent := axis.cross(new_offset).normalized()
-
-	body.global_position = parent.global_position + new_offset
-	body.velocity = parent.velocity + tangent * speed
+	# Semi-implicit Euler: update velocity first, then position with the new velocity.
+	rel_vel += accel * dt
+	body.velocity = parent.velocity + rel_vel
+	body.global_position += body.velocity * dt

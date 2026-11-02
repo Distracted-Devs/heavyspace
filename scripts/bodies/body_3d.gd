@@ -25,6 +25,9 @@ const NEGATIVE_COLOUR := Color.DODGER_BLUE
 		is_orbit_locked = value
 		if not value:
 			orbit_parent = null
+@export var lock_rest_length := -1.0
+@export var spring_stiffness := 20.0
+@export var spring_damping := 2.0
 
 var radius: float = 1.0
 var velocity: Vector3 = Vector3.ZERO
