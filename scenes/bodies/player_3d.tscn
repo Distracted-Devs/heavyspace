@@ -7,6 +7,11 @@
 script = ExtResource("2_gcb5y")
 thrust_force = 200000.0
 mass_rate = 50000.0
+mouse_sensitivity = 0.003
+zoom_speed = 0.1
+zoom = 300.0
+min_zoom = 20.0
+max_zoom = 20000.0
 
 [node name="Camera3D" type="Camera3D" parent="." index="1" unique_id=1635213795]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.1794112)
