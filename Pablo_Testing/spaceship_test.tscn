@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://dtys8e1tss8dd"]
+
+[ext_resource type="PackedScene" uid="uid://dm62qfpi3wcqr" path="res://Pablo_Testing/planet.tscn" id="1_planet"]
+[ext_resource type="Texture2D" path="res://Sprites/space.jpeg" id="2_space"]
+[ext_resource type="Script" path="res://Pablo_Testing/spaceship_controller.gd" id="3_ctrl"]
+[ext_resource type="Script" path="res://Pablo_Testing/orbit_minimap.gd" id="4_map"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_space"]
+panorama = ExtResource("2_space")
+
+[sub_resource type="Sky" id="Sky_space"]
+sky_material = SubResource("PanoramaSkyMaterial_space")
+
+[sub_resource type="Environment" id="Environment_space"]
+background_mode = 2
+sky = SubResource("Sky_space")
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.15, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pyramid"]
+material = SubResource("StandardMaterial3D_player")
+top_radius = 0.0
+height = 1.0
+radial_segments = 4
+rings = 1
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_pyramid"]
+points = PackedVector3Array(0, 0.5, 0, 0, -0.5, 0.5, 0.5, -0.5, 0, 0, -0.5, -0.5, -0.5, -0.5, 0)
+
+[node name="SpaceshipTest" type="Node3D" unique_id=1914269854]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1973557783]
+environment = SubResource("Environment_space")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=2104972885]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 0, 0)
+
+[node name="Planet" parent="." unique_id=554523774 instance=ExtResource("1_planet")]
+
+[node name="Player" type="Node3D" parent="." unique_id=568472731]
+transform = Transform3D(1.000000, 0.000000, -0.000000, -0.000000, 0.484600, -0.874736, 0.000000, 0.874736, 0.484600, 0, 232.794, 606.883)
+script = ExtResource("3_ctrl")
+
+[node name="Pyramid" type="MeshInstance3D" parent="Player" unique_id=190291972]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_pyramid")
+
+[node name="Hitbox" type="Area3D" parent="Player/Pyramid"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player/Pyramid/Hitbox"]
+shape = SubResource("ConvexPolygonShape3D_pyramid")
+
+[node name="Camera3D" type="Camera3D" parent="Player" unique_id=2092861461]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 1.2, 3.5)
+current = true
+far = 6000.0
+
+[node name="Minimap" type="CanvasLayer" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("4_map")
+player = NodePath("../Player")

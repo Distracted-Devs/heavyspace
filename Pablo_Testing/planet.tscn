@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dm62qfpi3wcqr"]
+
+[ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://Sprites/earth.jpg" id="1_w27va"]
+[ext_resource type="Script" path="res://Pablo_Testing/planet_gravity.gd" id="2_grav"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_igg2w"]
+albedo_texture = ExtResource("1_w27va")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_planet"]
+albedo_color = Color(0.35, 0.55, 0.85, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_planet"]
+material = SubResource("StandardMaterial3D_planet")
+radius = 500.0
+height = 1000.0
+radial_segments = 128
+rings = 64
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_planet"]
+radius = 500.0
+
+[node name="Planet" type="Area3D" unique_id=1535436158]
+script = ExtResource("2_grav")
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1786088887]
+material_override = SubResource("StandardMaterial3D_igg2w")
+mesh = SubResource("SphereMesh_planet")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_planet")

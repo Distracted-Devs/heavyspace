@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Heavy Space"
-run/main_scene="uid://c7qn7fvgiahtg"
+run/main_scene="res://Pablo_Testing/spaceship_test.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
