@@ -1,18 +1,18 @@
 class_name OrbitMinimap
 extends CanvasLayer
-## Sci-fi wireframe 3D minimap for the PlayerShip (scripts/player/player_controller.gd).
+## Sci-fi wireframe 3D minimap for the Player (scripts/player/player_controller.gd).
 ##
 ## - Reads the ship's rotation, velocity and mass from its RigidBody3D.
 ## - Predicts the path if the player touches nothing, using the same gravity as
-##   PlayerShip._apply_gravity() plus the ship's linear damping.
+##   Player._apply_gravity() plus the ship's linear damping.
 ## - Every node in the "bodies" group is drawn as a wireframe planet.
 ## - Size, zoom and line sizes all scale with the screen and the orbit, so it
 ##   works for any planet size or distance.
 ##
-## Usage: instance orbit_minimap.tscn in a scene that has a PlayerShip.
+## Usage: instance orbit_minimap.tscn in a scene that has a Player.
 
-## Leave empty to use the first PlayerShip found in the current scene.
-@export var player: PlayerShip
+## Leave empty to use the first Player found in the current scene.
+@export var player: Player
 
 @export_group("Layout")
 ## Height of the 3D view as a fraction of the screen height.
@@ -135,12 +135,12 @@ func _find_player() -> bool:
 	if scene == null:
 		return false
 	for node in scene.find_children("*", "Node3D", true, false):
-		if node is PlayerShip:
+		if node is Player:
 			player = node
 			return is_instance_valid(player.ship)
 	return false
 
-# --- Gravity (mirrors PlayerShip) --------------------------------------------
+# --- Gravity (mirrors Player) --------------------------------------------
 
 
 func _get_bodies() -> Array[Node3D]:
@@ -151,14 +151,14 @@ func _get_bodies() -> Array[Node3D]:
 	return bodies
 
 
-## Same as PlayerShip._get_mass().
+## Same as Player._get_mass().
 func _body_mass(body: Node3D) -> float:
 	if body is RigidBody3D:
 		return body.mass
 	return body.get_meta("mass", 1.0)
 
 
-## Acceleration from PlayerShip._apply_gravity(): force / ship mass.
+## Acceleration from Player._apply_gravity(): force / ship mass.
 func _gravity_at(point: Vector3, bodies: Array[Node3D]) -> Vector3:
 	var accel := Vector3.ZERO
 	for body in bodies:

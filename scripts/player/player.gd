@@ -1,4 +1,4 @@
-class_name PlayerShip
+class_name Player
 extends Node3D
 
 @export var roll_impulse := 2.0
@@ -6,6 +6,10 @@ extends Node3D
 @export var yaw_impulse := 2.0
 
 @export var thrust_force := 20.0
+
+@export var max_fuel := 100.0
+@export var fuel_drain_rate := 20.0 # fuel units per second of thrust
+@export var fuel := 100.0
 
 @export var gravitational_constant := 10.0
 @export var softening := 0.5 # stops the force blowing up at tiny distances
@@ -16,10 +20,14 @@ extends Node3D
 @onready var ship: RigidBody3D = $Ship
 
 
+func _ready() -> void:
+	add_to_group("player")
+
+
 func _physics_process(delta: float) -> void:
 	_apply_rotation(delta)
 	_adjust_mass(delta)
-	_apply_thrust()
+	_apply_thrust(delta)
 	_apply_gravity()
 
 
@@ -40,9 +48,10 @@ func _apply_rotation(delta: float) -> void:
 		ship.apply_torque_impulse(torque * delta)
 
 
-func _apply_thrust() -> void:
-	if Input.is_physical_key_pressed(KEY_SPACE):
+func _apply_thrust(delta: float) -> void:
+	if Input.is_physical_key_pressed(KEY_SPACE) and fuel > 0.0:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)
+		fuel = maxf(fuel - fuel_drain_rate * delta, 0.0)
 
 
 func _apply_gravity() -> void:
@@ -66,6 +75,10 @@ func _get_mass(node: Node) -> float:
 	if node is RigidBody3D:
 		return node.mass
 	return node.get_meta("mass", 1.0)
+
+
+func get_fuel_fraction() -> float:
+	return fuel / max_fuel if max_fuel > 0.0 else 0.0
 
 
 func _adjust_mass(delta: float) -> void:

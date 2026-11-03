@@ -2,10 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bhoi16hwttumv" path="res://scripts/collectables/collectable.gd" id="1_5vh6f"]
 [ext_resource type="Script" uid="uid://c5xrkcb2rs4al" path="res://scripts/collectables/heavier_effect.gd" id="1_66vsl"]
+[ext_resource type="Script" uid="uid://bq4sa1xsjrt16" path="res://scripts/collectables/fuel_effect.gd" id="3_ox2l5"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="MassPickup" type="Area3D" unique_id=304802312]
+[node name="FuelPickup" type="Area3D" unique_id=304802312]
 script = ExtResource("1_5vh6f")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=589145897]
@@ -15,3 +16,6 @@ shape = SubResource("SphereShape3D_7l7pj")
 script = ExtResource("1_66vsl")
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="." unique_id=447343475]
+
+[node name="FuelEffect" type="Node" parent="." unique_id=1697524544]
+script = ExtResource("3_ox2l5")
