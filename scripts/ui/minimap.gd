@@ -83,7 +83,7 @@ var _trail_mesh: ImmediateMesh
 var _path_mesh: ImmediateMesh
 var _limit_mesh: ImmediateMesh
 var _planet_wire: ImmediateMesh # unit sphere, shared by every planet
-var _planet_nodes := {} # body Node3D -> map Node3D
+var _planet_nodes := { } # body Node3D -> map Node3D
 
 # State
 var _trail: PackedVector3Array = []
@@ -121,9 +121,10 @@ func _process(delta: float) -> void:
 	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
 	_draw_limit_ring(focus)
 	_update_camera(ship, focus)
-	_label.text = "SPD %5.1f   ALT %5.0f" % [
+	_label.text = "SPD %5.1f | ALT %5.0f | MAS %5d" % [
 		ship.linear_velocity.length(),
 		ship.global_position.distance_to(focus.global_position) - _body_radius(focus),
+		ship.mass,
 	]
 
 
@@ -139,8 +140,8 @@ func _find_player() -> bool:
 			return is_instance_valid(player.ship)
 	return false
 
-
 # --- Gravity (mirrors PlayerShip) --------------------------------------------
+
 
 func _get_bodies() -> Array[Node3D]:
 	var bodies: Array[Node3D] = []
@@ -188,7 +189,10 @@ func _body_radius(body: Node3D) -> float:
 		var shape := (child as CollisionShape3D).shape
 		if shape is SphereShape3D:
 			var shape_scale := (child as Node3D).global_basis.get_scale()
-			return (shape as SphereShape3D).radius * maxf(shape_scale.x, maxf(shape_scale.y, shape_scale.z))
+			return (shape as SphereShape3D).radius * maxf(
+				shape_scale.x,
+				maxf(shape_scale.y, shape_scale.z),
+			)
 	return 1.0
 
 
@@ -198,8 +202,8 @@ func _linear_damp(ship: RigidBody3D) -> float:
 		damp += ProjectSettings.get_setting("physics/3d/default_linear_damp", 0.0)
 	return damp
 
-
 # --- Prediction & trail ------------------------------------------------------
+
 
 func _record_trail(ship_position: Vector3, delta: float) -> void:
 	_trail_timer += delta
@@ -252,8 +256,8 @@ func _path_colour() -> Color:
 		return PATH_ESCAPE_COLOUR
 	return PATH_SAFE_COLOUR
 
-
 # --- UI ----------------------------------------------------------------------
+
 
 func _build_ui() -> void:
 	var mono := SystemFont.new()
@@ -334,8 +338,8 @@ func _update_layout() -> void:
 	_title.add_theme_font_size_override("font_size", font_size - 1)
 	_label.add_theme_font_size_override("font_size", font_size)
 
-
 # --- 3D map ------------------------------------------------------------------
+
 
 func _build_world() -> void:
 	_camera = Camera3D.new()
@@ -401,16 +405,40 @@ func _build_unit_wire_sphere() -> ImmediateMesh:
 	for i in range(1, LATITUDE_LINES):
 		var lat := PI * i / LATITUDE_LINES - PI / 2.0
 		var alpha := 0.9 if i * 2 == LATITUDE_LINES else 0.45 # brighter equator
-		_add_ring(wire, Vector3(0, sin(lat), 0), cos(lat), Vector3.RIGHT, Vector3.BACK, Color(HOLO_COLOUR, alpha), false)
+		_add_ring(
+			wire,
+			Vector3(0, sin(lat), 0),
+			cos(lat),
+			Vector3.RIGHT,
+			Vector3.BACK,
+			Color(HOLO_COLOUR, alpha),
+			false,
+		)
 	for i in LONGITUDE_LINES:
 		var lon := PI * i / LONGITUDE_LINES
-		_add_ring(wire, Vector3.ZERO, 1.0, Vector3(cos(lon), 0, sin(lon)), Vector3.UP, Color(HOLO_COLOUR, 0.45), false)
+		_add_ring(
+			wire,
+			Vector3.ZERO,
+			1.0,
+			Vector3(cos(lon), 0, sin(lon)),
+			Vector3.UP,
+			Color(HOLO_COLOUR, 0.45),
+			false,
+		)
 	wire.surface_end()
 	return wire
 
 
 ## Adds a ring as PRIMITIVE_LINES segments. dashed = every other segment.
-func _add_ring(mesh: ImmediateMesh, centre: Vector3, radius: float, a: Vector3, b: Vector3, colour: Color, dashed: bool) -> void:
+func _add_ring(
+	mesh: ImmediateMesh,
+	centre: Vector3,
+	radius: float,
+	a: Vector3,
+	b: Vector3,
+	colour: Color,
+	dashed: bool,
+) -> void:
 	var segments := RING_SEGMENTS * (2 if dashed else 1)
 	var step := 2 if dashed else 1
 	for i in range(0, segments, step):
@@ -448,7 +476,9 @@ func _sync_planets(bodies: Array[Node3D], focus: Node3D) -> void:
 
 		var map_node: Node3D = _planet_nodes[body]
 		map_node.position = _to_map(body.global_position, focus)
-		map_node.basis = Basis(body.global_basis.get_rotation_quaternion()).scaled(Vector3.ONE * _body_radius(body))
+		map_node.basis = Basis(body.global_basis.get_rotation_quaternion()).scaled(
+			Vector3.ONE * _body_radius(body)
+		)
 
 
 func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
@@ -487,7 +517,14 @@ func _update_ship_marker(ship: RigidBody3D, focus: Node3D) -> void:
 	_ship_marker.basis = Basis(ship_rotation).scaled(Vector3.ONE * _view_radius * MARKER_SIZE)
 
 
-func _draw_line(mesh: ImmediateMesh, points: PackedVector3Array, colour: Color, focus: Node3D, fade_in: bool, extra_end := Vector3.INF) -> void:
+func _draw_line(
+	mesh: ImmediateMesh,
+	points: PackedVector3Array,
+	colour: Color,
+	focus: Node3D,
+	fade_in: bool,
+	extra_end := Vector3.INF,
+) -> void:
 	mesh.clear_surfaces()
 	var count := points.size() + (0 if extra_end == Vector3.INF else 1)
 	if count < 2:
@@ -514,7 +551,15 @@ func _draw_limit_ring(focus: Node3D) -> void:
 	a = a.normalized()
 	var b := _plane_normal.cross(a).normalized()
 	_limit_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	_add_ring(_limit_mesh, Vector3.ZERO, _body_radius(focus) + limit_altitude, a, b, LIMIT_COLOUR, true)
+	_add_ring(
+		_limit_mesh,
+		Vector3.ZERO,
+		_body_radius(focus) + limit_altitude,
+		a,
+		b,
+		LIMIT_COLOUR,
+		true,
+	)
 	_limit_mesh.surface_end()
 
 
