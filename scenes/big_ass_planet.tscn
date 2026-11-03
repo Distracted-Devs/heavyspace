@@ -1,8 +1,12 @@
 [gd_scene format=3 uid="uid://d4soxyul74t3"]
 
 [ext_resource type="PackedScene" uid="uid://ceoq6hv771dqh" path="res://scenes/bodies/gravity_body.tscn" id="1_t700u"]
+[ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://resources/textures/earth.jpg" id="2_py0cc"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_t700u"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ojvte"]
+albedo_texture = ExtResource("2_py0cc")
 
 [node name="BigAssPlanet" unique_id=213988570 instance=ExtResource("1_t700u")]
 mass = 1.0
@@ -12,3 +16,4 @@ transform = Transform3D(171.705, 0, 0, 0, 171.705, 0, 0, 0, 171.705, 0, 0, 0)
 shape = SubResource("SphereShape3D_t700u")
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="CollisionShape3D" index="0" unique_id=1860115016]
+material = SubResource("StandardMaterial3D_ojvte")

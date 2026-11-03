@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://dtys8e1tss8dd"]
+
+[ext_resource type="Texture2D" uid="uid://b4u1e2rcjlw00" path="res://resources/textures/milkyway.exr" id="1_pia7a"]
+[ext_resource type="PackedScene" uid="uid://bji83neuivaio" path="res://scenes/player/player_ship.tscn" id="2_mijp5"]
+[ext_resource type="PackedScene" uid="uid://d4soxyul74t3" path="res://scenes/big_ass_planet.tscn" id="3_ojvte"]
+[ext_resource type="PackedScene" uid="uid://ba3ejxia8n30j" path="res://scenes/ui/orbit_minimap.tscn" id="4_djktr"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gcb5y"]
+panorama = ExtResource("1_pia7a")
+
+[sub_resource type="Sky" id="Sky_mijp5"]
+sky_material = SubResource("PanoramaSkyMaterial_gcb5y")
+
+[sub_resource type="Environment" id="Environment_space"]
+background_mode = 2
+sky = SubResource("Sky_mijp5")
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.15, 0.2, 1)
+
+[node name="SpaceshipTest" type="Node3D" unique_id=1596929932]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1291008803]
+environment = SubResource("Environment_space")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1848086833]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 0, 0)
+
+[node name="PlayerShip" parent="." unique_id=1639055760 instance=ExtResource("2_mijp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5657938, 158.70502)
+
+[node name="BigAssPlanet" parent="." unique_id=108632261 instance=ExtResource("3_ojvte")]
+mass = 5000.0
+
+[node name="BigAssPlanet2" parent="." unique_id=501970007 instance=ExtResource("3_ojvte")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 202.89676, 101.21318, -143.7546)
+mass = 5000.0
+
+[node name="BigAssPlanet3" parent="." unique_id=634459534 instance=ExtResource("3_ojvte")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -127.057434, 101.21318, 211.83333)
+mass = 5000.0
+
+[node name="OrbitMinimap" parent="." unique_id=1657402373 instance=ExtResource("4_djktr")]

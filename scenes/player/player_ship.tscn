@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bji83neuivaio"]
 
-[ext_resource type="Script" uid="uid://4sk2uo38r44x" path="res://scripts/player/player_controller.gd" id="1_4fnjr"]
+[ext_resource type="Script" uid="uid://4sk2uo38r44x" path="res://scripts/player/player.gd" id="1_4fnjr"]
 [ext_resource type="Script" uid="uid://ckrj26q2d0ft8" path="res://scripts/player/camera.gd" id="2_42gqe"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]

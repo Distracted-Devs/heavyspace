@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ceoq6hv771dqh"]
 
-[ext_resource type="Script" uid="uid://bob5gtf4obh0j" path="res://scripts/gravity_body.gd" id="1_v6woc"]
+[ext_resource type="Script" uid="uid://bob5gtf4obh0j" path="res://scripts/bodies/gravity_body.gd" id="1_v6woc"]
 
 [node name="GravityBody" type="RigidBody3D" unique_id=519093917]
 mass = 10000.0

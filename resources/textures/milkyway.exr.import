@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqno0163dqbia"
-path.s3tc="res://.godot/imported/space.jpeg-c8a6e74a188ba2c2d95751294003237e.s3tc.ctex"
+uid="uid://b4u1e2rcjlw00"
+path.bptc="res://.godot/imported/milkyway.exr-2b44a8af8a7c0fbcd832bd06020138c3.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Sprites/space.jpeg"
-dest_files=["res://.godot/imported/space.jpeg-c8a6e74a188ba2c2d95751294003237e.s3tc.ctex"]
+source_file="res://resources/textures/milkyway.exr"
+dest_files=["res://.godot/imported/milkyway.exr-2b44a8af8a7c0fbcd832bd06020138c3.bptc.ctex"]
 
 [params]
 
