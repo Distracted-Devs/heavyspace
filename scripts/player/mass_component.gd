@@ -9,7 +9,12 @@ signal changed(current: float)
 var mass: float = starting_mass
 
 
-func change_mass(delta_mass: float) -> void:
+func add_mass(delta_mass: float) -> void:
 	mass += delta_mass
-	player.ship.mass = mass
+	mass = maxf(mass, 0.0)
+	changed.emit(mass)
+
+
+func set_mass(new_mass: float) -> void:
+	mass = new_mass
 	changed.emit(mass)

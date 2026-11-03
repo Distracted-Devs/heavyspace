@@ -21,7 +21,7 @@ extends CanvasLayer
 
 @export_group("Feedback")
 ## Below this fraction of fuel the readout warns (red + flashing).
-@export_range(0.0, 1.0) var low_fuel_ratio: float = 0.25
+@export var low_fuel: float = 10.0
 ## Flash speed in Hz while warning.
 @export var flash_hz: float = 2.0
 
@@ -135,11 +135,13 @@ func _update_layout() -> void:
 
 
 func _update() -> void:
-	var fraction := player.fuel / player.max_fuel if player.max_fuel > 0.0 else 0.0
-	var warning := fraction < low_fuel_ratio
+	var fuel: float = player.fuel_component.fuel
+	var warning := fuel < low_fuel
 	var colour := LOW_COLOUR if warning else HOLO_COLOUR
 	if warning:
 		colour.a = 0.5 + 0.5 * absf(sin(_flash * TAU * flash_hz))
+	# TODO: this is fudging, should be a max fuel or communicate this differently
+	var fraction := fuel / 150.0
 
 	_title.add_theme_color_override("font_color", Color(colour, 0.8) if not warning else colour)
 	_label.add_theme_color_override("font_color", colour)
@@ -147,8 +149,8 @@ func _update() -> void:
 	_bar.set_meta("fraction", fraction)
 	_bar.set_meta("colour", colour)
 
-	var seconds_left := player.fuel / maxf(player.fuel_drain_rate, 0.001)
-	_label.text = "FUEL %3d%% | T-%5.1fs" % [int(fraction * 100.0), seconds_left]
+	var seconds_left: float = fuel / maxf(player.fuel_drain_rate, 0.001)
+	_label.text = "FUEL %3d | T-%.1fs" % [int(fuel), seconds_left]
 
 
 func _draw_bar() -> void:

@@ -7,26 +7,28 @@ extends Node3D
 
 @export var thrust_force := 20.0
 
-@export var max_fuel := 100.0
-@export var fuel_drain_rate := 20.0 # fuel units per second of thrust
-@export var fuel := 100.0
+@export var fuel_drain_rate := 20.0
+@export var mass_to_fuel_ratio := .01
 
 @export var gravitational_constant := 10.0
-@export var softening := 0.5 # stops the force blowing up at tiny distances
-@export var mass_change_rate := 10.0 # units per second
+@export var softening := 0.5
+@export var mass_change_rate := 10.0
 @export var min_mass := 0.1
 @export var max_mass := 1000.0
+@export var mass_component: MassComponent
+@export var fuel_component: FuelComponent
 
 @onready var ship: RigidBody3D = $Ship
 
 
 func _ready() -> void:
 	add_to_group("player")
+	fuel_component.changed.connect(_on_fuel_changed)
+	mass_component.add_mass(fuel_component.fuel * mass_to_fuel_ratio)
 
 
 func _physics_process(delta: float) -> void:
 	_apply_rotation(delta)
-	_adjust_mass(delta)
 	_apply_thrust(delta)
 	_apply_gravity()
 
@@ -49,9 +51,9 @@ func _apply_rotation(delta: float) -> void:
 
 
 func _apply_thrust(delta: float) -> void:
-	if Input.is_physical_key_pressed(KEY_SPACE) and fuel > 0.0:
+	if Input.is_physical_key_pressed(KEY_SPACE) and fuel_component.fuel > 0.0:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)
-		fuel = maxf(fuel - fuel_drain_rate * delta, 0.0)
+		fuel_component.add_fuel(-fuel_drain_rate * delta)
 
 
 func _apply_gravity() -> void:
@@ -77,14 +79,5 @@ func _get_mass(node: Node) -> float:
 	return node.get_meta("mass", 1.0)
 
 
-func get_fuel_fraction() -> float:
-	return fuel / max_fuel if max_fuel > 0.0 else 0.0
-
-
-func _adjust_mass(delta: float) -> void:
-	var change := int(Input.is_physical_key_pressed(KEY_X)) - int(
-		Input.is_physical_key_pressed(KEY_Z)
-	)
-
-	if change != 0:
-		ship.mass = clamp(ship.mass + change * mass_change_rate * delta, min_mass, max_mass)
+func _on_fuel_changed(_new_fuel: float, delta_fuel: float) -> void:
+	mass_component.add_mass(delta_fuel * mass_to_fuel_ratio)

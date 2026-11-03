@@ -8,8 +8,23 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 radius = 0.50158125
 
-[node name="PlayerShip" type="Node3D" unique_id=146044525]
+[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component")]
 script = ExtResource("1_4fnjr")
+roll_impulse = null
+pitch_impulse = null
+yaw_impulse = null
+thrust_force = null
+max_fuel = null
+fuel_drain_rate = null
+fuel = null
+fuel_to_mass_ratio = null
+gravitational_constant = null
+softening = null
+mass_change_rate = null
+min_mass = null
+max_mass = null
+mass_component = NodePath("Ship/MassComponent")
+fuel_component = NodePath("Ship/FuelComponent")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1998297707 node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.90940315, 0.41591582, 0, -0.41591582, 0.90940315, 0, 1.4504993, 3.1636226)

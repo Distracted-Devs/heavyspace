@@ -121,10 +121,10 @@ func _process(delta: float) -> void:
 	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
 	_draw_limit_ring(focus)
 	_update_camera(ship, focus)
-	_label.text = "SPD %5.1f | ALT %5.0f | MAS %5d" % [
+	_label.text = "SPD %5.1f | ALT %5.0f | MAS %.2f" % [
 		ship.linear_velocity.length(),
 		ship.global_position.distance_to(focus.global_position) - _body_radius(focus),
-		ship.mass,
+		player.mass_component.mass,
 	]
 
 
