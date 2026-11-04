@@ -10,7 +10,11 @@
 radius = 0.50158125
 
 [node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component", "gravity_effect", "ship")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.83786, 0, 10.287233)
 script = ExtResource("1_4fnjr")
+rotation_correction_speed = 0.1
+rotation_correction_multiplier = 5.0
+rotation_correction_exponent = 0.6
 mass_component = NodePath("Ship/MassComponent")
 fuel_component = NodePath("Ship/FuelComponent")
 gravity_effect = NodePath("Ship/GravityEffect")
