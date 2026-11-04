@@ -12,7 +12,6 @@ albedo_texture = ExtResource("2_py0cc")
 mass = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." index="0" unique_id=1276215937]
-transform = Transform3D(2000, 0, 0, 0, 2000, 0, 0, 0, 2000, 0, 0, 0)
 shape = SubResource("SphereShape3D_t700u")
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="CollisionShape3D" index="0" unique_id=1860115016]

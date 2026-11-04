@@ -74,7 +74,7 @@ func _apply_rotation_correction(_delta: float) -> void:
 		if not gravity_body:
 			continue
 		var gravity_body_distance: float = (
-			gravity_body.global_position - self.global_position
+			gravity_body.global_position - ship.global_position
 		).length()
 
 		if gravity_body_distance < closest_gravity_body_distance:
@@ -84,6 +84,19 @@ func _apply_rotation_correction(_delta: float) -> void:
 	if not closest_gravity_body:
 		return
 
+	var closest_gravity_body_radius: float = closest_gravity_body.diameter / 2.0
+	var rotation_correction_coefficient: float = rotation_correction_multiplier / (
+		((closest_gravity_body_distance - closest_gravity_body_radius) + 1)
+		** rotation_correction_exponent
+	)
+	var rotation_correction: float = rotation_correction_coefficient * rotation_correction_speed
+	# print(closest_gravity_body_distance - closest_gravity_body_radius)
+
+	# if too far away, exit
+	print(rotation_correction_coefficient)
+	if rotation_correction < 0.01:
+		return
+
 	var up: Vector3 = ship.global_position - closest_gravity_body.global_position
 
 	if up.is_zero_approx():
@@ -91,13 +104,8 @@ func _apply_rotation_correction(_delta: float) -> void:
 	up = up.normalized()
 
 	# Tangent: velocity minus its radial part, falling back to the current nose.
-	var forward: Vector3 = ship.linear_velocity - up * ship.linear_velocity.dot(up)
-	if forward.length_squared() < 0.01:
-		var nose: Vector3 = -ship.global_basis.z
-		forward = nose - up * nose.dot(up)
-	if forward.length_squared() < 0.0001:
-		return
-	forward = forward.normalized()
+	var nose: Vector3 = -ship.global_basis.z
+	var forward = nose - up * nose.dot(up)
 
 	# -Z along the tangent, +Y away from the body.
 	var target_basis := Basis.looking_at(forward, up)
@@ -110,7 +118,4 @@ func _apply_rotation_correction(_delta: float) -> void:
 		error = -error # take the short way around
 
 	# Drive the body with angular velocity (safe with the physics engine).
-	var rotation_correction: float = rotation_correction_speed * rotation_correction_multiplier / (
-		(closest_gravity_body_distance + 1) ** rotation_correction_exponent
-	)
 	ship.angular_velocity += error.get_axis() * error.get_angle() * rotation_correction
