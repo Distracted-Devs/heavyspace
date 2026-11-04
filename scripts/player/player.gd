@@ -93,7 +93,6 @@ func _apply_rotation_correction(_delta: float) -> void:
 	# print(closest_gravity_body_distance - closest_gravity_body_radius)
 
 	# if too far away, exit
-	print(rotation_correction_coefficient)
 	if rotation_correction < 0.01:
 		return
 
