@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://4euwmx6ycuaw"]
 
-[ext_resource type="Script" uid="uid://bhoi16hwttumv" path="res://scripts/collectables/collectable.gd" id="1_5vh6f"]
-[ext_resource type="Script" uid="uid://bq4sa1xsjrt16" path="res://scripts/collectables/fuel_effect.gd" id="3_ox2l5"]
+[ext_resource type="Script" uid="uid://bhoi16hwttumv" path="res://scripts/components/collectable.gd" id="1_5vh6f"]
+[ext_resource type="Script" uid="uid://bq4sa1xsjrt16" path="res://scripts/components/fuel_effect.gd" id="3_ox2l5"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 

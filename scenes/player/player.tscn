@@ -2,29 +2,23 @@
 
 [ext_resource type="Script" uid="uid://4sk2uo38r44x" path="res://scripts/player/player.gd" id="1_4fnjr"]
 [ext_resource type="Script" uid="uid://ckrj26q2d0ft8" path="res://scripts/player/camera.gd" id="2_42gqe"]
-[ext_resource type="Script" uid="uid://cieyl2wcg3ad" path="res://scripts/player/mass_component.gd" id="3_gmlin"]
-[ext_resource type="Script" uid="uid://dpcf2wtymmhno" path="res://scripts/player/fuel_component.gd" id="4_lvxji"]
+[ext_resource type="Script" uid="uid://cieyl2wcg3ad" path="res://scripts/components/mass_component.gd" id="3_gmlin"]
+[ext_resource type="Script" uid="uid://dpcf2wtymmhno" path="res://scripts/components/fuel_component.gd" id="4_lvxji"]
+[ext_resource type="Script" uid="uid://dke8yv62eulki" path="res://scripts/components/gravity_effect.gd" id="5_p47bc"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 radius = 0.50158125
 
-[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component")]
+[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component", "gravity_effect", "ship")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.83786, 0, 10.287233)
 script = ExtResource("1_4fnjr")
-roll_impulse = null
-pitch_impulse = null
-yaw_impulse = null
-thrust_force = null
-max_fuel = null
-fuel_drain_rate = null
-fuel = null
-fuel_to_mass_ratio = null
-gravitational_constant = null
-softening = null
-mass_change_rate = null
-min_mass = null
-max_mass = null
+rotation_correction_speed = 0.1
+rotation_correction_multiplier = 5.0
+rotation_correction_exponent = 0.6
 mass_component = NodePath("Ship/MassComponent")
 fuel_component = NodePath("Ship/FuelComponent")
+gravity_effect = NodePath("Ship/GravityEffect")
+ship = NodePath("Ship")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1998297707 node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.90940315, 0.41591582, 0, -0.41591582, 0.90940315, 0, 1.4504993, 3.1636226)
@@ -34,6 +28,7 @@ target = NodePath("../Ship")
 
 [node name="Ship" type="RigidBody3D" parent="." unique_id=1578687592 groups=["collector"]]
 gravity_scale = 0.0
+angular_damp = 1.0
 
 [node name="Body" type="CSGSphere3D" parent="Ship" unique_id=1217962877]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.355, 0, 0, 0)
@@ -60,3 +55,8 @@ player = NodePath("../..")
 [node name="FuelComponent" type="Node" parent="Ship" unique_id=97571167 node_paths=PackedStringArray("player")]
 script = ExtResource("4_lvxji")
 player = NodePath("../..")
+starting_fuel = 500.0
+
+[node name="GravityEffect" type="Node" parent="Ship" unique_id=1703276924 node_paths=PackedStringArray("body")]
+script = ExtResource("5_p47bc")
+body = NodePath("..")
