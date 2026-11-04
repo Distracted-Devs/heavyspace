@@ -32,9 +32,13 @@ extends CanvasLayer
 @export var zoom_smoothing: float = 2.0
 
 @export_group("Prediction")
-## How far ahead the path is simulated, in seconds.
-@export var path_seconds: float = 60.0
+## How far ahead the path is simulated, in seconds. The simulation stops as
+## soon as the path has gone a full turn around the focused planet (or the
+## ship crashes), so closed orbits are always drawn in full.
+@export var path_seconds: float = 3600.0
 @export var path_step: float = 1.0 / 30.0
+## Never use more integration steps than this, no matter how long the orbit.
+@export var path_max_steps: int = 2400
 ## How much of the flown path is kept, in seconds.
 @export var trail_seconds: float = 60.0
 @export var trail_interval: float = 0.1
@@ -221,6 +225,8 @@ func _record_trail(ship_position: Vector3, delta: float) -> void:
 
 
 ## Simulates the ship forward with no input: gravity + damping only.
+## Runs until the path has swept a full turn around the focused planet, the
+## ship crashes, or path_seconds have elapsed, whichever comes first.
 func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	_predicted.clear()
 	_predicted.append(ship.global_position)
@@ -229,22 +235,45 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	for body in bodies:
 		radii.append(_body_radius(body))
 
+	var focus_pos := focus.global_position
 	var p := ship.global_position
 	var v := ship.linear_velocity
-	var damping := maxf(0.0, 1.0 - _linear_damp(ship) * path_step)
-	var steps := int(path_seconds / path_step)
+	var damping := _linear_damp(ship)
+
+	# Choose a step size that integrates a full orbit accurately (at least a
+	# few hundred steps around it) while keeping the total step count bounded,
+	# so a slow wide orbit costs no more than a fast tight one.
+	var r0 := maxf(p.distance_to(focus_pos), 0.001)
+	var mu := player.gravity_effect.gravitational_constant * _body_mass(focus)
+	var step := path_step
+	if mu > 0.0:
+		var period := TAU * sqrt(r0 * r0 * r0 / mu)
+		step = maxf(step, period / path_max_steps)
+	var steps := mini(int(path_seconds / step), path_max_steps)
+
+	var sweep := 0.0
+	var prev_rel := p - focus_pos
 	for i in steps:
-		v += _gravity_at(p, bodies) * path_step
-		v *= damping
-		p += v * path_step
+		var damp_factor := maxf(0.0, 1.0 - damping * step)
+		v += _gravity_at(p, bodies) * step
+		v *= damp_factor
+		p += v * step
 		for j in bodies.size():
 			if p.distance_to(bodies[j].global_position) < radii[j]:
 				_will_crash = true
 		if _will_crash:
 			_predicted.append(p)
 			break
+
+		# Accumulate the angle swept around the focused planet.
+		var rel := p - focus_pos
+		sweep += atan2(prev_rel.cross(rel).length(), prev_rel.dot(rel))
+		prev_rel = rel
 		if i % 3 == 0:
 			_predicted.append(p)
+		if sweep >= TAU:
+			_predicted.append(p)
+			break
 
 	# Positive orbital energy around the focused planet = it won't come back.
 	var r := maxf(ship.global_position.distance_to(focus.global_position), 0.001)

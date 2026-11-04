@@ -23,7 +23,6 @@ window/stretch/aspect="expand"
 [global_group]
 
 collector=""
-gravity=""
 
 [input]
 

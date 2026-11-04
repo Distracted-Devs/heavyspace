@@ -9,19 +9,18 @@ extends Node
 
 
 func _physics_process(_delta: float) -> void:
-	var total_force := Vector3()
-	for node in get_tree().get_nodes_in_group("gravity"):
-		if node == self or not node is Node3D:
+	var total_force := Vector3.ZERO
+	for node in get_tree().get_nodes_in_group(&"gravity"):
+		var gravity_component := node.get_node_or_null("GravityComponent") as GravityComponent
+		if gravity_component == null:
 			continue
-		var gravity_component := get_node_or_null("GravityComponent") as GravityComponent
-		if gravity_component:
-			var offset: Vector3 = node.global_position - body.global_position
-			var dist_sq := offset.length_squared() + softening * softening
+		var offset: Vector3 = node.global_position - body.global_position
+		var dist_sq := offset.length_squared() + softening * softening
 
-			var this_mass := body.mass
-			var other_mass := gravity_component.mass
+		var this_mass := body.mass
+		var other_mass := gravity_component.mass
 
-			var magnitude := gravitational_constant * this_mass * other_mass / dist_sq
-			total_force += offset.normalized() * magnitude
+		var magnitude := gravitational_constant * this_mass * other_mass / dist_sq
+		total_force += offset.normalized() * magnitude
 
 	body.apply_central_force(total_force)
