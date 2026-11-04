@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ceoq6hv771dqh" path="res://scenes/bodies/gravity_body.tscn" id="1_t700u"]
 [ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://resources/textures/earth.jpg" id="2_py0cc"]
+[ext_resource type="Script" uid="uid://cry2v6qlqd12y" path="res://scripts/components/gravity_component.gd" id="3_rp5as"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_t700u"]
 
@@ -12,8 +13,13 @@ albedo_texture = ExtResource("2_py0cc")
 mass = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." index="0" unique_id=1276215937]
-transform = Transform3D(171.705, 0, 0, 0, 171.705, 0, 0, 0, 171.705, 0, 0, 0)
+transform = Transform3D(2000, 0, 0, 0, 2000, 0, 0, 0, 2000, 0, 0, 0)
 shape = SubResource("SphereShape3D_t700u")
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="CollisionShape3D" index="0" unique_id=1860115016]
+radial_segments = 59
+rings = 100
 material = SubResource("StandardMaterial3D_ojvte")
+
+[node name="GravityComponent" type="Node" parent="." index="1" unique_id=1968637885]
+script = ExtResource("3_rp5as")

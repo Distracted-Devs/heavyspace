@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://db5alj460rtpt" path="res://scripts/levels/test_level.gd" id="1_48ne7"]
 [ext_resource type="Texture2D" uid="uid://b4u1e2rcjlw00" path="res://resources/textures/milkyway.exr" id="1_v45ci"]
 [ext_resource type="PackedScene" uid="uid://bji83neuivaio" path="res://scenes/player/player.tscn" id="2_48ne7"]
-[ext_resource type="PackedScene" uid="uid://d4soxyul74t3" path="res://scenes/big_ass_planet.tscn" id="3_6xh4u"]
+[ext_resource type="PackedScene" uid="uid://d4soxyul74t3" path="res://scenes/bodies/big_ass_planet.tscn" id="3_6xh4u"]
 [ext_resource type="PackedScene" uid="uid://4euwmx6ycuaw" path="res://scenes/collectables/FuelPickup.tscn" id="4_48ne7"]
 [ext_resource type="PackedScene" uid="uid://ba3ejxia8n30j" path="res://scenes/ui/minimap.tscn" id="4_v45ci"]
 [ext_resource type="PackedScene" uid="uid://huxn3knhtqvl" path="res://scenes/ui/hud.tscn" id="5_hud"]
@@ -30,7 +30,8 @@ environment = SubResource("Environment_space")
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 0, 0)
 
 [node name="PlayerShip" parent="." unique_id=1639055760 instance=ExtResource("2_48ne7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5657938, 229.21976)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5657938, 1229.7375)
+gravitational_constant = 200.0
 
 [node name="BigAssPlanet" parent="." unique_id=108632261 instance=ExtResource("3_6xh4u")]
 mass = 5000.0

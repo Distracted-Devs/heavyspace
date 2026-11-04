@@ -6,7 +6,7 @@ signal changed(new_fuel: float, delta_fuel: float)
 @export var player: Player
 @export var starting_fuel: float = 100.0
 
-var fuel: float = starting_fuel
+@onready var fuel: float = starting_fuel
 
 
 func add_fuel(delta_fuel: float) -> void:

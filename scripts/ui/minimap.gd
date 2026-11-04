@@ -163,8 +163,12 @@ func _gravity_at(point: Vector3, bodies: Array[Node3D]) -> Vector3:
 	var accel := Vector3.ZERO
 	for body in bodies:
 		var _offset := body.global_position - point
-		var dist_sq := _offset.length_squared() + player.softening * player.softening
-		accel += _offset.normalized() * player.gravitational_constant * _body_mass(body) / dist_sq
+		var dist_sq := _offset.length_squared() + player.gravity_effect.softening * player \
+				.gravity_effect \
+				.softening
+		accel += _offset.normalized() * player.gravity_effect.gravitational_constant * _body_mass(
+			body
+		) / dist_sq
 	return accel
 
 
@@ -245,7 +249,7 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	# Positive orbital energy around the focused planet = it won't come back.
 	var r := maxf(ship.global_position.distance_to(focus.global_position), 0.001)
 	var energy := ship.linear_velocity.length_squared() * 0.5 \
-			- player.gravitational_constant * _body_mass(focus) / r
+			- player.gravity_effect.gravitational_constant * _body_mass(focus) / r
 	_will_escape = energy >= 0.0
 
 
