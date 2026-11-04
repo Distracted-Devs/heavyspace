@@ -162,9 +162,9 @@ func _body_mass(body: Node3D) -> float:
 func _gravity_at(point: Vector3, bodies: Array[Node3D]) -> Vector3:
 	var accel := Vector3.ZERO
 	for body in bodies:
-		var offset := body.global_position - point
-		var dist_sq := offset.length_squared() + player.softening * player.softening
-		accel += offset.normalized() * player.gravitational_constant * _body_mass(body) / dist_sq
+		var _offset := body.global_position - point
+		var dist_sq := _offset.length_squared() + player.softening * player.softening
+		accel += _offset.normalized() * player.gravitational_constant * _body_mass(body) / dist_sq
 	return accel
 
 
@@ -487,8 +487,8 @@ func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
 
 ## The orbit plane's normal, smoothed so the camera doesn't jitter.
 func _update_orbit_plane(ship: RigidBody3D, focus: Node3D, delta: float) -> void:
-	var offset := ship.global_position - focus.global_position
-	var normal := offset.cross(ship.linear_velocity)
+	var _offset := ship.global_position - focus.global_position
+	var normal := _offset.cross(ship.linear_velocity)
 	if normal.length_squared() < 0.0001:
 		return
 	_plane_normal = _plane_normal.lerp(normal.normalized(), clampf(delta * 2.0, 0.0, 1.0)).normalized()
