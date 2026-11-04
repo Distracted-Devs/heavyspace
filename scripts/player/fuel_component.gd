@@ -4,7 +4,7 @@ extends Node
 signal changed(new_fuel: float, delta_fuel: float)
 
 @export var player: Player
-@export var starting_fuel: float = 100.0
+@export var starting_fuel: float = 200.0
 
 var fuel: float = starting_fuel
 

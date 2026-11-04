@@ -1,9 +1,9 @@
 class_name Player
 extends Node3D
 
-@export var roll_impulse := 2.0
-@export var pitch_impulse := 2.0
-@export var yaw_impulse := 2.0
+@export var roll_impulse := 1.0
+@export var pitch_impulse := 1.0
+@export var yaw_impulse := 1.0
 
 @export var thrust_force := 20.0
 

@@ -32,9 +32,16 @@ extends CanvasLayer
 @export var zoom_smoothing: float = 2.0
 
 @export_group("Prediction")
-## How far ahead the path is simulated, in seconds.
+## How far ahead the path is simulated when not in a closed orbit, in seconds.
 @export var path_seconds: float = 60.0
-@export var path_step: float = 1.0 / 30.0
+## In a closed orbit the path covers one full revolution, capped at this.
+@export var max_path_seconds: float = 400.0
+@export var path_step: float = 1.0 / 15.0
+## The lowest point of the orbit must clear the surface by this fraction of the
+## planet radius to count as stable.
+@export var stable_margin: float = 0.02
+## Flash speed of the path in Hz while the orbit is unstable.
+@export var flash_hz: float = 2.0
 ## How much of the flown path is kept, in seconds.
 @export var trail_seconds: float = 60.0
 @export var trail_interval: float = 0.1
@@ -44,9 +51,8 @@ extends CanvasLayer
 const HOLO_COLOUR := Color(0.3, 0.9, 1.0)
 const PLANET_FILL_COLOUR := Color(0.0, 0.05, 0.08)
 const TRAIL_COLOUR := Color(0.3, 0.9, 1.0)
-const PATH_SAFE_COLOUR := Color(0.3, 1.0, 0.5)
-const PATH_CRASH_COLOUR := Color(1.0, 0.25, 0.2)
-const PATH_ESCAPE_COLOUR := Color(1.0, 0.8, 0.2)
+const PATH_STABLE_COLOUR := Color(0.3, 1.0, 0.5)
+const PATH_UNSTABLE_COLOUR := Color(1.0, 0.25, 0.2)
 const LIMIT_COLOUR := Color(1.0, 0.45, 0.2, 0.8)
 const SHIP_COLOUR := Color(1.0, 0.15, 0.15)
 
@@ -91,6 +97,8 @@ var _trail_timer := 0.0
 var _predicted: PackedVector3Array = []
 var _will_crash := false
 var _will_escape := false
+var _stable := false
+var _flash := 0.0
 var _plane_normal := Vector3.UP
 var _view_radius := -1.0
 
@@ -111,6 +119,7 @@ func _process(delta: float) -> void:
 	if focus == null:
 		return
 
+	_flash += delta
 	_record_trail(ship.global_position, delta)
 	_predict(ship, bodies, focus)
 	_sync_planets(bodies, focus)
@@ -118,9 +127,12 @@ func _process(delta: float) -> void:
 	_update_zoom(ship, focus, delta)
 	_update_ship_marker(ship, focus)
 	_draw_line(_trail_mesh, _trail, TRAIL_COLOUR, focus, true, ship.global_position)
-	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
+	var colour := _path_colour()
+	_draw_line(_path_mesh, _predicted, colour, focus, false)
 	_draw_limit_ring(focus)
 	_update_camera(ship, focus)
+	_title.text = "// ORBIT SCAN  %s" % _orbit_status()
+	_title.add_theme_color_override("font_color", colour)
 	_label.text = "SPD %5.1f | ALT %5.0f | MAS %.2f" % [
 		ship.linear_velocity.length(),
 		ship.global_position.distance_to(focus.global_position) - _body_radius(focus),
@@ -216,7 +228,8 @@ func _record_trail(ship_position: Vector3, delta: float) -> void:
 		_trail = _trail.slice(_trail.size() - max_points)
 
 
-## Simulates the ship forward with no input: gravity + damping only.
+## Simulates the ship forward with no input (gravity + damping only) and
+## decides whether the current orbit is stable.
 func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	_predicted.clear()
 	_predicted.append(ship.global_position)
@@ -225,10 +238,27 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	for body in bodies:
 		radii.append(_body_radius(body))
 
-	var p := ship.global_position
+	# Two-body orbit around the focused planet: energy says bound or escaping,
+	# periapsis says whether the lowest point clears the surface.
+	var mu := player.gravitational_constant * _body_mass(focus)
+	var r_vec := ship.global_position - focus.global_position
+	var r := maxf(r_vec.length(), 0.001)
 	var v := ship.linear_velocity
+	var energy := v.length_squared() * 0.5 - mu / r
+	_will_escape = energy >= 0.0
+	var periapsis := 0.0
+	var horizon := path_seconds
+	if not _will_escape and mu > 0.0:
+		var semi_major := -mu / (2.0 * energy)
+		var ecc := (v.cross(r_vec.cross(v)) / mu - r_vec / r).length()
+		periapsis = semi_major * (1.0 - ecc)
+		var period := TAU * sqrt(pow(semi_major, 3.0) / mu)
+		horizon = clampf(period * 1.02, path_seconds, max_path_seconds)
+
+	# Numerical path, so damping and other planets are accounted for.
+	var p := ship.global_position
 	var damping := maxf(0.0, 1.0 - _linear_damp(ship) * path_step)
-	var steps := int(path_seconds / path_step)
+	var steps := int(horizon / path_step)
 	for i in steps:
 		v += _gravity_at(p, bodies) * path_step
 		v *= damping
@@ -242,19 +272,27 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 		if i % 3 == 0:
 			_predicted.append(p)
 
-	# Positive orbital energy around the focused planet = it won't come back.
-	var r := maxf(ship.global_position.distance_to(focus.global_position), 0.001)
-	var energy := ship.linear_velocity.length_squared() * 0.5 \
-			- player.gravitational_constant * _body_mass(focus) / r
-	_will_escape = energy >= 0.0
+	_stable = not _will_escape and not _will_crash \
+			and periapsis > _body_radius(focus) * (1.0 + stable_margin)
 
 
+## Steady green when stable, flashing red otherwise.
 func _path_colour() -> Color:
+	if _stable:
+		return PATH_STABLE_COLOUR
+	var colour := PATH_UNSTABLE_COLOUR
+	colour.a = 0.35 + 0.65 * absf(sin(_flash * PI * flash_hz))
+	return colour
+
+
+func _orbit_status() -> String:
+	if _stable:
+		return "STABLE"
 	if _will_crash:
-		return PATH_CRASH_COLOUR
+		return "IMPACT"
 	if _will_escape:
-		return PATH_ESCAPE_COLOUR
-	return PATH_SAFE_COLOUR
+		return "ESCAPE"
+	return "DECAYING"
 
 # --- UI ----------------------------------------------------------------------
 
@@ -535,7 +573,7 @@ func _draw_line(
 		var t := float(i) / (count - 1)
 		var c := colour
 		# Trail fades out toward its oldest point, the prediction toward its end.
-		c.a = lerpf(0.1, 0.9, t) if fade_in else lerpf(1.0, 0.25, t)
+		c.a = (lerpf(0.1, 0.9, t) if fade_in else lerpf(1.0, 0.25, t)) * colour.a
 		mesh.surface_set_color(c)
 		mesh.surface_add_vertex(_to_map(point, focus))
 	mesh.surface_end()
