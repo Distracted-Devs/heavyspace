@@ -10,6 +10,14 @@ extends Node3D
 @export var rotation_correction_multiplier := 1.0
 @export var rotation_correction_exponent := 0.01
 
+@export_group("Orbit lock")
+
+@export var min_lock_altitude := 10.0
+@export var max_lock_altitude := 500.0
+@export var orbit_speed_multiplier := 2.0
+@export var orbit_boost_response := 3.0
+@export var orbit_align_speed := 4.0
+
 @export_group("Fuel")
 @export var fuel_drain_rate := 20.0
 @export var mass_to_fuel_ratio := .01
@@ -20,6 +28,15 @@ extends Node3D
 @export var gravity_effect: GravityEffect
 @export var ship: RigidBody3D
 
+signal orbit_lock_changed(locked: bool)
+
+## The orbit the ship is riding while locked (null when free-flying).
+var _locked_orbit: Orbit
+var _locked_source: Node3D
+var _lock_time := 0.0
+## Current orbit time scale: 1 when coasting, up to orbit_speed_multiplier.
+var _orbit_time_scale := 1.0
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -28,9 +45,131 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _locked_orbit:
+		# Locked: no steering, Space only speeds the ship along the orbit.
+		_apply_orbit_boost(delta)
+		_follow_locked_orbit(delta)
+		return
 	_apply_rotation_correction(delta)
 	_apply_rotation(delta)
 	_apply_thrust(delta)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"toggle_orbit_lock") and not event.is_echo():
+		if _locked_orbit:
+			unlock_orbit()
+		else:
+			lock_orbit()
+
+
+
+# --- Orbit lock ----------------------------------------------------------------
+
+
+## I still dont understand all of this since it uses a formula was so weird but looks awesome
+
+func get_orbit_source() -> Node3D:
+	return gravity_effect.strongest_source(ship.global_position)
+
+
+## The orbit the ship would follow if it stopped thrusting right now.
+func get_current_orbit() -> Orbit:
+	if _locked_orbit:
+		return _locked_orbit
+	var source := get_orbit_source()
+	return gravity_effect.orbit_around(source)
+
+
+func can_lock_orbit() -> bool:
+	var source := get_orbit_source()
+	if source == null:
+		return false
+	var orbit := gravity_effect.orbit_around(source)
+	var radius := GravityEffect.source_radius(source)
+	return orbit.is_stable(radius + min_lock_altitude) \
+			and orbit.apoapsis <= radius + max_lock_altitude
+
+
+func is_orbit_locked() -> bool:
+	return _locked_orbit != null
+
+
+## Freezes the current orbit's shape and rides it on rails, so it never
+## decays or drifts. Fails if the orbit isn't stable.
+func lock_orbit() -> bool:
+	if _locked_orbit or not can_lock_orbit():
+		return false
+	_locked_source = get_orbit_source()
+	_locked_orbit = gravity_effect.orbit_around(_locked_source)
+	_lock_time = 0.0
+	_orbit_time_scale = 1.0
+	gravity_effect.enabled = false
+
+	# Taken out of the physics simulation
+	ship.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	ship.freeze = true
+	ship.linear_velocity = Vector3.ZERO
+	ship.angular_velocity = Vector3.ZERO
+	orbit_lock_changed.emit(true)
+	return true
+
+
+## Back to free flight
+func unlock_orbit() -> void:
+	if not _locked_orbit:
+		return
+	ship.freeze = false
+	ship.linear_velocity = _locked_orbit.velocity_at(_lock_time)
+	ship.angular_velocity = Vector3.ZERO
+	_orbit_time_scale = 1.0
+	_locked_orbit = null
+	_locked_source = null
+	gravity_effect.enabled = true
+	orbit_lock_changed.emit(false)
+
+
+func _follow_locked_orbit(delta: float) -> void:
+	if not is_instance_valid(_locked_source):
+		unlock_orbit()
+		return
+	# Boosting just plays the orbit forward faster: same ellipse, more speed.
+	_lock_time += delta * _orbit_time_scale
+	var rel_position := _locked_orbit.position_at(_lock_time)
+	ship.global_position = _locked_source.global_position + rel_position
+	_align_to_orbit(rel_position, _locked_orbit.velocity_at(_lock_time), delta)
+
+
+
+## points away from the body it's orbiting.
+func _align_to_orbit(rel_position: Vector3, velocity: Vector3, delta: float) -> void:
+	var up := rel_position.normalized()
+	var forward := velocity.normalized()
+	if up.is_zero_approx() or forward.is_zero_approx() \
+			or forward.cross(up).is_zero_approx():
+		return
+	var target := Basis.looking_at(forward, up).get_rotation_quaternion()
+	var current := ship.global_basis.orthonormalized().get_rotation_quaternion()
+	var weight := 1.0 - exp(-orbit_align_speed * delta)
+	ship.global_basis = Basis(current.slerp(target, weight))
+
+
+## Space while locked actys as a turbio
+func _apply_orbit_boost(delta: float) -> void:
+
+	var boosting := Input.is_physical_key_pressed(KEY_SPACE) and fuel_component.fuel > 0.0
+	
+	var target_scale := orbit_speed_multiplier if boosting else 1.0
+	
+	_orbit_time_scale = move_toward(
+		_orbit_time_scale,
+		target_scale,
+		orbit_boost_response * maxf(orbit_speed_multiplier - 1.0, 1.0) * delta,
+	)
+	if boosting:
+		##maybe this should consume a different type of fuel???
+		fuel_component.add_fuel(-fuel_drain_rate * delta)
+
 
 
 func _apply_rotation(delta: float) -> void:

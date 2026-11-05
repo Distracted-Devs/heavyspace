@@ -15,6 +15,7 @@ script = ExtResource("1_4fnjr")
 rotation_correction_speed = 0.1
 rotation_correction_multiplier = 5.0
 rotation_correction_exponent = 0.6
+min_lock_altitude = 2.0
 mass_component = NodePath("Ship/MassComponent")
 fuel_component = NodePath("Ship/FuelComponent")
 gravity_effect = NodePath("Ship/GravityEffect")
@@ -28,6 +29,7 @@ target = NodePath("../Ship")
 
 [node name="Ship" type="RigidBody3D" parent="." unique_id=1578687592 groups=["collector"]]
 gravity_scale = 0.0
+linear_damp_mode = 1
 angular_damp = 1.0
 
 [node name="Body" type="CSGSphere3D" parent="Ship" unique_id=1217962877]
@@ -55,7 +57,7 @@ player = NodePath("../..")
 [node name="FuelComponent" type="Node" parent="Ship" unique_id=97571167 node_paths=PackedStringArray("player")]
 script = ExtResource("4_lvxji")
 player = NodePath("../..")
-starting_fuel = 500.0
+starting_fuel = 2000.0
 
 [node name="GravityEffect" type="Node" parent="Ship" unique_id=1703276924 node_paths=PackedStringArray("body")]
 script = ExtResource("5_p47bc")

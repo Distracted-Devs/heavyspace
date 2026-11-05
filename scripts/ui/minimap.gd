@@ -9,6 +9,9 @@ extends CanvasLayer
 ## - Size, zoom and line sizes all scale with the screen and the orbit, so it
 ##   works for any planet size or distance.
 ##
+## - Every node in the "points_of_interest" group is drawn as a blinking
+##   yellow dot.
+##
 ## Usage: instance orbit_minimap.tscn in a scene that has a Player.
 
 ## Leave empty to use the first Player found in the current scene.
@@ -45,20 +48,39 @@ extends CanvasLayer
 ## Dashed limit ring at this altitude above the focused planet. 0 = hidden.
 @export var limit_altitude: float = 0.0
 
+@export_group("Orbit lock")
+## The orbit preview zooms in by this much while locked (the panel stays the same size).
+@export var locked_zoom: float = 1.25
+## Seconds the bouncy zoom takes when locking / unlocking.
+@export var lock_tween_duration: float = 0.6
+## Green pulses per second while locked.
+@export var lock_pulse_hz: float = 0.8
+
+@export_group("Points of interest")
+## Nodes in this group are shown as blinking dots.
+@export var poi_group: StringName = &"points_of_interest"
+## Blinks per second.
+@export var poi_blink_speed: float = 1.5
+
 const HOLO_COLOUR := Color(0.3, 0.9, 1.0)
 const PLANET_FILL_COLOUR := Color(0.0, 0.05, 0.08)
 const TRAIL_COLOUR := Color(0.3, 0.9, 1.0)
 const PATH_SAFE_COLOUR := Color(0.3, 1.0, 0.5)
+## Bound path that didn't close a full turn within the prediction window.
+const PATH_OPEN_COLOUR := Color(0.3, 0.9, 1.0)
 const PATH_CRASH_COLOUR := Color(1.0, 0.25, 0.2)
 const PATH_ESCAPE_COLOUR := Color(1.0, 0.8, 0.2)
 const LIMIT_COLOUR := Color(1.0, 0.45, 0.2, 0.8)
 const SHIP_COLOUR := Color(1.0, 0.15, 0.15)
+const POI_COLOUR := Color(1.0, 0.85, 0.1)
 
 const LATITUDE_LINES := 8
 const LONGITUDE_LINES := 12
 const RING_SEGMENTS := 48
 ## Ship marker length as a fraction of the visible radius.
 const MARKER_SIZE := 0.12
+## Point of interest dot radius as a fraction of the visible radius.
+const POI_SIZE := 0.035
 const SCANLINE_SHADER := """
 shader_type canvas_item;
 uniform vec4 tint : source_color = vec4(0.3, 0.9, 1.0, 0.05);
@@ -75,6 +97,7 @@ void fragment() {
 var _panel: PanelContainer
 var _panel_style: StyleBoxFlat
 var _title: Label
+var _status: Label
 var _frame: Control
 var _label: Label
 
@@ -88,6 +111,10 @@ var _path_mesh: ImmediateMesh
 var _limit_mesh: ImmediateMesh
 var _planet_wire: ImmediateMesh # unit sphere, shared by every planet
 var _planet_nodes := { } # body Node3D -> map Node3D
+var _poi_nodes := { } # point of interest Node3D -> map MeshInstance3D
+var _poi_mesh: SphereMesh # shared by every point of interest
+var _poi_material: StandardMaterial3D # shared, so one alpha change blinks all
+var _poi_time := 0.0
 
 # State
 var _trail: PackedVector3Array = []
@@ -95,6 +122,18 @@ var _trail_timer := 0.0
 var _predicted: PackedVector3Array = []
 var _will_crash := false
 var _will_escape := false
+## True when the ship, left alone, would loop all the way around the focused
+## planet without hitting anything or escaping.
+var _in_orbit := false
+## 1 right after entering a stable orbit, fades to 0. Drives the border pulse.
+var _orbit_flash := 0.0
+## 0 = free flight, 1 = fully locked layout. Eased toward the lock state.
+var _lock_blend := 0.0
+## Tweened zoom on the orbit preview: 1 = normal, locked_zoom = locked.
+var _lock_zoom := 1.0
+var _lock_tween: Tween
+var _was_locked := false
+var _lock_pulse_time := 0.0
 var _plane_normal := Vector3.UP
 var _view_radius := -1.0
 
@@ -121,13 +160,25 @@ func _process(delta: float) -> void:
 	_update_orbit_plane(ship, focus, delta)
 	_update_zoom(ship, focus, delta)
 	_update_ship_marker(ship, focus)
+	_sync_points_of_interest(focus, delta)
 	_draw_line(_trail_mesh, _trail, TRAIL_COLOUR, focus, true, ship.global_position)
 	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
 	_draw_limit_ring(focus)
 	_update_camera(ship, focus)
-	_label.text = "SPD %5.1f | ALT %5.0f | MAS %.2f" % [
-		ship.linear_velocity.length(),
-		ship.global_position.distance_to(focus.global_position) - _body_radius(focus),
+	_update_lock_effect(delta)
+	_update_status(delta)
+	var radius := _body_radius(focus)
+	var orbit := player.get_current_orbit()
+	var pe := "---"
+	var ap := "---"
+	if orbit and orbit.is_bound():
+		pe = "%.0f" % (orbit.periapsis - radius)
+		ap = "%.0f" % (orbit.apoapsis - radius)
+	_label.text = "SPD %5.1f | ALT %5.0f\nPE %s | AP %s | MAS %.2f" % [
+		player.get_ship_velocity().length(),
+		ship.global_position.distance_to(focus.global_position) - radius,
+		pe,
+		ap,
 		player.mass_component.mass,
 	]
 
@@ -148,47 +199,26 @@ func _find_player() -> bool:
 
 
 func _get_bodies() -> Array[Node3D]:
-	var bodies: Array[Node3D] = []
-	for node in get_tree().get_nodes_in_group("bodies"):
-		if node is Node3D and node != player and node != player.ship:
-			bodies.append(node)
-	return bodies
+	return player.gravity_effect.get_sources()
 
 
-## Same as Player._get_mass().
+## Same mass the real gravity uses (the GravityComponent's).
 func _body_mass(body: Node3D) -> float:
-	if body is RigidBody3D:
-		return body.mass
-	return body.get_meta("mass", 1.0)
+	return GravityEffect.source_mass(body)
 
 
-## Acceleration from Player._apply_gravity(): force / ship mass.
 func _gravity_at(point: Vector3, bodies: Array[Node3D]) -> Vector3:
-	var accel := Vector3.ZERO
-	for body in bodies:
-		var _offset := body.global_position - point
-		var dist_sq := _offset.length_squared() + player.gravity_effect.softening * player \
-				.gravity_effect \
-				.softening
-		accel += _offset.normalized() * player.gravity_effect.gravitational_constant * _body_mass(
-			body
-		) / dist_sq
-	return accel
+	return player.gravity_effect.acceleration_at(point, bodies)
 
 
 func _strongest_body(bodies: Array[Node3D], point: Vector3) -> Node3D:
-	var best: Node3D = null
-	var best_pull := 0.0
-	for body in bodies:
-		var pull := _body_mass(body) / maxf(body.global_position.distance_squared_to(point), 0.0001)
-		if pull > best_pull:
-			best_pull = pull
-			best = body
-	return best
+	return player.gravity_effect.strongest_source(point, bodies)
 
 
 ## Surface radius: a "radius" property, a "radius" meta, or the first sphere collider.
 func _body_radius(body: Node3D) -> float:
+	if body is GravityBody:
+		return GravityEffect.source_radius(body)
 	if "radius" in body:
 		return body.radius
 	if body.has_meta("radius"):
@@ -237,14 +267,14 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 
 	var focus_pos := focus.global_position
 	var p := ship.global_position
-	var v := ship.linear_velocity
+	var v := player.get_orbit_velocity()
 	var damping := _linear_damp(ship)
 
 	# Choose a step size that integrates a full orbit accurately (at least a
 	# few hundred steps around it) while keeping the total step count bounded,
 	# so a slow wide orbit costs no more than a fast tight one.
 	var r0 := maxf(p.distance_to(focus_pos), 0.001)
-	var mu := player.gravity_effect.gravitational_constant * _body_mass(focus)
+	var mu := player.gravity_effect.mu_of(focus)
 	var step := path_step
 	if mu > 0.0:
 		var period := TAU * sqrt(r0 * r0 * r0 / mu)
@@ -253,6 +283,8 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 
 	var sweep := 0.0
 	var prev_rel := p - focus_pos
+	var was_in_orbit := _in_orbit
+	_in_orbit = false
 	for i in steps:
 		var damp_factor := maxf(0.0, 1.0 - damping * step)
 		v += _gravity_at(p, bodies) * step
@@ -275,11 +307,12 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 			_predicted.append(p)
 			break
 
-	# Positive orbital energy around the focused planet = it won't come back.
-	var r := maxf(ship.global_position.distance_to(focus.global_position), 0.001)
-	var energy := ship.linear_velocity.length_squared() * 0.5 \
-			- player.gravity_effect.gravitational_constant * _body_mass(focus) / r
-	_will_escape = energy >= 0.0
+	# Same test the orbit lock (Shift) uses, so "STABLE ORBIT" always means lockable.
+	var orbit := player.get_current_orbit()
+	_will_escape = orbit == null or not orbit.is_bound()
+	_in_orbit = player.is_orbit_locked() or (player.can_lock_orbit() and not _will_crash)
+	if _in_orbit and not was_in_orbit:
+		_orbit_flash = 1.0
 
 
 func _path_colour() -> Color:
@@ -287,7 +320,76 @@ func _path_colour() -> Color:
 		return PATH_CRASH_COLOUR
 	if _will_escape:
 		return PATH_ESCAPE_COLOUR
-	return PATH_SAFE_COLOUR
+	if _in_orbit:
+		return PATH_SAFE_COLOUR.lerp(Color.WHITE, _lock_pulse() * 0.6)
+	return PATH_OPEN_COLOUR
+
+
+func _update_status(delta: float) -> void:
+	var colour: Color
+	if player.is_orbit_locked():
+		_status.text = "ORBIT LOCKED"
+		colour = PATH_SAFE_COLOUR
+	elif _in_orbit:
+		_status.text = "STABLE [SHIFT] LOCK"
+		colour = PATH_SAFE_COLOUR
+	elif _will_crash:
+		_status.text = "IMPACT"
+		colour = PATH_CRASH_COLOUR
+	elif _will_escape:
+		_status.text = "ESCAPE"
+		colour = PATH_ESCAPE_COLOUR
+	else:
+		_status.text = "NO ORBIT"
+		colour = Color(HOLO_COLOUR, 0.6)
+	if player.is_orbit_locked():
+		colour = colour.lerp(Color.WHITE, _lock_pulse() * 0.5)
+	_status.add_theme_color_override("font_color", colour)
+
+	# Border glows green while in orbit, with a bright pulse when it's entered.
+	_orbit_flash = maxf(0.0, _orbit_flash - delta * 1.5)
+	var border := Color(HOLO_COLOUR, 0.6)
+	if _in_orbit:
+		border = Color(PATH_SAFE_COLOUR, 0.7)
+	# While locked, the border breathes between deep and bright green.
+	var pulse := _lock_pulse()
+	border = border.lerp(Color(PATH_SAFE_COLOUR.lightened(0.4), 1.0), pulse * 0.9)
+	border = border.lerp(Color(1.0, 1.0, 1.0, 1.0), _orbit_flash * 0.8)
+	_panel_style.border_color = border
+	_panel_style.bg_color = Color(0.0, 0.04, 0.07, 0.6).lerp(
+		Color(0.0, 0.12, 0.05, 0.7),
+		_lock_blend * (0.5 + 0.5 * pulse),
+	)
+	var width := 1 + int(round(_orbit_flash * 2.0))
+	_panel_style.set_border_width_all(width)
+
+
+## Bouncy zoom on the orbit preview when the lock changes, and the green pulse.
+func _update_lock_effect(delta: float) -> void:
+	var locked := player.is_orbit_locked()
+	if locked != _was_locked:
+		_was_locked = locked
+		_play_lock_tween(locked)
+	if _lock_blend > 0.0:
+		_lock_pulse_time = fmod(_lock_pulse_time + delta * lock_pulse_hz, 1.0)
+	else:
+		_lock_pulse_time = 0.0
+
+
+func _play_lock_tween(locked: bool) -> void:
+	if _lock_tween:
+		_lock_tween.kill()
+	_lock_tween = create_tween().set_parallel()
+	# TRANS_BACK overshoots a little and settles: a soft bounce.
+	_lock_tween.tween_property(self, "_lock_zoom", locked_zoom if locked else 1.0, lock_tween_duration) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_lock_tween.tween_property(self, "_lock_blend", 1.0 if locked else 0.0, lock_tween_duration * 0.5) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Smooth 0..1 pulse while locked (fades in/out with the lock), 0 otherwise.
+func _lock_pulse() -> float:
+	return (0.5 - 0.5 * cos(_lock_pulse_time * TAU)) * _lock_blend
 
 # --- UI ----------------------------------------------------------------------
 
@@ -318,7 +420,17 @@ func _build_ui() -> void:
 	_title.text = "// ORBIT SCAN"
 	_title.add_theme_font_override("font", mono)
 	_title.add_theme_color_override("font_color", Color(HOLO_COLOUR, 0.8))
-	vbox.add_child(_title)
+	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	_status = Label.new()
+	_status.add_theme_font_override("font", mono)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+	var header := HBoxContainer.new()
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(_title)
+	header.add_child(_status)
+	vbox.add_child(header)
 
 	# The 3D view with a scanline overlay on top.
 	_frame = Control.new()
@@ -369,6 +481,7 @@ func _update_layout() -> void:
 	_panel.offset_top = margin
 	_panel_style.set_content_margin_all(maxf(3.0, height * 0.03))
 	_title.add_theme_font_size_override("font_size", font_size - 1)
+	_status.add_theme_font_size_override("font_size", font_size - 1)
 	_label.add_theme_font_size_override("font_size", font_size)
 
 # --- 3D map ------------------------------------------------------------------
@@ -405,6 +518,19 @@ func _build_world() -> void:
 	_path_mesh = _add_line_instance(true)
 	_limit_mesh = _add_line_instance(false)
 	_planet_wire = _build_unit_wire_sphere()
+
+	# Point of interest dot: a unit sphere scaled with the zoom, drawn on top
+	# so it's never hidden behind a planet.
+	_poi_material = _unshaded(POI_COLOUR)
+	_poi_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_poi_material.no_depth_test = true
+	_poi_material.render_priority = 9
+	_poi_mesh = SphereMesh.new()
+	_poi_mesh.radius = 1.0
+	_poi_mesh.height = 2.0
+	_poi_mesh.radial_segments = 12
+	_poi_mesh.rings = 6
+	_poi_mesh.material = _poi_material
 
 
 func _add_line_instance(on_top: bool) -> ImmediateMesh:
@@ -514,6 +640,34 @@ func _sync_planets(bodies: Array[Node3D], focus: Node3D) -> void:
 		)
 
 
+## Keeps one blinking yellow dot per node in the poi_group.
+func _sync_points_of_interest(focus: Node3D, delta: float) -> void:
+	var points: Array[Node3D] = []
+	for node in get_tree().get_nodes_in_group(poi_group):
+		if node is Node3D:
+			points.append(node)
+
+	for point in _poi_nodes.keys():
+		if not is_instance_valid(point) or not points.has(point):
+			_poi_nodes[point].queue_free()
+			_poi_nodes.erase(point)
+
+	for point in points:
+		if not _poi_nodes.has(point):
+			var dot := MeshInstance3D.new()
+			dot.mesh = _poi_mesh
+			_root.add_child(dot)
+			_poi_nodes[point] = dot
+		var map_dot: MeshInstance3D = _poi_nodes[point]
+		map_dot.position = _to_map(point.global_position, focus)
+		map_dot.scale = Vector3.ONE * _view_radius / _lock_zoom * POI_SIZE
+
+	# Smooth blink between faint and fully lit.
+	_poi_time = fmod(_poi_time + delta * poi_blink_speed, 1.0)
+	var blink := 0.5 + 0.5 * cos(_poi_time * TAU)
+	_poi_material.albedo_color = Color(POI_COLOUR, lerpf(0.15, 1.0, blink))
+
+
 func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
 	return world_point - focus.global_position
 
@@ -521,7 +675,7 @@ func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
 ## The orbit plane's normal, smoothed so the camera doesn't jitter.
 func _update_orbit_plane(ship: RigidBody3D, focus: Node3D, delta: float) -> void:
 	var _offset := ship.global_position - focus.global_position
-	var normal := _offset.cross(ship.linear_velocity)
+	var normal := _offset.cross(player.get_orbit_velocity())
 	if normal.length_squared() < 0.0001:
 		return
 	_plane_normal = _plane_normal.lerp(normal.normalized(), clampf(delta * 2.0, 0.0, 1.0)).normalized()
@@ -547,7 +701,7 @@ func _update_ship_marker(ship: RigidBody3D, focus: Node3D) -> void:
 	_ship_marker.position = _to_map(ship.global_position, focus)
 	# The ship's real rotation (what the player is steering).
 	var ship_rotation := ship.global_basis.get_rotation_quaternion()
-	_ship_marker.basis = Basis(ship_rotation).scaled(Vector3.ONE * _view_radius * MARKER_SIZE)
+	_ship_marker.basis = Basis(ship_rotation).scaled(Vector3.ONE * _view_radius / _lock_zoom * MARKER_SIZE)
 
 
 func _draw_line(
@@ -605,7 +759,8 @@ func _update_camera(ship: RigidBody3D, focus: Node3D) -> void:
 		return
 	var tilt := deg_to_rad(camera_tilt_degrees)
 	var direction := (_plane_normal * cos(tilt) + out * sin(tilt)).normalized()
-	var distance := _view_radius / tan(deg_to_rad(_camera.fov) * 0.5)
+	# Moving the camera closer zooms the orbit preview without resizing the panel.
+	var distance := _view_radius / _lock_zoom / tan(deg_to_rad(_camera.fov) * 0.5)
 	_camera.near = distance * 0.01
 	_camera.far = distance * 4.0
 	_camera.position = direction * distance

@@ -6,6 +6,7 @@ extends Camera3D
 @export var max_distance := 40.0
 @export var zoom_step := 1.0
 @export var sensitivity := 0.005
+@export var key_rotate_speed := 2.0 # radians per second when using arrow keys
 
 var yaw := 0.0
 var pitch := -0.3 # negative = camera starts above, looking down
@@ -28,13 +29,30 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		yaw -= event.relative.x * sensitivity
-		pitch = clamp(pitch - event.relative.y * sensitivity, -PI / 2 + 0.01, PI / 2 - 0.01)
+		var new_pitch: float = pitch - event.relative.y * sensitivity
+
+		if absf(pitch) < PI / 2:
+			new_pitch = clamp(new_pitch, -PI / 2 + 0.01, PI / 2 - 0.01)
+		pitch = wrapf(new_pitch, -PI, PI)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not target:
 		return
+
+	_apply_key_rotation(delta)
 
 	var orbit := Basis.from_euler(Vector3(pitch, yaw, 0.0))
 	global_basis = orbit
 	global_position = target.global_position + orbit * Vector3(0, 0, distance)
+
+
+func _apply_key_rotation(delta: float) -> void:
+	var horizontal := int(Input.is_physical_key_pressed(KEY_LEFT)) - int(
+		Input.is_physical_key_pressed(KEY_RIGHT)
+	)
+	var vertical := int(Input.is_physical_key_pressed(KEY_UP)) - int(
+		Input.is_physical_key_pressed(KEY_DOWN)
+	)
+	yaw += horizontal * key_rotate_speed * delta
+	pitch = wrapf(pitch + vertical * key_rotate_speed * delta, -PI, PI)
