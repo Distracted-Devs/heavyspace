@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://ctu8cin2qq85k"]
+
+[ext_resource type="Script" path="res://scripts/missions/asteroid_mission.gd" id="1_asteroid"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asteroid"]
+albedo_color = Color(0.45, 0.4, 0.36, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_asteroid"]
+material = SubResource("StandardMaterial3D_asteroid")
+radius = 3.0
+height = 6.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_solid"]
+radius = 3.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_detect"]
+radius = 4.5
+
+[node name="AsteroidMission" type="Node3D" unique_id=1861415494 node_paths=PackedStringArray("solid_body", "detect_area")]
+script = ExtResource("1_asteroid")
+solid_body = NodePath("StaticBody3D")
+detect_area = NodePath("DetectArea")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1542912725]
+mesh = SubResource("SphereMesh_asteroid")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1438926773]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=399653075]
+shape = SubResource("SphereShape3D_solid")
+
+[node name="DetectArea" type="Area3D" parent="." unique_id=371042735]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectArea" unique_id=40489975]
+shape = SubResource("SphereShape3D_detect")

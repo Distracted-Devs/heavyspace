@@ -81,6 +81,21 @@ func get_current_orbit() -> Orbit:
 	return gravity_effect.orbit_around(source)
 
 
+## Ship velocity, including while riding a locked orbit (the ship is frozen then,
+## so linear_velocity is zero).
+func get_ship_velocity() -> Vector3:
+	if _locked_orbit:
+		return _locked_orbit.velocity_at(_lock_time) * _orbit_time_scale
+	return ship.linear_velocity
+
+
+## Velocity used to draw and predict the orbit (ignores the boost time scale).
+func get_orbit_velocity() -> Vector3:
+	if _locked_orbit:
+		return _locked_orbit.velocity_at(_lock_time)
+	return ship.linear_velocity
+
+
 func can_lock_orbit() -> bool:
 	var source := get_orbit_source()
 	if source == null:
