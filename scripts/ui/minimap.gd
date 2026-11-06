@@ -5,7 +5,8 @@ extends CanvasLayer
 ## - Reads the ship's rotation, velocity and mass from its RigidBody3D.
 ## - Predicts the path if the player touches nothing, using the same gravity as
 ##   Player._apply_gravity() plus the ship's linear damping.
-## - Every node in the "bodies" group is drawn as a wireframe planet.
+## - Every node in the "bodies" group is drawn with its own meshes and
+##   materials (wireframe if it has none), lit by the scene's sun.
 ## - Size, zoom and line sizes all scale with the screen and the orbit, so it
 ##   works for any planet size or distance.
 ##
@@ -111,6 +112,9 @@ var _path_mesh: ImmediateMesh
 var _limit_mesh: ImmediateMesh
 var _planet_wire: ImmediateMesh # unit sphere, shared by every planet
 var _planet_nodes := { } # body Node3D -> map Node3D
+var _sun: DirectionalLight3D
+var _scene_sun: DirectionalLight3D
+var _sun_search_timer := 0.0
 var _poi_nodes := { } # point of interest Node3D -> map MeshInstance3D
 var _poi_mesh: SphereMesh # shared by every point of interest
 var _poi_material: StandardMaterial3D # shared, so one alpha change blinks all
@@ -165,6 +169,7 @@ func _process(delta: float) -> void:
 	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
 	_draw_limit_ring(focus)
 	_update_camera(ship, focus)
+	_update_lighting()
 	_update_lock_effect(delta)
 	_update_status(delta)
 	var radius := _body_radius(focus)
@@ -518,6 +523,7 @@ func _build_world() -> void:
 	_path_mesh = _add_line_instance(true)
 	_limit_mesh = _add_line_instance(false)
 	_planet_wire = _build_unit_wire_sphere()
+	_build_lighting()
 
 	# Point of interest dot: a unit sphere scaled with the zoom, drawn on top
 	# so it's never hidden behind a planet.
@@ -609,7 +615,10 @@ func _add_ring(
 		mesh.surface_add_vertex(centre + (a * cos(a1) + b * sin(a1)) * radius)
 
 
-## Keeps one wireframe planet per body: a dark core hides the back lines.
+## Keeps one map planet per body. Each one is a copy of the body's own meshes
+## (MeshInstance3D or CSG)
+## and materials, so it looks like the real planet. Bodies with no visible
+## mesh fall back to the wireframe sphere.
 func _sync_planets(bodies: Array[Node3D], focus: Node3D) -> void:
 	for body in _planet_nodes.keys():
 		if not is_instance_valid(body) or not bodies.has(body):
@@ -617,27 +626,118 @@ func _sync_planets(bodies: Array[Node3D], focus: Node3D) -> void:
 			_planet_nodes.erase(body)
 
 	for body in bodies:
+		# A body whose CSG mesh wasn't baked yet: rebuild it once it is.
+		if _planet_nodes.has(body) and _planet_nodes[body].has_meta("retry"):
+			_planet_nodes[body].queue_free()
+			_planet_nodes.erase(body)
 		if not _planet_nodes.has(body):
-			var node := Node3D.new()
-			var core := SphereMesh.new()
-			core.radius = 0.98
-			core.height = 1.96
-			core.material = _unshaded(PLANET_FILL_COLOUR)
-			var core_instance := MeshInstance3D.new()
-			core_instance.mesh = core
-			node.add_child(core_instance)
-			var wire_instance := MeshInstance3D.new()
-			wire_instance.mesh = _planet_wire
-			wire_instance.material_override = _line_material(false)
-			node.add_child(wire_instance)
+			var node := _copy_body_visuals(body)
 			_root.add_child(node)
 			_planet_nodes[body] = node
 
 		var map_node: Node3D = _planet_nodes[body]
 		map_node.position = _to_map(body.global_position, focus)
-		map_node.basis = Basis(body.global_basis.get_rotation_quaternion()).scaled(
-			Vector3.ONE * _body_radius(body)
-		)
+		if map_node.has_meta("wireframe"):
+			map_node.basis = Basis(body.global_basis.get_rotation_quaternion()).scaled(
+				Vector3.ONE * _body_radius(body)
+			)
+		else:
+			# The copied meshes already carry the body's scale in their local
+			# transforms, so only the body's rotation is needed here.
+			map_node.basis = Basis(body.global_basis.get_rotation_quaternion())
+
+
+## A Node3D holding copies of the body's visible meshes, placed relative to
+## the body exactly as in the world (same size, offset and materials).
+func _copy_body_visuals(body: Node3D) -> Node3D:
+	var node := Node3D.new()
+	var body_rotation := Transform3D(Basis(body.global_basis.get_rotation_quaternion()), body.global_position)
+	var to_local := body_rotation.affine_inverse()
+	for child in body.find_children("*", "MeshInstance3D", true, false):
+		var source := child as MeshInstance3D
+		if source.mesh == null or not source.is_visible_in_tree():
+			continue
+		var copy := MeshInstance3D.new()
+		copy.mesh = source.mesh
+		copy.material_override = source.material_override
+		copy.material_overlay = source.material_overlay
+		for i in source.get_surface_override_material_count():
+			copy.set_surface_override_material(i, source.get_surface_override_material(i))
+		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		copy.transform = to_local * source.global_transform
+		node.add_child(copy)
+
+	# CSG shapes (e.g. a CSGSphere3D planet): copy the baked mesh. CSG bakes
+	# its mesh deferred, so right after load it may be empty: retry later.
+	for child in body.find_children("*", "CSGShape3D", true, false):
+		var csg := child as CSGShape3D
+		if not csg.is_root_shape() or not csg.is_visible_in_tree():
+			continue
+		var baked := csg.get_meshes()
+		if baked.size() < 2 or baked[1] == null:
+			node.set_meta("retry", true)
+			continue
+		var copy := MeshInstance3D.new()
+		copy.mesh = baked[1]
+		copy.material_override = csg.material_override
+		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		copy.transform = to_local * csg.global_transform * (baked[0] as Transform3D)
+		node.add_child(copy)
+
+	if node.get_child_count() == 0:
+		node.set_meta("wireframe", true)
+		var core := SphereMesh.new()
+		core.radius = 0.98
+		core.height = 1.96
+		core.material = _unshaded(PLANET_FILL_COLOUR)
+		var core_instance := MeshInstance3D.new()
+		core_instance.mesh = core
+		node.add_child(core_instance)
+		var wire_instance := MeshInstance3D.new()
+		wire_instance.mesh = _planet_wire
+		wire_instance.material_override = _line_material(false)
+		node.add_child(wire_instance)
+	return node
+
+
+## Lights the map like the game: copies the scene's sun direction (if any)
+## and adds some ambient light so the night side is still readable.
+func _build_lighting() -> void:
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_CLEAR_COLOR
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color.WHITE
+	environment.ambient_light_energy = 0.35
+	var world_environment := WorldEnvironment.new()
+	world_environment.environment = environment
+	_root.add_child(world_environment)
+
+	_sun = DirectionalLight3D.new()
+	_root.add_child(_sun)
+
+
+## Keeps the map's sun pointing the same way as the scene's sun. With no sun
+## in the scene, the map is lit from the camera.
+func _update_lighting() -> void:
+	if not is_instance_valid(_scene_sun):
+		_scene_sun = null
+		_sun_search_timer -= get_process_delta_time()
+		var scene := get_tree().current_scene
+		if scene and _sun_search_timer <= 0.0:
+			_sun_search_timer = 1.0
+			for node in scene.find_children("*", "DirectionalLight3D", true, false):
+				# Skip the map's own light (this node may be inside the scene).
+				if is_ancestor_of(node):
+					continue
+				if (node as DirectionalLight3D).is_visible_in_tree():
+					_scene_sun = node
+					break
+	if _scene_sun:
+		_sun.basis = _scene_sun.global_basis.orthonormalized()
+		_sun.light_color = _scene_sun.light_color
+		_sun.light_energy = _scene_sun.light_energy
+	else:
+		_sun.basis = _camera.basis
 
 
 ## Keeps one blinking yellow dot per node in the poi_group.

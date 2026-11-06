@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Sci-fi holographic thrust/fuel readout, styled to match OrbitMinimap.
 ##
-## Reads the ship's fuel (Player.fuel / max_fuel) and draws a segmented
+## Reads the ship's fuel (FuelComponent.fuel / max_fuel) and draws a segmented
 ## holo bar with a scanline overlay. Turns red and flashes below low_fuel_ratio.
 ##
 ## Usage: instance hud.tscn in a scene that has a Player.
@@ -140,8 +140,7 @@ func _update() -> void:
 	var colour := LOW_COLOUR if warning else HOLO_COLOUR
 	if warning:
 		colour.a = 0.5 + 0.5 * absf(sin(_flash * TAU * flash_hz))
-	# TODO: this is fudging, should be a max fuel or communicate this differently
-	var fraction := fuel / 150.0
+	var fraction := clampf(player.fuel_component.get_fraction(), 0.0, 1.0)
 
 	_title.add_theme_color_override("font_color", Color(colour, 0.8) if not warning else colour)
 	_label.add_theme_color_override("font_color", colour)

@@ -1,6 +1,10 @@
 [gd_scene format=3 uid="uid://ctu8cin2qq85k"]
 
-[ext_resource type="Script" path="res://scripts/missions/asteroid_mission.gd" id="1_asteroid"]
+[ext_resource type="Script" uid="uid://cbl2p4vkmnbbj" path="res://scripts/missions/asteroid_mission.gd" id="1_asteroid"]
+[ext_resource type="Texture2D" uid="uid://dprhu2jh874s2" path="res://resources/textures/mars.jpg" id="2_yyjyp"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c4xsx"]
+albedo_texture = ExtResource("2_yyjyp")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asteroid"]
 albedo_color = Color(0.45, 0.4, 0.36, 1)
@@ -22,6 +26,7 @@ solid_body = NodePath("StaticBody3D")
 detect_area = NodePath("DetectArea")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1542912725]
+material_override = SubResource("StandardMaterial3D_c4xsx")
 mesh = SubResource("SphereMesh_asteroid")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1438926773]

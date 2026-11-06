@@ -172,7 +172,7 @@ func _align_to_orbit(rel_position: Vector3, velocity: Vector3, delta: float) -> 
 ## Space while locked actys as a turbio
 func _apply_orbit_boost(delta: float) -> void:
 
-	var boosting := Input.is_physical_key_pressed(KEY_SPACE) and fuel_component.fuel > 0.0
+	var boosting := _is_thrust_pressed() and fuel_component.fuel > 0.0
 	
 	var target_scale := orbit_speed_multiplier if boosting else 1.0
 	
@@ -188,13 +188,23 @@ func _apply_orbit_boost(delta: float) -> void:
 
 
 func _apply_rotation(delta: float) -> void:
-	var roll := int(Input.is_physical_key_pressed(KEY_A)) - int(
-		Input.is_physical_key_pressed(KEY_D)
+	# Keyboard: A/D roll, W/S pitch, Q/E yaw.
+	# Controller: left stick pitch/yaw (analog), LB/RB roll.
+	var roll := clampf(
+		int(Input.is_physical_key_pressed(KEY_A)) - int(Input.is_physical_key_pressed(KEY_D))
+		+ Input.get_axis(&"ship_roll_right", &"ship_roll_left"),
+		-1.0, 1.0,
 	)
-	var pitch := int(Input.is_physical_key_pressed(KEY_S)) - int(
-		Input.is_physical_key_pressed(KEY_W)
+	var pitch := clampf(
+		int(Input.is_physical_key_pressed(KEY_S)) - int(Input.is_physical_key_pressed(KEY_W))
+		+ Input.get_axis(&"ship_pitch_down", &"ship_pitch_up"),
+		-1.0, 1.0,
 	)
-	var yaw := int(Input.is_physical_key_pressed(KEY_Q)) - int(Input.is_physical_key_pressed(KEY_E))
+	var yaw := clampf(
+		int(Input.is_physical_key_pressed(KEY_Q)) - int(Input.is_physical_key_pressed(KEY_E))
+		+ Input.get_axis(&"ship_yaw_right", &"ship_yaw_left"),
+		-1.0, 1.0,
+	)
 
 	var torque := ship.global_basis.z * roll * roll_impulse \
 			+ ship.global_basis.x * pitch * pitch_impulse \
@@ -205,9 +215,14 @@ func _apply_rotation(delta: float) -> void:
 
 
 func _apply_thrust(delta: float) -> void:
-	if Input.is_physical_key_pressed(KEY_SPACE) and fuel_component.fuel > 0.0:
+	if _is_thrust_pressed() and fuel_component.fuel > 0.0:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)
 		fuel_component.add_fuel(-fuel_drain_rate * delta)
+
+
+## Space on keyboard, RT or A on a controller.
+func _is_thrust_pressed() -> bool:
+	return Input.is_physical_key_pressed(KEY_SPACE) or Input.is_action_pressed(&"ship_thrust")
 
 
 func _get_mass(node: Node) -> float:

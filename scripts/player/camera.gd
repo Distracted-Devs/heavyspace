@@ -6,7 +6,7 @@ extends Camera3D
 @export var max_distance := 40.0
 @export var zoom_step := 1.0
 @export var sensitivity := 0.005
-@export var key_rotate_speed := 2.0 # radians per second when using arrow keys
+@export var key_rotate_speed := 2.0 # radians per second (arrow keys / right stick)
 
 var yaw := 0.0
 var pitch := -0.3 # negative = camera starts above, looking down
@@ -48,11 +48,16 @@ func _physics_process(delta: float) -> void:
 
 
 func _apply_key_rotation(delta: float) -> void:
-	var horizontal := int(Input.is_physical_key_pressed(KEY_LEFT)) - int(
-		Input.is_physical_key_pressed(KEY_RIGHT)
+	# Arrow keys or the controller's right stick (analog).
+	var horizontal := clampf(
+		int(Input.is_physical_key_pressed(KEY_LEFT)) - int(Input.is_physical_key_pressed(KEY_RIGHT))
+		+ Input.get_axis(&"camera_right", &"camera_left"),
+		-1.0, 1.0,
 	)
-	var vertical := int(Input.is_physical_key_pressed(KEY_UP)) - int(
-		Input.is_physical_key_pressed(KEY_DOWN)
+	var vertical := clampf(
+		int(Input.is_physical_key_pressed(KEY_UP)) - int(Input.is_physical_key_pressed(KEY_DOWN))
+		+ Input.get_axis(&"camera_down", &"camera_up"),
+		-1.0, 1.0,
 	)
 	yaw += horizontal * key_rotate_speed * delta
 	pitch = wrapf(pitch + vertical * key_rotate_speed * delta, -PI, PI)
