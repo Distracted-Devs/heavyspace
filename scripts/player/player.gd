@@ -239,9 +239,11 @@ func _apply_rotation_correction(_delta: float) -> void:
 		return
 
 	var closest_gravity_body_radius: float = closest_gravity_body.diameter / 2.0
+	# Clamp: on contact the ship sinks slightly into the surface, and a negative
+	# base raised to a fractional power is NaN, which corrupts the ship's physics.
+	var altitude := maxf(closest_gravity_body_distance - closest_gravity_body_radius, 0.0)
 	var rotation_correction_coefficient: float = rotation_correction_multiplier / (
-		((closest_gravity_body_distance - closest_gravity_body_radius) + 1)
-		** rotation_correction_exponent
+		(altitude + 1.0) ** rotation_correction_exponent
 	)
 	var rotation_correction: float = rotation_correction_coefficient * rotation_correction_speed
 	# print(closest_gravity_body_distance - closest_gravity_body_radius)
@@ -259,6 +261,12 @@ func _apply_rotation_correction(_delta: float) -> void:
 	# Tangent: velocity minus its radial part, falling back to the current nose.
 	var nose: Vector3 = -ship.global_basis.z
 	var forward = nose - up * nose.dot(up)
+	if forward.is_zero_approx():
+		# Nose points straight at / away from the body: use the ship's up instead.
+		var ship_up: Vector3 = ship.global_basis.y
+		forward = ship_up - up * ship_up.dot(up)
+		if forward.is_zero_approx():
+			return
 
 	# -Z along the tangent, +Y away from the body.
 	var target_basis := Basis.looking_at(forward, up)
@@ -269,6 +277,9 @@ func _apply_rotation_correction(_delta: float) -> void:
 			* current_basis.get_rotation_quaternion().inverse()
 	if error.w < 0.0:
 		error = -error # take the short way around
+	var angle := error.get_angle()
+	if angle < 0.0001:
+		return # already aligned (get_axis() is NaN for an identity rotation)
 
 	# Drive the body with angular velocity (safe with the physics engine).
-	ship.angular_velocity += error.get_axis() * error.get_angle() * rotation_correction
+	ship.angular_velocity += error.get_axis() * angle * rotation_correction

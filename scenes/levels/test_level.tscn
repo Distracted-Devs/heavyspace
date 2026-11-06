@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://4euwmx6ycuaw" path="res://scenes/collectables/FuelPickup.tscn" id="4_48ne7"]
 [ext_resource type="PackedScene" uid="uid://ba3ejxia8n30j" path="res://scenes/ui/minimap.tscn" id="4_v45ci"]
 [ext_resource type="PackedScene" uid="uid://huxn3knhtqvl" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" uid="uid://ctu8cin2qq85k" path="res://scenes/missions/asteroid_mission.tscn" id="8_7x1jh"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gcb5y"]
 panorama = ExtResource("1_v45ci")
@@ -51,5 +52,8 @@ mass = 8000000.0
 [node name="OrbitMinimap" parent="." unique_id=1179555850 instance=ExtResource("4_v45ci")]
 
 [node name="HUD" parent="." unique_id=795487204 instance=ExtResource("5_hud")]
+
+[node name="AsteroidMission" parent="." unique_id=1861415494 instance=ExtResource("8_7x1jh")]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 1559.0624)
 
 [editable path="BigAssPlanet"]

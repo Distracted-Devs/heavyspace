@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://1ekwvc25enie"]
 
+[ext_resource type="Script" path="res://scripts/missions/goal_mission.gd" id="1_goal"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pyw6q"]
 albedo_color = Color(0.2, 1, 0.45, 1)
 emission_enabled = true
@@ -13,7 +15,9 @@ height = 4.0
 [sub_resource type="SphereShape3D" id="SphereShape3D_goal"]
 radius = 2.0
 
-[node name="GoalMission" type="Node3D" unique_id=1890983931]
+[node name="GoalMission" type="Node3D" unique_id=1890983931 node_paths=PackedStringArray("goal_area")]
+script = ExtResource("1_goal")
+goal_area = NodePath("Area3D")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2070104549]
 material_override = SubResource("StandardMaterial3D_pyw6q")
