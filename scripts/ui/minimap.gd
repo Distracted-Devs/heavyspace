@@ -18,6 +18,41 @@ extends CanvasLayer
 @export_range(0.0, 0.2) var margin_ratio: float = 0.015
 @export var min_size_px: float = 160.0
 
+@export_group("Forecast label")
+## The IMPACT / ESCAPE / STABLE label. Style it (font, outline...) in
+## minimap.tscn; its colour and blink are driven from here via modulate.
+@export var forecast_label: Label
+## Blinks per second.
+@export var forecast_blink_speed: float = 1.2
+## Lowest opacity of the blink.
+@export_range(0.0, 1.0) var forecast_blink_min_alpha: float = 0.25
+## Scale the font size with the map. Turn off to use the size set on the label.
+@export var auto_font_size: bool = true
+## Font size as a fraction of the map size (when auto_font_size is on).
+@export var font_size_ratio: float = 0.075
+
+@export_group("Grid")
+## Number of cells along each side of the map.
+@export_range(1, 64) var grid_cells: int = 12:
+	set(value):
+		grid_cells = value
+		_apply_grid()
+## Grid line colour; its alpha is the line transparency.
+@export var grid_line_colour: Color = Color(0.3, 0.9, 1.0, 0.18):
+	set(value):
+		grid_line_colour = value
+		_apply_grid()
+## Background behind the grid; its alpha is the background transparency.
+@export var grid_fill_colour: Color = Color(0.0, 0.04, 0.07, 0.35):
+	set(value):
+		grid_fill_colour = value
+		_apply_grid()
+## Line thickness in pixels.
+@export_range(0.5, 8.0, 0.5) var grid_line_width: float = 1.0:
+	set(value):
+		grid_line_width = value
+		_apply_grid()
+
 @export_group("View")
 ## Camera angle away from straight down on the orbit plane, in degrees.
 @export var camera_tilt_degrees: float = 35.0
@@ -53,24 +88,19 @@ const POI_SIZE := 0.05
 const LOCKED_ORBIT_SEGMENTS := 128
 const LOCK_PULSE_HZ := 0.8
 
-## Transparent 4x4 grid with a faint frame: the "tech hack" background.
+## Transparent 12x12 grid of thin lines: the "tech hack" background.
 const GRID_SHADER := """
 shader_type canvas_item;
 uniform vec4 line_colour : source_color = vec4(0.3, 0.9, 1.0, 0.18);
 uniform vec4 fill_colour : source_color = vec4(0.0, 0.04, 0.07, 0.35);
-uniform float cells = 4.0;
+uniform float cells = 12.0;
 uniform float line_px = 1.0;
 uniform vec2 size = vec2(256.0); // panel size in pixels, set from the script
 void fragment() {
 	vec2 g = fract(UV * cells);
 	vec2 d = min(g, 1.0 - g) * size / cells; // pixels to nearest grid line
 	float line = 1.0 - step(line_px, min(d.x, d.y));
-	// Small crosses at every grid intersection read brighter.
-	float node = (1.0 - step(line_px * 6.0, max(d.x, d.y))) * line;
-	vec4 c = fill_colour;
-	c = mix(c, line_colour, line);
-	c = mix(c, vec4(line_colour.rgb, line_colour.a * 3.0), node);
-	COLOR = c;
+	COLOR = mix(fill_colour, line_colour, line);
 }
 """
 
@@ -226,11 +256,8 @@ func _update_status() -> void:
 	var forecast := _forecast()
 	var colour := _forecast_colour(forecast)
 	_status.text = forecast
-	_status.add_theme_color_override("font_color", colour)
-	var border := Color(colour if forecast != "" else HOLO_COLOUR, 0.6)
-	if player.is_orbit_locked():
-		border = border.lerp(Color(STABLE_COLOUR.lightened(0.4), 1.0), _lock_pulse() * 0.9)
-	_panel_style.border_color = border
+	var blink := 0.5 + 0.5 * cos(_time * forecast_blink_speed * TAU)
+	_status.modulate = Color(colour, lerpf(forecast_blink_min_alpha, 1.0, blink))
 
 # --- UI --------------------------------------------------------------------------
 
@@ -257,6 +284,7 @@ func _build_ui() -> void:
 	_grid_material = ShaderMaterial.new()
 	_grid_material.shader = shader
 	grid.material = _grid_material
+	_apply_grid()
 	panel.add_child(grid)
 
 	var container := SubViewportContainer.new()
@@ -273,15 +301,25 @@ func _build_ui() -> void:
 	_root = Node3D.new()
 	viewport.add_child(_root)
 
-	var mono := SystemFont.new()
-	mono.font_names = PackedStringArray(["Menlo", "Consolas", "DejaVu Sans Mono", "monospace"])
-	_status = Label.new()
-	_status.add_theme_font_override("font", mono)
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	# The forecast label lives in minimap.tscn so it can be styled there; it's
+	# moved inside the map panel and stretched over it at runtime.
+	_status = forecast_label if forecast_label else Label.new()
+	if _status.get_parent():
+		_status.reparent(panel, false)
+	else:
+		panel.add_child(_status)
 	_status.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(_status)
+
+
+## Pushes the Grid settings into the grid shader.
+func _apply_grid() -> void:
+	if _grid_material == null:
+		return
+	_grid_material.set_shader_parameter("cells", float(grid_cells))
+	_grid_material.set_shader_parameter("line_colour", grid_line_colour)
+	_grid_material.set_shader_parameter("fill_colour", grid_fill_colour)
+	_grid_material.set_shader_parameter("line_px", grid_line_width)
 
 
 func _update_layout() -> void:
@@ -294,7 +332,12 @@ func _update_layout() -> void:
 	_frame.offset_bottom = margin + size
 	_grid_material.set_shader_parameter("size", Vector2(size, size))
 	_status.offset_bottom = -size * 0.03
-	_status.add_theme_font_size_override("font_size", maxi(10, int(size * 0.075)))
+	if auto_font_size:
+		var font_size := maxi(10, int(size * font_size_ratio))
+		if _status.label_settings:
+			_status.label_settings.font_size = font_size
+		else:
+			_status.add_theme_font_size_override("font_size", font_size)
 
 # --- 3D map ----------------------------------------------------------------------
 
