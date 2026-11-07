@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://huxn3knhtqvl" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" uid="uid://ctu8cin2qq85k" path="res://scenes/missions/asteroid_mission.tscn" id="8_7x1jh"]
 [ext_resource type="PackedScene" uid="uid://dbdwhryww2fc8" path="res://scenes/ui/pixelate_overlay.tscn" id="9_pix"]
+[ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="10_sun"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gcb5y"]
 panorama = ExtResource("1_v45ci")
@@ -21,6 +22,12 @@ background_mode = 2
 sky = SubResource("Sky_mijp5")
 ambient_light_source = 2
 ambient_light_color = Color(0.15, 0.15, 0.2, 1)
+tonemap_mode = 3
+tonemap_white = 6.0
+glow_enabled = true
+glow_intensity = 1.2
+glow_bloom = 0.15
+glow_hdr_threshold = 1.2
 
 [node name="SpaceshipTest" type="Node3D" unique_id=1596929932 node_paths=PackedStringArray("planet")]
 script = ExtResource("1_48ne7")
@@ -32,8 +39,12 @@ spawn_radius_from_planet = 1100.0
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1291008803]
 environment = SubResource("Environment_space")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1848086833]
-transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 0, 0)
+[node name="Sun" parent="." unique_id=488505938 instance=ExtResource("10_sun")]
+process_priority = 1000
+transform = Transform3D(0.9999995, 0, 0, 0, 1, 0, 0, 0, 0.9999995, -7726.3936, 4489.034, -4489.034)
+direction = Vector3(-0.77263933, 0.44890344, -0.44890344)
+distance = 10000.0
+light_intensity = 6.0
 
 [node name="PlayerShip" parent="." unique_id=1639055760 instance=ExtResource("2_48ne7")]
 transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0, 2287.6565)

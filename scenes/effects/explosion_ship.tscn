@@ -1,0 +1,183 @@
+[gd_scene format=3]
+
+; ============================================================
+;  MUZZLE  - the initial blinding flash (~0.4s)
+; ============================================================
+
+[sub_resource type="Gradient" id="Gradient_muzzle"]
+offsets = PackedFloat32Array(0, 0.25, 0.6, 1)
+colors = PackedColorArray(6, 6, 5, 1, 5, 3.5, 1.5, 1, 3, 1.2, 0.3, 0.6, 1, 0.2, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_muzzle"]
+gradient = SubResource("Gradient_muzzle")
+
+[sub_resource type="Curve" id="Curve_muzzle_scale"]
+_data = [Vector2(0, 0.3), 0.0, 6.0, 0, 0, Vector2(0.2, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -1.5, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_muzzle_scale"]
+curve = SubResource("Curve_muzzle_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_muzzle"]
+emission_shape = 1
+emission_sphere_radius = 0.3
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 0.5
+initial_velocity_max = 2.0
+gravity = Vector3(0, 0, 0)
+damping_min = 2.0
+damping_max = 4.0
+scale_min = 2.5
+scale_max = 4.0
+scale_curve = SubResource("CurveTexture_muzzle_scale")
+color_ramp = SubResource("GradientTexture_muzzle")
+
+[sub_resource type="StandardMaterial3D" id="Material_muzzle"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="Mesh_muzzle"]
+material = SubResource("Material_muzzle")
+radius = 0.5
+height = 1.0
+radial_segments = 12
+rings = 6
+
+; ============================================================
+;  EXPLOSION  - main fireball burst (~1.8s)
+; ============================================================
+
+[sub_resource type="Gradient" id="Gradient_explosion"]
+offsets = PackedFloat32Array(0, 0.12, 0.35, 0.6, 0.85, 1)
+colors = PackedColorArray(4, 3.5, 2, 1, 3.5, 1.8, 0.4, 1, 2, 0.6, 0.1, 1, 0.6, 0.12, 0.03, 0.9, 0.12, 0.1, 0.1, 0.5, 0.05, 0.05, 0.05, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_explosion"]
+gradient = SubResource("Gradient_explosion")
+
+[sub_resource type="Curve" id="Curve_explosion_scale"]
+_data = [Vector2(0, 0.2), 0.0, 4.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.15), -1.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_explosion_scale"]
+curve = SubResource("Curve_explosion_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_explosion"]
+emission_shape = 1
+emission_sphere_radius = 0.5
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 6.0
+initial_velocity_max = 16.0
+gravity = Vector3(0, 0, 0)
+damping_min = 6.0
+damping_max = 12.0
+scale_min = 0.8
+scale_max = 2.2
+scale_curve = SubResource("CurveTexture_explosion_scale")
+color_ramp = SubResource("GradientTexture_explosion")
+turbulence_enabled = true
+turbulence_noise_strength = 2.0
+turbulence_noise_scale = 4.0
+turbulence_influence_min = 0.05
+turbulence_influence_max = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_explosion"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="Mesh_explosion"]
+material = SubResource("Material_explosion")
+radius = 0.5
+height = 1.0
+radial_segments = 12
+rings = 6
+
+; ============================================================
+;  SMOKE  - lingering debris smoke after the crash (~5s)
+; ============================================================
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.08, 0.2, 0.6, 1)
+colors = PackedColorArray(0.4, 0.15, 0.05, 0, 0.25, 0.12, 0.08, 0.75, 0.16, 0.15, 0.15, 0.7, 0.1, 0.1, 0.1, 0.45, 0.08, 0.08, 0.08, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_smoke"]
+gradient = SubResource("Gradient_smoke")
+
+[sub_resource type="Curve" id="Curve_smoke_scale"]
+_data = [Vector2(0, 0.3), 0.0, 2.0, 0, 0, Vector2(0.4, 0.85), 0.5, 0.5, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_smoke_scale"]
+curve = SubResource("Curve_smoke_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_smoke"]
+emission_shape = 1
+emission_sphere_radius = 1.5
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 1.0
+initial_velocity_max = 4.0
+gravity = Vector3(0, 0, 0)
+damping_min = 0.5
+damping_max = 1.5
+scale_min = 2.0
+scale_max = 4.0
+scale_curve = SubResource("CurveTexture_smoke_scale")
+color_ramp = SubResource("GradientTexture_smoke")
+turbulence_enabled = true
+turbulence_noise_strength = 1.5
+turbulence_noise_scale = 6.0
+turbulence_influence_min = 0.05
+turbulence_influence_max = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_smoke"]
+transparency = 1
+vertex_color_use_as_albedo = true
+roughness = 1.0
+
+[sub_resource type="SphereMesh" id="Mesh_smoke"]
+material = SubResource("Material_smoke")
+radius = 0.5
+height = 1.0
+radial_segments = 10
+rings = 5
+
+; ============================================================
+;  NODES
+; ============================================================
+
+[node name="ExplosionShip" type="Node3D"]
+
+[node name="Muzzle" type="GPUParticles3D" parent="."]
+amount = 14
+lifetime = 0.4
+one_shot = true
+explosiveness = 1.0
+randomness = 0.3
+visibility_aabb = AABB(-6, -6, -6, 12, 12, 12)
+process_material = SubResource("ProcessMaterial_muzzle")
+draw_pass_1 = SubResource("Mesh_muzzle")
+
+[node name="Explosion" type="GPUParticles3D" parent="."]
+amount = 140
+lifetime = 1.8
+one_shot = true
+explosiveness = 0.92
+randomness = 0.5
+visibility_aabb = AABB(-15, -15, -15, 30, 30, 30)
+process_material = SubResource("ProcessMaterial_explosion")
+draw_pass_1 = SubResource("Mesh_explosion")
+
+[node name="Smoke" type="GPUParticles3D" parent="."]
+amount = 70
+lifetime = 5.0
+one_shot = true
+explosiveness = 0.75
+randomness = 0.4
+visibility_aabb = AABB(-20, -20, -20, 40, 40, 40)
+process_material = SubResource("ProcessMaterial_smoke")
+draw_pass_1 = SubResource("Mesh_smoke")

@@ -1,145 +1,100 @@
 class_name OrbitMinimap
 extends CanvasLayer
-## Sci-fi wireframe 3D minimap for the Player (scripts/player/player_controller.gd).
+## Minimal holographic orbit map, top-right corner.
 ##
-## - Reads the ship's rotation, velocity and mass from its RigidBody3D.
-## - Predicts the path if the player touches nothing, using the same gravity as
-##   Player._apply_gravity() plus the ship's linear damping.
-## - Every node in the "bodies" group is drawn with its own meshes and
-##   materials (wireframe if it has none), lit by the scene's sun.
-## - Size, zoom and line sizes all scale with the screen and the orbit, so it
-##   works for any planet size or distance.
+## Shows only: the planets, points of interest, the ship and its predicted
+## path, the locked orbit (while locked) and a one-word forecast of what
+## happens if nothing changes: IMPACT, ESCAPE or STABLE.
 ##
-## - Every node in the "points_of_interest" group is drawn as a blinking
-##   yellow dot.
-##
-## Usage: instance orbit_minimap.tscn in a scene that has a Player.
+## Usage: instance minimap.tscn in a scene that has a Player.
 
 ## Leave empty to use the first Player found in the current scene.
 @export var player: Player
 
 @export_group("Layout")
-## Height of the 3D view as a fraction of the screen height.
-@export_range(0.05, 1.0) var size_ratio: float = 0.25
-## Width / height of the 3D view.
-@export var aspect: float = 1.15
+## Size of the (square) map as a fraction of the screen height.
+@export_range(0.05, 1.0) var size_ratio: float = 0.34
 ## Distance from the top-right corner as a fraction of the screen height.
 @export_range(0.0, 0.2) var margin_ratio: float = 0.015
-@export var min_height_px: float = 120.0
+@export var min_size_px: float = 160.0
 
 @export_group("View")
 ## Camera angle away from straight down on the orbit plane, in degrees.
 @export var camera_tilt_degrees: float = 35.0
 ## Extra room around the orbit (1 = tight fit).
-@export var fit_padding: float = 1.3
+@export var fit_padding: float = 1.15
 ## How quickly the map zooms to fit the orbit.
 @export var zoom_smoothing: float = 2.0
 
 @export_group("Prediction")
-## How far ahead the path is simulated, in seconds. The simulation stops as
-## soon as the path has gone a full turn around the focused planet (or the
-## ship crashes), so closed orbits are always drawn in full.
+## Longest the path is simulated, in seconds. Stops early after one full turn
+## around the planet or on impact.
 @export var path_seconds: float = 3600.0
 @export var path_step: float = 1.0 / 30.0
-## Never use more integration steps than this, no matter how long the orbit.
 @export var path_max_steps: int = 2400
-## How much of the flown path is kept, in seconds.
-@export var trail_seconds: float = 60.0
-@export var trail_interval: float = 0.1
-## Dashed limit ring at this altitude above the focused planet. 0 = hidden.
-@export var limit_altitude: float = 0.0
-
-@export_group("Orbit lock")
-## The orbit preview zooms in by this much while locked (the panel stays the same size).
-@export var locked_zoom: float = 1.25
-## Seconds the bouncy zoom takes when locking / unlocking.
-@export var lock_tween_duration: float = 0.6
-## Green pulses per second while locked.
-@export var lock_pulse_hz: float = 0.8
 
 @export_group("Points of interest")
-## Nodes in this group are shown as blinking dots.
 @export var poi_group: StringName = &"points_of_interest"
 ## Blinks per second.
 @export var poi_blink_speed: float = 1.5
 
 const HOLO_COLOUR := Color(0.3, 0.9, 1.0)
-const PLANET_FILL_COLOUR := Color(0.0, 0.05, 0.08)
-const TRAIL_COLOUR := Color(0.3, 0.9, 1.0)
-const PATH_SAFE_COLOUR := Color(0.3, 1.0, 0.5)
-## Bound path that didn't close a full turn within the prediction window.
-const PATH_OPEN_COLOUR := Color(0.3, 0.9, 1.0)
-const PATH_CRASH_COLOUR := Color(1.0, 0.25, 0.2)
-const PATH_ESCAPE_COLOUR := Color(1.0, 0.8, 0.2)
-const LIMIT_COLOUR := Color(1.0, 0.45, 0.2, 0.8)
+const PATH_COLOUR := Color(0.3, 0.9, 1.0)
+const STABLE_COLOUR := Color(0.3, 1.0, 0.5)
+const IMPACT_COLOUR := Color(1.0, 0.25, 0.2)
+const ESCAPE_COLOUR := Color(1.0, 0.8, 0.2)
 const SHIP_COLOUR := Color(1.0, 0.15, 0.15)
 const POI_COLOUR := Color(1.0, 0.85, 0.1)
 
-const LATITUDE_LINES := 8
-const LONGITUDE_LINES := 12
-const RING_SEGMENTS := 48
 ## Ship marker length as a fraction of the visible radius.
-const MARKER_SIZE := 0.12
+const MARKER_SIZE := 0.16
 ## Point of interest dot radius as a fraction of the visible radius.
-const POI_SIZE := 0.035
-const SCANLINE_SHADER := """
+const POI_SIZE := 0.05
+const LOCKED_ORBIT_SEGMENTS := 128
+const LOCK_PULSE_HZ := 0.8
+
+## Transparent 4x4 grid with a faint frame: the "tech hack" background.
+const GRID_SHADER := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.3, 0.9, 1.0, 0.05);
+uniform vec4 line_colour : source_color = vec4(0.3, 0.9, 1.0, 0.18);
+uniform vec4 fill_colour : source_color = vec4(0.0, 0.04, 0.07, 0.35);
+uniform float cells = 4.0;
+uniform float line_px = 1.0;
+uniform vec2 size = vec2(256.0); // panel size in pixels, set from the script
 void fragment() {
-	float line = step(0.5, fract(FRAGCOORD.y / 3.0));
-	// Slightly brighter towards the edges, like a hologram frame.
-	vec2 edge = abs(UV - 0.5) * 2.0;
-	float vignette = smoothstep(0.6, 1.0, max(edge.x, edge.y));
-	COLOR = vec4(tint.rgb, tint.a * line + vignette * 0.08);
+	vec2 g = fract(UV * cells);
+	vec2 d = min(g, 1.0 - g) * size / cells; // pixels to nearest grid line
+	float line = 1.0 - step(line_px, min(d.x, d.y));
+	// Small crosses at every grid intersection read brighter.
+	float node = (1.0 - step(line_px * 6.0, max(d.x, d.y))) * line;
+	vec4 c = fill_colour;
+	c = mix(c, line_colour, line);
+	c = mix(c, vec4(line_colour.rgb, line_colour.a * 3.0), node);
+	COLOR = c;
 }
 """
 
-# UI
-var _panel: PanelContainer
 var _panel_style: StyleBoxFlat
-var _title: Label
-var _status: Label
 var _frame: Control
-var _label: Label
+var _status: Label
+var _grid_material: ShaderMaterial
 
-# 3D map. Everything is placed relative to the focused planet, so the map
-# works no matter how far from the world origin things are.
 var _root: Node3D
 var _camera: Camera3D
-var _ship_marker: Node3D
-var _trail_mesh: ImmediateMesh
-var _path_mesh: ImmediateMesh
-var _limit_mesh: ImmediateMesh
-var _planet_wire: ImmediateMesh # unit sphere, shared by every planet
-var _planet_nodes := { } # body Node3D -> map Node3D
 var _sun: DirectionalLight3D
-var _scene_sun: DirectionalLight3D
-var _sun_search_timer := 0.0
-var _poi_nodes := { } # point of interest Node3D -> map MeshInstance3D
-var _poi_mesh: SphereMesh # shared by every point of interest
-var _poi_material: StandardMaterial3D # shared, so one alpha change blinks all
-var _poi_time := 0.0
+var _ship_marker: Node3D
+var _path_mesh: ImmediateMesh
+var _planet_nodes := { } # body -> map Node3D
+var _poi_nodes := { } # point of interest -> map MeshInstance3D
+var _poi_mesh: SphereMesh
+var _poi_material: StandardMaterial3D
 
-# State
-var _trail: PackedVector3Array = []
-var _trail_timer := 0.0
 var _predicted: PackedVector3Array = []
 var _will_crash := false
 var _will_escape := false
-## True when the ship, left alone, would loop all the way around the focused
-## planet without hitting anything or escaping.
-var _in_orbit := false
-## 1 right after entering a stable orbit, fades to 0. Drives the border pulse.
-var _orbit_flash := 0.0
-## 0 = free flight, 1 = fully locked layout. Eased toward the lock state.
-var _lock_blend := 0.0
-## Tweened zoom on the orbit preview: 1 = normal, locked_zoom = locked.
-var _lock_zoom := 1.0
-var _lock_tween: Tween
-var _was_locked := false
-var _lock_pulse_time := 0.0
 var _plane_normal := Vector3.UP
 var _view_radius := -1.0
+var _time := 0.0
 
 
 func _ready() -> void:
@@ -153,39 +108,21 @@ func _process(delta: float) -> void:
 	if not _find_player():
 		return
 	var ship := player.ship
-	var bodies := _get_bodies()
-	var focus := _strongest_body(bodies, ship.global_position)
+	var bodies := player.gravity_effect.get_sources()
+	var focus := player.gravity_effect.strongest_source(ship.global_position, bodies)
 	if focus == null:
 		return
+	_time += delta
 
-	_record_trail(ship.global_position, delta)
 	_predict(ship, bodies, focus)
 	_sync_planets(bodies, focus)
+	_sync_points_of_interest(focus)
 	_update_orbit_plane(ship, focus, delta)
 	_update_zoom(ship, focus, delta)
 	_update_ship_marker(ship, focus)
-	_sync_points_of_interest(focus, delta)
-	_draw_line(_trail_mesh, _trail, TRAIL_COLOUR, focus, true, ship.global_position)
-	_draw_line(_path_mesh, _predicted, _path_colour(), focus, false)
-	_draw_limit_ring(focus)
+	_draw_path(focus)
 	_update_camera(ship, focus)
-	_update_lighting()
-	_update_lock_effect(delta)
-	_update_status(delta)
-	var radius := _body_radius(focus)
-	var orbit := player.get_current_orbit()
-	var pe := "---"
-	var ap := "---"
-	if orbit and orbit.is_bound():
-		pe = "%.0f" % (orbit.periapsis - radius)
-		ap = "%.0f" % (orbit.apoapsis - radius)
-	_label.text = "SPD %5.1f | ALT %5.0f\nPE %s | AP %s | MAS %.2f" % [
-		player.get_ship_velocity().length(),
-		ship.global_position.distance_to(focus.global_position) - radius,
-		pe,
-		ap,
-		player.mass_component.mass,
-	]
+	_update_status()
 
 
 func _find_player() -> bool:
@@ -200,109 +137,53 @@ func _find_player() -> bool:
 			return is_instance_valid(player.ship)
 	return false
 
-# --- Gravity (mirrors Player) --------------------------------------------
 
-
-func _get_bodies() -> Array[Node3D]:
-	return player.gravity_effect.get_sources()
-
-
-## Same mass the real gravity uses (the GravityComponent's).
-func _body_mass(body: Node3D) -> float:
-	return GravityEffect.source_mass(body)
-
-
-func _gravity_at(point: Vector3, bodies: Array[Node3D]) -> Vector3:
-	return player.gravity_effect.acceleration_at(point, bodies)
-
-
-func _strongest_body(bodies: Array[Node3D], point: Vector3) -> Node3D:
-	return player.gravity_effect.strongest_source(point, bodies)
-
-
-## Surface radius: a "radius" property, a "radius" meta, or the first sphere collider.
 func _body_radius(body: Node3D) -> float:
-	if body is GravityBody:
-		return GravityEffect.source_radius(body)
-	if "radius" in body:
-		return body.radius
-	if body.has_meta("radius"):
-		return body.get_meta("radius")
-	for child in body.find_children("*", "CollisionShape3D", true, false):
-		var shape := (child as CollisionShape3D).shape
-		if shape is SphereShape3D:
-			var shape_scale := (child as Node3D).global_basis.get_scale()
-			return (shape as SphereShape3D).radius * maxf(
-				shape_scale.x,
-				maxf(shape_scale.y, shape_scale.z),
-			)
-	return 1.0
+	return GravityEffect.source_radius(body)
+
+# --- Prediction ----------------------------------------------------------------
 
 
-func _linear_damp(ship: RigidBody3D) -> float:
-	var damp := ship.linear_damp
-	if ship.linear_damp_mode == RigidBody3D.DAMP_MODE_COMBINE:
-		damp += ProjectSettings.get_setting("physics/3d/default_linear_damp", 0.0)
-	return damp
-
-# --- Prediction & trail ------------------------------------------------------
-
-
-func _record_trail(ship_position: Vector3, delta: float) -> void:
-	_trail_timer += delta
-	if _trail_timer < trail_interval:
-		return
-	_trail_timer = 0.0
-	_trail.append(ship_position)
-	var max_points := int(trail_seconds / trail_interval)
-	if _trail.size() > max_points:
-		_trail = _trail.slice(_trail.size() - max_points)
-
-
-## Simulates the ship forward with no input: gravity + damping only.
-## Runs until the path has swept a full turn around the focused planet, the
-## ship crashes, or path_seconds have elapsed, whichever comes first.
+## Simulates the ship with no input (gravity + damping) until one full turn
+## around the focused planet, an impact, or path_seconds.
 func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 	_predicted.clear()
 	_predicted.append(ship.global_position)
 	_will_crash = false
+	var orbit := player.get_current_orbit()
+	_will_escape = orbit == null or not orbit.is_bound()
+	if player.is_orbit_locked():
+		return # the locked orbit is drawn instead
+
 	var radii: Array[float] = []
 	for body in bodies:
 		radii.append(_body_radius(body))
-
 	var focus_pos := focus.global_position
 	var p := ship.global_position
 	var v := player.get_orbit_velocity()
-	var damping := _linear_damp(ship)
+	var damping := ship.linear_damp
+	if ship.linear_damp_mode == RigidBody3D.DAMP_MODE_COMBINE:
+		damping += ProjectSettings.get_setting("physics/3d/default_linear_damp", 0.0)
 
-	# Choose a step size that integrates a full orbit accurately (at least a
-	# few hundred steps around it) while keeping the total step count bounded,
-	# so a slow wide orbit costs no more than a fast tight one.
-	var r0 := maxf(p.distance_to(focus_pos), 0.001)
-	var mu := player.gravity_effect.mu_of(focus)
 	var step := path_step
+	var mu := player.gravity_effect.mu_of(focus)
 	if mu > 0.0:
-		var period := TAU * sqrt(r0 * r0 * r0 / mu)
-		step = maxf(step, period / path_max_steps)
+		var r0 := maxf(p.distance_to(focus_pos), 0.001)
+		step = maxf(step, TAU * sqrt(r0 * r0 * r0 / mu) / path_max_steps)
 	var steps := mini(int(path_seconds / step), path_max_steps)
 
 	var sweep := 0.0
 	var prev_rel := p - focus_pos
-	var was_in_orbit := _in_orbit
-	_in_orbit = false
 	for i in steps:
-		var damp_factor := maxf(0.0, 1.0 - damping * step)
-		v += _gravity_at(p, bodies) * step
-		v *= damp_factor
+		v += player.gravity_effect.acceleration_at(p, bodies) * step
+		v *= maxf(0.0, 1.0 - damping * step)
 		p += v * step
 		for j in bodies.size():
 			if p.distance_to(bodies[j].global_position) < radii[j]:
 				_will_crash = true
 		if _will_crash:
 			_predicted.append(p)
-			break
-
-		# Accumulate the angle swept around the focused planet.
+			return
 		var rel := p - focus_pos
 		sweep += atan2(prev_rel.cross(rel).length(), prev_rel.dot(rel))
 		prev_rel = rel
@@ -310,186 +191,112 @@ func _predict(ship: RigidBody3D, bodies: Array[Node3D], focus: Node3D) -> void:
 			_predicted.append(p)
 		if sweep >= TAU:
 			_predicted.append(p)
-			break
-
-	# Same test the orbit lock (Shift) uses, so "STABLE ORBIT" always means lockable.
-	var orbit := player.get_current_orbit()
-	_will_escape = orbit == null or not orbit.is_bound()
-	_in_orbit = player.is_orbit_locked() or (player.can_lock_orbit() and not _will_crash)
-	if _in_orbit and not was_in_orbit:
-		_orbit_flash = 1.0
+			return
 
 
-func _path_colour() -> Color:
+## The forecast if nothing changes, or "" when none of the three applies.
+func _forecast() -> String:
+	if player.is_orbit_locked():
+		return "STABLE"
 	if _will_crash:
-		return PATH_CRASH_COLOUR
+		return "IMPACT"
 	if _will_escape:
-		return PATH_ESCAPE_COLOUR
-	if _in_orbit:
-		return PATH_SAFE_COLOUR.lerp(Color.WHITE, _lock_pulse() * 0.6)
-	return PATH_OPEN_COLOUR
+		return "ESCAPE"
+	if player.can_lock_orbit():
+		return "STABLE"
+	return ""
 
 
-func _update_status(delta: float) -> void:
-	var colour: Color
-	if player.is_orbit_locked():
-		_status.text = "ORBIT LOCKED"
-		colour = PATH_SAFE_COLOUR
-	elif _in_orbit:
-		_status.text = "STABLE [SHIFT] LOCK"
-		colour = PATH_SAFE_COLOUR
-	elif _will_crash:
-		_status.text = "IMPACT"
-		colour = PATH_CRASH_COLOUR
-	elif _will_escape:
-		_status.text = "ESCAPE"
-		colour = PATH_ESCAPE_COLOUR
-	else:
-		_status.text = "NO ORBIT"
-		colour = Color(HOLO_COLOUR, 0.6)
-	if player.is_orbit_locked():
-		colour = colour.lerp(Color.WHITE, _lock_pulse() * 0.5)
-	_status.add_theme_color_override("font_color", colour)
-
-	# Border glows green while in orbit, with a bright pulse when it's entered.
-	_orbit_flash = maxf(0.0, _orbit_flash - delta * 1.5)
-	var border := Color(HOLO_COLOUR, 0.6)
-	if _in_orbit:
-		border = Color(PATH_SAFE_COLOUR, 0.7)
-	# While locked, the border breathes between deep and bright green.
-	var pulse := _lock_pulse()
-	border = border.lerp(Color(PATH_SAFE_COLOUR.lightened(0.4), 1.0), pulse * 0.9)
-	border = border.lerp(Color(1.0, 1.0, 1.0, 1.0), _orbit_flash * 0.8)
-	_panel_style.border_color = border
-	_panel_style.bg_color = Color(0.0, 0.04, 0.07, 0.6).lerp(
-		Color(0.0, 0.12, 0.05, 0.7),
-		_lock_blend * (0.5 + 0.5 * pulse),
-	)
-	var width := 1 + int(round(_orbit_flash * 2.0))
-	_panel_style.set_border_width_all(width)
+func _forecast_colour(forecast: String) -> Color:
+	match forecast:
+		"IMPACT":
+			return IMPACT_COLOUR
+		"ESCAPE":
+			return ESCAPE_COLOUR
+		"STABLE":
+			return STABLE_COLOUR
+	return PATH_COLOUR
 
 
-## Bouncy zoom on the orbit preview when the lock changes, and the green pulse.
-func _update_lock_effect(delta: float) -> void:
-	var locked := player.is_orbit_locked()
-	if locked != _was_locked:
-		_was_locked = locked
-		_play_lock_tween(locked)
-	if _lock_blend > 0.0:
-		_lock_pulse_time = fmod(_lock_pulse_time + delta * lock_pulse_hz, 1.0)
-	else:
-		_lock_pulse_time = 0.0
-
-
-func _play_lock_tween(locked: bool) -> void:
-	if _lock_tween:
-		_lock_tween.kill()
-	_lock_tween = create_tween().set_parallel()
-	# TRANS_BACK overshoots a little and settles: a soft bounce.
-	_lock_tween.tween_property(self, "_lock_zoom", locked_zoom if locked else 1.0, lock_tween_duration) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_lock_tween.tween_property(self, "_lock_blend", 1.0 if locked else 0.0, lock_tween_duration * 0.5) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-
-## Smooth 0..1 pulse while locked (fades in/out with the lock), 0 otherwise.
 func _lock_pulse() -> float:
-	return (0.5 - 0.5 * cos(_lock_pulse_time * TAU)) * _lock_blend
+	return 0.5 - 0.5 * cos(_time * LOCK_PULSE_HZ * TAU)
 
-# --- UI ----------------------------------------------------------------------
+
+func _update_status() -> void:
+	var forecast := _forecast()
+	var colour := _forecast_colour(forecast)
+	_status.text = forecast
+	_status.add_theme_color_override("font_color", colour)
+	var border := Color(colour if forecast != "" else HOLO_COLOUR, 0.6)
+	if player.is_orbit_locked():
+		border = border.lerp(Color(STABLE_COLOUR.lightened(0.4), 1.0), _lock_pulse() * 0.9)
+	_panel_style.border_color = border
+
+# --- UI --------------------------------------------------------------------------
 
 
 func _build_ui() -> void:
-	var mono := SystemFont.new()
-	mono.font_names = PackedStringArray(["Menlo", "Consolas", "DejaVu Sans Mono", "monospace"])
-
-	_panel = PanelContainer.new()
+	var panel := Panel.new()
 	_panel_style = StyleBoxFlat.new()
-	_panel_style.bg_color = Color(0.0, 0.04, 0.07, 0.6)
+	_panel_style.bg_color = Color.TRANSPARENT
 	_panel_style.border_color = Color(HOLO_COLOUR, 0.6)
 	_panel_style.set_border_width_all(1)
-	_panel.add_theme_stylebox_override("panel", _panel_style)
-	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Top-right corner.
-	_panel.anchor_left = 1.0
-	_panel.anchor_right = 1.0
-	_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	add_child(_panel)
+	panel.add_theme_stylebox_override("panel", _panel_style)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	add_child(panel)
+	_frame = panel
 
-	var vbox := VBoxContainer.new()
-	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_theme_constant_override("separation", 2)
-	_panel.add_child(vbox)
-
-	_title = Label.new()
-	_title.text = "// ORBIT SCAN"
-	_title.add_theme_font_override("font", mono)
-	_title.add_theme_color_override("font_color", Color(HOLO_COLOUR, 0.8))
-	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	_status = Label.new()
-	_status.add_theme_font_override("font", mono)
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-
-	var header := HBoxContainer.new()
-	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(_title)
-	header.add_child(_status)
-	vbox.add_child(header)
-
-	# The 3D view with a scanline overlay on top.
-	_frame = Control.new()
-	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(_frame)
+	var grid := ColorRect.new()
+	grid.set_anchors_preset(Control.PRESET_FULL_RECT)
+	grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shader := Shader.new()
+	shader.code = GRID_SHADER
+	_grid_material = ShaderMaterial.new()
+	_grid_material.shader = shader
+	grid.material = _grid_material
+	panel.add_child(grid)
 
 	var container := SubViewportContainer.new()
 	container.stretch = true
 	container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_frame.add_child(container)
+	panel.add_child(container)
 
 	var viewport := SubViewport.new()
 	viewport.own_world_3d = true
 	viewport.transparent_bg = true
 	viewport.msaa_3d = Viewport.MSAA_4X
 	container.add_child(viewport)
-
 	_root = Node3D.new()
 	viewport.add_child(_root)
 
-	var scanlines := ColorRect.new()
-	scanlines.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scanlines.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var shader := Shader.new()
-	shader.code = SCANLINE_SHADER
-	var shader_material := ShaderMaterial.new()
-	shader_material.shader = shader
-	scanlines.material = shader_material
-	_frame.add_child(scanlines)
-
-	_label = Label.new()
-	_label.add_theme_font_override("font", mono)
-	_label.add_theme_color_override("font_color", HOLO_COLOUR)
-	vbox.add_child(_label)
+	var mono := SystemFont.new()
+	mono.font_names = PackedStringArray(["Menlo", "Consolas", "DejaVu Sans Mono", "monospace"])
+	_status = Label.new()
+	_status.add_theme_font_override("font", mono)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_status.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(_status)
 
 
-## Sizes everything from the screen height so it looks the same at any resolution.
 func _update_layout() -> void:
 	var screen_height := get_viewport().get_visible_rect().size.y
-	var height := maxf(min_height_px, screen_height * size_ratio)
+	var size := maxf(min_size_px, screen_height * size_ratio)
 	var margin := screen_height * margin_ratio
-	var font_size := maxi(9, int(height * 0.065))
+	_frame.offset_left = -margin - size
+	_frame.offset_right = -margin
+	_frame.offset_top = margin
+	_frame.offset_bottom = margin + size
+	_grid_material.set_shader_parameter("size", Vector2(size, size))
+	_status.offset_bottom = -size * 0.03
+	_status.add_theme_font_size_override("font_size", maxi(10, int(size * 0.075)))
 
-	_frame.custom_minimum_size = Vector2(height * aspect, height)
-	_panel.offset_left = -margin
-	_panel.offset_right = -margin
-	_panel.offset_top = margin
-	_panel_style.set_content_margin_all(maxf(3.0, height * 0.03))
-	_title.add_theme_font_size_override("font_size", font_size - 1)
-	_status.add_theme_font_size_override("font_size", font_size - 1)
-	_label.add_theme_font_size_override("font_size", font_size)
-
-# --- 3D map ------------------------------------------------------------------
+# --- 3D map ----------------------------------------------------------------------
 
 
 func _build_world() -> void:
@@ -498,8 +305,18 @@ func _build_world() -> void:
 	_root.add_child(_camera)
 	_camera.current = true
 
-	# Ship marker: a red cone pointing along -Z, the ship's nose. Unit length,
-	# scaled with the zoom so it always reads the same size.
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_CLEAR_COLOR
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color.WHITE
+	environment.ambient_light_energy = 0.5
+	var world_environment := WorldEnvironment.new()
+	world_environment.environment = environment
+	_root.add_child(world_environment)
+	_sun = DirectionalLight3D.new()
+	_camera.add_child(_sun) # lit from the viewer
+
+	# Ship: a red cone along -Z (the nose), always drawn on top.
 	_ship_marker = Node3D.new()
 	_root.add_child(_ship_marker)
 	var cone := CylinderMesh.new()
@@ -509,7 +326,6 @@ func _build_world() -> void:
 	cone.radial_segments = 4
 	cone.rings = 1
 	var marker_material := _unshaded(SHIP_COLOUR)
-	# Always drawn on top so the ship is never lost behind a planet.
 	marker_material.no_depth_test = true
 	marker_material.render_priority = 10
 	cone.material = marker_material
@@ -518,15 +334,18 @@ func _build_world() -> void:
 	cone_instance.rotation_degrees.x = -90.0
 	_ship_marker.add_child(cone_instance)
 
-	_trail_mesh = _add_line_instance(false)
-	# The prediction is drawn on top so a crash into a planet is always visible.
-	_path_mesh = _add_line_instance(true)
-	_limit_mesh = _add_line_instance(false)
-	_planet_wire = _build_unit_wire_sphere()
-	_build_lighting()
+	# Path / locked orbit, drawn on top so an impact is always visible.
+	_path_mesh = ImmediateMesh.new()
+	var path_instance := MeshInstance3D.new()
+	path_instance.mesh = _path_mesh
+	var line_material := _unshaded(Color.WHITE)
+	line_material.vertex_color_use_as_albedo = true
+	line_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	line_material.no_depth_test = true
+	path_instance.material_override = line_material
+	_root.add_child(path_instance)
 
-	# Point of interest dot: a unit sphere scaled with the zoom, drawn on top
-	# so it's never hidden behind a planet.
+	# Points of interest: blinking yellow dots, on top.
 	_poi_material = _unshaded(POI_COLOUR)
 	_poi_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_poi_material.no_depth_test = true
@@ -539,23 +358,6 @@ func _build_world() -> void:
 	_poi_mesh.material = _poi_material
 
 
-func _add_line_instance(on_top: bool) -> ImmediateMesh:
-	var mesh := ImmediateMesh.new()
-	var instance := MeshInstance3D.new()
-	instance.mesh = mesh
-	instance.material_override = _line_material(on_top)
-	_root.add_child(instance)
-	return mesh
-
-
-func _line_material(on_top: bool) -> StandardMaterial3D:
-	var material := _unshaded(Color.WHITE)
-	material.vertex_color_use_as_albedo = true
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.no_depth_test = on_top
-	return material
-
-
 func _unshaded(colour: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -563,96 +365,40 @@ func _unshaded(colour: Color) -> StandardMaterial3D:
 	return material
 
 
-## Latitude / longitude rings on a sphere of radius 1.
-func _build_unit_wire_sphere() -> ImmediateMesh:
-	var wire := ImmediateMesh.new()
-	wire.surface_begin(Mesh.PRIMITIVE_LINES)
-	for i in range(1, LATITUDE_LINES):
-		var lat := PI * i / LATITUDE_LINES - PI / 2.0
-		var alpha := 0.9 if i * 2 == LATITUDE_LINES else 0.45 # brighter equator
-		_add_ring(
-			wire,
-			Vector3(0, sin(lat), 0),
-			cos(lat),
-			Vector3.RIGHT,
-			Vector3.BACK,
-			Color(HOLO_COLOUR, alpha),
-			false,
-		)
-	for i in LONGITUDE_LINES:
-		var lon := PI * i / LONGITUDE_LINES
-		_add_ring(
-			wire,
-			Vector3.ZERO,
-			1.0,
-			Vector3(cos(lon), 0, sin(lon)),
-			Vector3.UP,
-			Color(HOLO_COLOUR, 0.45),
-			false,
-		)
-	wire.surface_end()
-	return wire
+func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
+	return world_point - focus.global_position
 
 
-## Adds a ring as PRIMITIVE_LINES segments. dashed = every other segment.
-func _add_ring(
-	mesh: ImmediateMesh,
-	centre: Vector3,
-	radius: float,
-	a: Vector3,
-	b: Vector3,
-	colour: Color,
-	dashed: bool,
-) -> void:
-	var segments := RING_SEGMENTS * (2 if dashed else 1)
-	var step := 2 if dashed else 1
-	for i in range(0, segments, step):
-		var a0 := TAU * i / segments
-		var a1 := TAU * (i + 1) / segments
-		mesh.surface_set_color(colour)
-		mesh.surface_add_vertex(centre + (a * cos(a0) + b * sin(a0)) * radius)
-		mesh.surface_set_color(colour)
-		mesh.surface_add_vertex(centre + (a * cos(a1) + b * sin(a1)) * radius)
-
-
-## Keeps one map planet per body. Each one is a copy of the body's own meshes
-## (MeshInstance3D or CSG)
-## and materials, so it looks like the real planet. Bodies with no visible
-## mesh fall back to the wireframe sphere.
+## One map copy per gravity body, using the body's own meshes (or a plain
+## sphere when it has none).
 func _sync_planets(bodies: Array[Node3D], focus: Node3D) -> void:
 	for body in _planet_nodes.keys():
 		if not is_instance_valid(body) or not bodies.has(body):
 			_planet_nodes[body].queue_free()
 			_planet_nodes.erase(body)
-
 	for body in bodies:
-		# A body whose CSG mesh wasn't baked yet: rebuild it once it is.
+		# CSG meshes bake deferred: rebuild once they exist.
 		if _planet_nodes.has(body) and _planet_nodes[body].has_meta("retry"):
 			_planet_nodes[body].queue_free()
 			_planet_nodes.erase(body)
 		if not _planet_nodes.has(body):
-			var node := _copy_body_visuals(body)
-			_root.add_child(node)
-			_planet_nodes[body] = node
-
-		var map_node: Node3D = _planet_nodes[body]
-		map_node.position = _to_map(body.global_position, focus)
-		if map_node.has_meta("wireframe"):
-			map_node.basis = Basis(body.global_basis.get_rotation_quaternion()).scaled(
-				Vector3.ONE * _body_radius(body)
-			)
-		else:
-			# The copied meshes already carry the body's scale in their local
-			# transforms, so only the body's rotation is needed here.
-			map_node.basis = Basis(body.global_basis.get_rotation_quaternion())
+			var copy := _copy_body_visuals(body)
+			_root.add_child(copy)
+			_planet_nodes[body] = copy
+		var node: Node3D = _planet_nodes[body]
+		node.position = _to_map(body.global_position, focus)
+		var rotation_basis := Basis(body.global_basis.get_rotation_quaternion())
+		if node.has_meta("fallback"):
+			rotation_basis = rotation_basis.scaled(Vector3.ONE * _body_radius(body))
+		node.basis = rotation_basis
 
 
-## A Node3D holding copies of the body's visible meshes, placed relative to
-## the body exactly as in the world (same size, offset and materials).
 func _copy_body_visuals(body: Node3D) -> Node3D:
 	var node := Node3D.new()
-	var body_rotation := Transform3D(Basis(body.global_basis.get_rotation_quaternion()), body.global_position)
-	var to_local := body_rotation.affine_inverse()
+	var to_local := Transform3D(
+		Basis(body.global_basis.get_rotation_quaternion()),
+		body.global_position,
+	).affine_inverse()
 	for child in body.find_children("*", "MeshInstance3D", true, false):
 		var source := child as MeshInstance3D
 		if source.mesh == null or not source.is_visible_in_tree():
@@ -660,15 +406,11 @@ func _copy_body_visuals(body: Node3D) -> Node3D:
 		var copy := MeshInstance3D.new()
 		copy.mesh = source.mesh
 		copy.material_override = source.material_override
-		copy.material_overlay = source.material_overlay
 		for i in source.get_surface_override_material_count():
 			copy.set_surface_override_material(i, source.get_surface_override_material(i))
 		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		copy.transform = to_local * source.global_transform
 		node.add_child(copy)
-
-	# CSG shapes (e.g. a CSGSphere3D planet): copy the baked mesh. CSG bakes
-	# its mesh deferred, so right after load it may be empty: retry later.
 	for child in body.find_children("*", "CSGShape3D", true, false):
 		var csg := child as CSGShape3D
 		if not csg.is_root_shape() or not csg.is_visible_in_tree():
@@ -683,75 +425,26 @@ func _copy_body_visuals(body: Node3D) -> Node3D:
 		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		copy.transform = to_local * csg.global_transform * (baked[0] as Transform3D)
 		node.add_child(copy)
-
 	if node.get_child_count() == 0:
-		node.set_meta("wireframe", true)
-		var core := SphereMesh.new()
-		core.radius = 0.98
-		core.height = 1.96
-		core.material = _unshaded(PLANET_FILL_COLOUR)
-		var core_instance := MeshInstance3D.new()
-		core_instance.mesh = core
-		node.add_child(core_instance)
-		var wire_instance := MeshInstance3D.new()
-		wire_instance.mesh = _planet_wire
-		wire_instance.material_override = _line_material(false)
-		node.add_child(wire_instance)
+		node.set_meta("fallback", true)
+		var sphere := SphereMesh.new()
+		sphere.material = _unshaded(Color(0.0, 0.1, 0.14))
+		var instance := MeshInstance3D.new()
+		instance.mesh = sphere
+		instance.scale = Vector3.ONE * 2.0 # SphereMesh radius is 0.5
+		node.add_child(instance)
 	return node
 
 
-## Lights the map like the game: copies the scene's sun direction (if any)
-## and adds some ambient light so the night side is still readable.
-func _build_lighting() -> void:
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_CLEAR_COLOR
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color.WHITE
-	environment.ambient_light_energy = 0.35
-	var world_environment := WorldEnvironment.new()
-	world_environment.environment = environment
-	_root.add_child(world_environment)
-
-	_sun = DirectionalLight3D.new()
-	_root.add_child(_sun)
-
-
-## Keeps the map's sun pointing the same way as the scene's sun. With no sun
-## in the scene, the map is lit from the camera.
-func _update_lighting() -> void:
-	if not is_instance_valid(_scene_sun):
-		_scene_sun = null
-		_sun_search_timer -= get_process_delta_time()
-		var scene := get_tree().current_scene
-		if scene and _sun_search_timer <= 0.0:
-			_sun_search_timer = 1.0
-			for node in scene.find_children("*", "DirectionalLight3D", true, false):
-				# Skip the map's own light (this node may be inside the scene).
-				if is_ancestor_of(node):
-					continue
-				if (node as DirectionalLight3D).is_visible_in_tree():
-					_scene_sun = node
-					break
-	if _scene_sun:
-		_sun.basis = _scene_sun.global_basis.orthonormalized()
-		_sun.light_color = _scene_sun.light_color
-		_sun.light_energy = _scene_sun.light_energy
-	else:
-		_sun.basis = _camera.basis
-
-
-## Keeps one blinking yellow dot per node in the poi_group.
-func _sync_points_of_interest(focus: Node3D, delta: float) -> void:
+func _sync_points_of_interest(focus: Node3D) -> void:
 	var points: Array[Node3D] = []
 	for node in get_tree().get_nodes_in_group(poi_group):
 		if node is Node3D:
 			points.append(node)
-
 	for point in _poi_nodes.keys():
 		if not is_instance_valid(point) or not points.has(point):
 			_poi_nodes[point].queue_free()
 			_poi_nodes.erase(point)
-
 	for point in points:
 		if not _poi_nodes.has(point):
 			var dot := MeshInstance3D.new()
@@ -760,34 +453,25 @@ func _sync_points_of_interest(focus: Node3D, delta: float) -> void:
 			_poi_nodes[point] = dot
 		var map_dot: MeshInstance3D = _poi_nodes[point]
 		map_dot.position = _to_map(point.global_position, focus)
-		map_dot.scale = Vector3.ONE * _view_radius / _lock_zoom * POI_SIZE
-
-	# Smooth blink between faint and fully lit.
-	_poi_time = fmod(_poi_time + delta * poi_blink_speed, 1.0)
-	var blink := 0.5 + 0.5 * cos(_poi_time * TAU)
+		map_dot.scale = Vector3.ONE * _view_radius * POI_SIZE
+	var blink := 0.5 + 0.5 * cos(_time * poi_blink_speed * TAU)
 	_poi_material.albedo_color = Color(POI_COLOUR, lerpf(0.15, 1.0, blink))
 
 
-func _to_map(world_point: Vector3, focus: Node3D) -> Vector3:
-	return world_point - focus.global_position
-
-
-## The orbit plane's normal, smoothed so the camera doesn't jitter.
 func _update_orbit_plane(ship: RigidBody3D, focus: Node3D, delta: float) -> void:
-	var _offset := ship.global_position - focus.global_position
-	var normal := _offset.cross(player.get_orbit_velocity())
+	var normal := (ship.global_position - focus.global_position).cross(player.get_orbit_velocity())
 	if normal.length_squared() < 0.0001:
 		return
 	_plane_normal = _plane_normal.lerp(normal.normalized(), clampf(delta * 2.0, 0.0, 1.0)).normalized()
 
 
-## Zooms so the planet, the ship and the nearby predicted path fit in view.
+## Zooms so the planet, the ship and the nearby path fit in view.
 func _update_zoom(ship: RigidBody3D, focus: Node3D, delta: float) -> void:
 	var ship_distance := ship.global_position.distance_to(focus.global_position)
 	var target := maxf(_body_radius(focus) * 1.2, ship_distance)
-	if limit_altitude > 0.0:
-		target = maxf(target, _body_radius(focus) + limit_altitude)
-	# Include the predicted path, but don't zoom out forever for escape paths.
+	var orbit := player.get_current_orbit()
+	if player.is_orbit_locked() and orbit:
+		target = maxf(target, orbit.apoapsis)
 	for point in _predicted:
 		target = maxf(target, minf(point.distance_to(focus.global_position), ship_distance * 2.0))
 	target *= fit_padding
@@ -799,59 +483,43 @@ func _update_zoom(ship: RigidBody3D, focus: Node3D, delta: float) -> void:
 
 func _update_ship_marker(ship: RigidBody3D, focus: Node3D) -> void:
 	_ship_marker.position = _to_map(ship.global_position, focus)
-	# The ship's real rotation (what the player is steering).
-	var ship_rotation := ship.global_basis.get_rotation_quaternion()
-	_ship_marker.basis = Basis(ship_rotation).scaled(Vector3.ONE * _view_radius / _lock_zoom * MARKER_SIZE)
-
-
-func _draw_line(
-	mesh: ImmediateMesh,
-	points: PackedVector3Array,
-	colour: Color,
-	focus: Node3D,
-	fade_in: bool,
-	extra_end := Vector3.INF,
-) -> void:
-	mesh.clear_surfaces()
-	var count := points.size() + (0 if extra_end == Vector3.INF else 1)
-	if count < 2:
-		return
-	mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
-	for i in count:
-		var point: Vector3 = points[i] if i < points.size() else extra_end
-		var t := float(i) / (count - 1)
-		var c := colour
-		# Trail fades out toward its oldest point, the prediction toward its end.
-		c.a = lerpf(0.1, 0.9, t) if fade_in else lerpf(1.0, 0.25, t)
-		mesh.surface_set_color(c)
-		mesh.surface_add_vertex(_to_map(point, focus))
-	mesh.surface_end()
-
-
-func _draw_limit_ring(focus: Node3D) -> void:
-	_limit_mesh.clear_surfaces()
-	if limit_altitude <= 0.0:
-		return
-	var a := _plane_normal.cross(Vector3.RIGHT)
-	if a.length_squared() < 0.01:
-		a = _plane_normal.cross(Vector3.FORWARD)
-	a = a.normalized()
-	var b := _plane_normal.cross(a).normalized()
-	_limit_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	_add_ring(
-		_limit_mesh,
-		Vector3.ZERO,
-		_body_radius(focus) + limit_altitude,
-		a,
-		b,
-		LIMIT_COLOUR,
-		true,
+	_ship_marker.basis = Basis(ship.global_basis.get_rotation_quaternion()).scaled(
+		Vector3.ONE * _view_radius * MARKER_SIZE
 	)
-	_limit_mesh.surface_end()
 
 
-## Looks down on the orbit plane, tilted toward the ship so the planet never
-## hides it, with the ship always at the top of the map.
+## Draws the locked orbit (pulsing green ellipse) while locked, otherwise the
+## predicted path coloured by the forecast.
+func _draw_path(focus: Node3D) -> void:
+	_path_mesh.clear_surfaces()
+	if player.is_orbit_locked():
+		var orbit := player.get_current_orbit()
+		var source := player.get_locked_source()
+		if orbit == null or source == null or not is_finite(orbit.period):
+			return
+		var colour := STABLE_COLOUR.lerp(Color.WHITE, _lock_pulse() * 0.6)
+		var offset := _to_map(source.global_position, focus)
+		_path_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+		for i in LOCKED_ORBIT_SEGMENTS + 1:
+			var t := orbit.period * i / LOCKED_ORBIT_SEGMENTS
+			_path_mesh.surface_set_color(colour)
+			_path_mesh.surface_add_vertex(offset + orbit.position_at(t))
+		_path_mesh.surface_end()
+		return
+
+	if _predicted.size() < 2:
+		return
+	var colour := _forecast_colour(_forecast())
+	_path_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+	for i in _predicted.size():
+		var c := colour
+		c.a = lerpf(1.0, 0.25, float(i) / (_predicted.size() - 1))
+		_path_mesh.surface_set_color(c)
+		_path_mesh.surface_add_vertex(_to_map(_predicted[i], focus))
+	_path_mesh.surface_end()
+
+
+## Looks down on the orbit plane, tilted toward the ship, ship at the top.
 func _update_camera(ship: RigidBody3D, focus: Node3D) -> void:
 	var out := (ship.global_position - focus.global_position).normalized()
 	out = (out - _plane_normal * out.dot(_plane_normal)).normalized()
@@ -859,8 +527,7 @@ func _update_camera(ship: RigidBody3D, focus: Node3D) -> void:
 		return
 	var tilt := deg_to_rad(camera_tilt_degrees)
 	var direction := (_plane_normal * cos(tilt) + out * sin(tilt)).normalized()
-	# Moving the camera closer zooms the orbit preview without resizing the panel.
-	var distance := _view_radius / _lock_zoom / tan(deg_to_rad(_camera.fov) * 0.5)
+	var distance := _view_radius / tan(deg_to_rad(_camera.fov) * 0.5)
 	_camera.near = distance * 0.01
 	_camera.far = distance * 4.0
 	_camera.position = direction * distance

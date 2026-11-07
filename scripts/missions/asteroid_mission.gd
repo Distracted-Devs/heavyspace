@@ -16,3 +16,7 @@ func _ready() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if _is_player_ship(body):
 		complete()
+		
+		## Spawn effect here
+		queue_free()  
+		

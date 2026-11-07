@@ -1,0 +1,47 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/bodies/sun.gd" id="1_sun"]
+[ext_resource type="Shader" path="res://resources/shaders/sun_surface.gdshader" id="2_surf"]
+[ext_resource type="Shader" path="res://resources/shaders/sun_corona.gdshader" id="3_cor"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_surface"]
+render_priority = 0
+shader = ExtResource("2_surf")
+
+[sub_resource type="SphereMesh" id="SphereMesh_sun"]
+material = SubResource("ShaderMaterial_surface")
+radius = 1.0
+height = 2.0
+radial_segments = 64
+rings = 32
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_corona"]
+render_priority = 0
+shader = ExtResource("3_cor")
+
+[sub_resource type="QuadMesh" id="QuadMesh_corona"]
+material = SubResource("ShaderMaterial_corona")
+size = Vector2(2, 2)
+
+[node name="Sun" type="Node3D"]
+script = ExtResource("1_sun")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_sun")
+
+[node name="Corona" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("QuadMesh_corona")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+light_color = Color(1, 0.88, 0.72, 1)
+light_energy = 3.0
+shadow_enabled = true
+directional_shadow_max_distance = 3000.0
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+light_color = Color(0.55, 0.65, 1, 1)
+light_energy = 0.6
+light_specular = 0.2
+shadow_enabled = false

@@ -28,6 +28,12 @@ extends Node3D
 @export var gravity_effect: GravityEffect
 @export var ship: RigidBody3D
 
+@export_group("Effects")
+@export var thrust_effect: GPUParticles3D
+@export var explosion: PackedScene = preload("res://scenes/effects/explosion_ship.tscn")
+## How far the explosion is pushed out from the impact point, away from what was hit.
+@export var explosion_offset := 2.0
+
 signal orbit_lock_changed(locked: bool)
 
 ## The orbit the ship is riding while locked (null when free-flying).
@@ -36,15 +42,75 @@ var _locked_source: Node3D
 var _lock_time := 0.0
 ## Current orbit time scale: 1 when coasting, up to orbit_speed_multiplier.
 var _orbit_time_scale := 1.0
+var _is_dead := false
+var _was_thrusting := false
 
 
 func _ready() -> void:
 	add_to_group("player")
 	fuel_component.changed.connect(_on_fuel_changed)
 	mass_component.add_mass(fuel_component.fuel * mass_to_fuel_ratio)
+	thrust_effect.emitting = false
+
+	# RigidBody3D only emits body_entered with contact monitoring on.
+	ship.contact_monitor = true
+	ship.max_contacts_reported = maxi(ship.max_contacts_reported, 4)
+	ship.body_entered.connect(_on_ship_body_entered)
+
+
+func _on_ship_body_entered(body: Node) -> void:
+	if body.is_in_group(&"deadly"):
+		var hit := _get_contact_point(body)
+		var away := ship.global_position - hit
+		if away.is_zero_approx() and body is Node3D:
+			away = ship.global_position - body.global_position
+		on_dead(hit + away.normalized() * explosion_offset)
+
+
+## World-space point where the ship touches `body`; falls back to the ship's position.
+func _get_contact_point(body: Node) -> Vector3:
+	var state := PhysicsServer3D.body_get_direct_state(ship.get_rid())
+	if state:
+		for i in state.get_contact_count():
+			if state.get_contact_collider_object(i) == body:
+				# Despite the name, this is the contact position in global space.
+				return state.get_contact_local_position(i)
+	return ship.global_position
+
+
+func on_dead(hit_point: Vector3 = ship.global_position) -> void:
+	if _is_dead:
+		return
+	_is_dead = true
+	Input.start_joy_vibration(0, 1.0, 1.0, 3.0)
+	_spawn_explosion(hit_point)
+
+	# Hide and stop the ship (ThrustEffect is a child, so it hides too).
+	thrust_effect.emitting = false
+	ship.hide()
+	
+	ship.set_deferred(&"freeze", true)
+
+
+func _spawn_explosion(at: Vector3) -> void:
+	if explosion == null:
+		return
+	var fx := explosion.instantiate() as Node3D
+	# Parent to the scene, not the ship, so it stays where the impact happened.
+	get_tree().current_scene.add_child(fx)
+	fx.global_position = at
+
+	# The effect is one-shot particles with no script, so free it once they finish.
+	var longest := 0.0
+	for child in fx.get_children():
+		if child is GPUParticles3D:
+			longest = maxf(longest, child.lifetime)
+	get_tree().create_timer(longest + 0.5).timeout.connect(fx.queue_free)
 
 
 func _physics_process(delta: float) -> void:
+	if _is_dead:
+		return
 	if _locked_orbit:
 		# Locked: no steering, Space only speeds the ship along the orbit.
 		_apply_orbit_boost(delta)
@@ -81,8 +147,7 @@ func get_current_orbit() -> Orbit:
 	return gravity_effect.orbit_around(source)
 
 
-## Ship velocity, including while riding a locked orbit (the ship is frozen then,
-## so linear_velocity is zero).
+
 func get_ship_velocity() -> Vector3:
 	if _locked_orbit:
 		return _locked_orbit.velocity_at(_lock_time) * _orbit_time_scale
@@ -104,6 +169,11 @@ func can_lock_orbit() -> bool:
 	var radius := GravityEffect.source_radius(source)
 	return orbit.is_stable(radius + min_lock_altitude) \
 			and orbit.apoapsis <= radius + max_lock_altitude
+
+
+## The body the locked orbit goes around (null when free-flying).
+func get_locked_source() -> Node3D:
+	return _locked_source
 
 
 func is_orbit_locked() -> bool:
@@ -173,7 +243,8 @@ func _align_to_orbit(rel_position: Vector3, velocity: Vector3, delta: float) -> 
 func _apply_orbit_boost(delta: float) -> void:
 
 	var boosting := _is_thrust_pressed() and fuel_component.fuel > 0.0
-	
+	thrust_effect.emitting = boosting
+
 	var target_scale := orbit_speed_multiplier if boosting else 1.0
 	
 	_orbit_time_scale = move_toward(
@@ -215,9 +286,22 @@ func _apply_rotation(delta: float) -> void:
 
 
 func _apply_thrust(delta: float) -> void:
-	if _is_thrust_pressed() and fuel_component.fuel > 0.0:
+
+	var thrusting := _is_thrust_pressed() and fuel_component.fuel > 0.0
+	thrust_effect.emitting = thrusting
+	
+	if thrusting:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)
 		fuel_component.add_fuel(-fuel_drain_rate * delta)
+
+	# Don't touch the rumble once dead, or it would cancel the death vibration.
+	if _is_dead:
+		return
+	if thrusting:
+		Input.start_joy_vibration(0, 0.25, 0.4, 0.5)
+	elif _was_thrusting:
+		Input.stop_joy_vibration(0)
+	_was_thrusting = thrusting
 
 
 ## Space on keyboard, RT or A on a controller.
@@ -230,10 +314,8 @@ func _get_mass(node: Node) -> float:
 		return node.mass
 	return node.get_meta("mass", 1.0)
 
-
 func _on_fuel_changed(_new_fuel: float, delta_fuel: float) -> void:
 	mass_component.add_mass(delta_fuel * mass_to_fuel_ratio)
-
 
 func _apply_rotation_correction(_delta: float) -> void:
 	var closest_gravity_body: GravityBody

@@ -4,7 +4,7 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pix"]
 shader = ExtResource("1_pix")
-shader_parameter/pixel_size = 16.0
+shader_parameter/pixel_size = 4.0
 
 [node name="PixelateOverlay" type="CanvasLayer" unique_id=1062255223]
 layer = 0

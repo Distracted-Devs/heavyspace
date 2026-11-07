@@ -8,7 +8,7 @@
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ojvte"]
 albedo_texture = ExtResource("2_py0cc")
 
-[node name="BigAssPlanet" unique_id=213988570 groups=["gravity"] instance=ExtResource("1_t700u")]
+[node name="BigAssPlanet" unique_id=213988570 groups=["gravity", "deadly"] instance=ExtResource("1_t700u")]
 mass = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." index="0" unique_id=1276215937]
