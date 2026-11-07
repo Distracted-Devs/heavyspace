@@ -34,6 +34,7 @@ thrust_effect = NodePath("Ship/ThrustEffect")
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1998297707 node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.90940315, 0.41591582, 0, -0.41591582, 0.90940315, 0, 1.4504993, 3.1636226)
 current = true
+far = 50000.0
 script = ExtResource("2_42gqe")
 target = NodePath("../Ship")
 
@@ -78,4 +79,3 @@ body = NodePath("..")
 
 [node name="ThrustEffect" parent="Ship" unique_id=163164834 instance=ExtResource("6_75vfm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052609205, 0, 1.3490169)
-emitting = true

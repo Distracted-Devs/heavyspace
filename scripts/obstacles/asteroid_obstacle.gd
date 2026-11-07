@@ -4,8 +4,8 @@ extends AnimatableBody3D
 
 @export var planet: Node3D
 
-## Distance from the planet's centre.
-@export var orbit_radius: float = 50.0
+@export var planet_radius: float = 2000.0
+@export var orbit_radius: float = 1.1
 @export var orbit_speed: float = 10.0
 @export var clockwise: bool = false
 
@@ -45,4 +45,4 @@ func _orbit_position() -> Vector3:
 	# Any vector perpendicular to the axis gives the angle-0 point on the orbit.
 	var reference := Vector3.RIGHT if absf(axis.dot(Vector3.RIGHT)) < 0.99 else Vector3.FORWARD
 	var start := (reference - axis * reference.dot(axis)).normalized()
-	return center + start.rotated(axis, _angle) * orbit_radius
+	return center + start.rotated(axis, _angle) * orbit_radius * planet_radius

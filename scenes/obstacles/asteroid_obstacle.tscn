@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cu326b8lov3cj"]
 
 [ext_resource type="Script" path="res://scripts/obstacles/asteroid_obstacle.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bntscoudqwjwx" path="res://resources/textures/astheroid.jpg" id="2_tex"]
@@ -14,12 +14,12 @@ height = 6.0
 [sub_resource type="SphereShape3D" id="SphereShape3D_asteroid"]
 radius = 3.0
 
-[node name="Asteroid_Obstacle" type="AnimatableBody3D" groups=["deadly"]]
+[node name="Asteroid_Obstacle" type="AnimatableBody3D" unique_id=804147482 groups=["deadly"]]
 sync_to_physics = false
 script = ExtResource("1_script")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=332234389]
 mesh = SubResource("SphereMesh_asteroid")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=909146851]
 shape = SubResource("SphereShape3D_asteroid")
