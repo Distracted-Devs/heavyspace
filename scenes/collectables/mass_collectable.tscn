@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://cy1nypgfcqngy"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
+
+[node name="MassCollectable" type="Node3D" unique_id=354161295]
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1264377945]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=217817322]
+shape = SubResource("SphereShape3D_7l7pj")
+
+[node name="CSGSphere3D" type="CSGSphere3D" parent="Area3D" unique_id=1544665345]

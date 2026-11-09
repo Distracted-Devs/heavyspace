@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://binwpba4o8jv3" path="res://scenes/player/player.tscn" id="2_48ne7"]
 [ext_resource type="PackedScene" uid="uid://mbq44dx6vywp" path="res://scenes/bodies/test_planet.tscn" id="2_yautc"]
+[ext_resource type="Script" uid="uid://bjsx1s4q2wt1t" path="res://scripts/managers/procedural_generation.gd" id="3_fr1um"]
 
 [node name="TestLevel" type="Node3D" unique_id=1744272397]
 
@@ -10,3 +11,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
 
 [node name="TestPlanet" parent="." unique_id=1294799979 instance=ExtResource("2_yautc")]
 transform = Transform3D(-7.545, 0, -6.5960484e-07, 0, 7.545, 0, 6.5960484e-07, 0, -7.545, 0.075116396, -0.45757604, -7.6461267)
+
+[node name="ProceduralGeneration" type="Node" parent="." unique_id=1367072459 node_paths=PackedStringArray("player")]
+script = ExtResource("3_fr1um")
+player = NodePath("../Player")
