@@ -1,17 +1,26 @@
 [gd_scene format=3 uid="uid://dsy4vvl6uilo0"]
 
+[ext_resource type="Script" uid="uid://dmeysin25g6c5" path="res://scripts/levels/test_level.gd" id="1_48ne7"]
 [ext_resource type="PackedScene" uid="uid://binwpba4o8jv3" path="res://scenes/player/player.tscn" id="2_48ne7"]
 [ext_resource type="PackedScene" uid="uid://mbq44dx6vywp" path="res://scenes/bodies/test_planet.tscn" id="2_yautc"]
 [ext_resource type="Script" uid="uid://bjsx1s4q2wt1t" path="res://scripts/managers/procedural_generation.gd" id="3_fr1um"]
+[ext_resource type="PackedScene" uid="uid://cy1nypgfcqngy" path="res://scenes/collectables/mass_collectable.tscn" id="4_v45ci"]
 
-[node name="TestLevel" type="Node3D" unique_id=1744272397]
+[node name="TestLevel" type="Node3D" unique_id=1744272397 node_paths=PackedStringArray("player", "planet")]
+script = ExtResource("1_48ne7")
+player = NodePath("Player")
+planet = NodePath("Planet")
 
 [node name="Player" parent="." unique_id=125079120 instance=ExtResource("2_48ne7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
 
-[node name="TestPlanet" parent="." unique_id=1294799979 instance=ExtResource("2_yautc")]
-transform = Transform3D(-7.545, 0, -6.5960484e-07, 0, 7.545, 0, 6.5960484e-07, 0, -7.545, 0.075116396, -0.45757604, -7.6461267)
+[node name="Planet" parent="." unique_id=1294799979 instance=ExtResource("2_yautc")]
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0.075116396, -0.45757604, -7.6461267)
 
-[node name="ProceduralGeneration" type="Node" parent="." unique_id=1367072459 node_paths=PackedStringArray("player")]
+[node name="ProceduralGeneration" type="Node" parent="." unique_id=1367072459 node_paths=PackedStringArray("player", "planet")]
 script = ExtResource("3_fr1um")
+collectable = ExtResource("4_v45ci")
 player = NodePath("../Player")
+planet = NodePath("../Planet")
+cell_side_length = 2.0
+grid_side_n_cells = 20

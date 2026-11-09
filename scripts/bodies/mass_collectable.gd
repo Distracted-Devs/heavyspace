@@ -1,0 +1,2 @@
+class_name MassCollectable
+extends Node3D

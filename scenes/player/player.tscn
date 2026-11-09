@@ -10,6 +10,7 @@ body = NodePath("PhysicsBody")
 
 [node name="PhysicsBody" type="RigidBody3D" parent="." unique_id=1645358274]
 gravity_scale = 0.0
+angular_damp = 1.0
 
 [node name="Mesh" type="Node3D" parent="PhysicsBody" unique_id=971868309]
 
