@@ -8,14 +8,12 @@ extends Node3D
 @export var spawn_radius_from_planet: float = 2500.0
 
 
-func _ready() -> void:
-	_spawn_pickups()
+
 
 
 func _process(_delta: float) -> void:
-	if Input.is_physical_key_pressed(KEY_R):
+	if Input.is_action_just_pressed(&"restart"):
 		get_tree().reload_current_scene()
-	pass
 
 
 func _spawn_pickups() -> void:

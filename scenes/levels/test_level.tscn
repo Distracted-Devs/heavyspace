@@ -11,6 +11,10 @@
 [ext_resource type="PackedScene" uid="uid://dbdwhryww2fc8" path="res://scenes/ui/pixelate_overlay.tscn" id="9_pix"]
 [ext_resource type="PackedScene" uid="uid://cu326b8lov3cj" path="res://scenes/obstacles/asteroid_obstacle.tscn" id="10_2mu0v"]
 [ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="10_sun"]
+[ext_resource type="PackedScene" path="res://scenes/ui/restart_prompt.tscn" id="11_restart"]
+[ext_resource type="PackedScene" path="res://scenes/ui/restart_hint.tscn" id="12_hint"]
+[ext_resource type="PackedScene" path="res://scenes/levels/dead_zone.tscn" id="13_deadzone"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dead_zone_warning.tscn" id="14_dzwarn"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gcb5y"]
 panorama = ExtResource("1_v45ci")
@@ -48,11 +52,11 @@ distance = 5000.0
 light_intensity = 6.0
 
 [node name="PlayerShip" parent="." unique_id=1639055760 instance=ExtResource("2_48ne7")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 1286.8164, 2287.6565)
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 1235.3691, 2600.1729)
 rotation_correction_speed = 0.5
 rotation_correction_multiplier = 1.0
 rotation_correction_exponent = 0.75
-max_lock_altitude = 1000.0
+max_lock_altitude = 1400.0
 orbit_boost_response = 1.0
 
 [node name="BigAssPlanet" parent="." unique_id=108632261 instance=ExtResource("3_6xh4u")]
@@ -67,6 +71,10 @@ mass = 8000000.0
 [node name="HUD" parent="." unique_id=795487204 instance=ExtResource("5_hud")]
 
 [node name="PixelateOverlay" parent="." unique_id=2044842021 instance=ExtResource("9_pix")]
+
+[node name="RestartPrompt" parent="." instance=ExtResource("11_restart")]
+
+[node name="RestartHint" parent="." instance=ExtResource("12_hint")]
 
 [node name="Asteroid_Obstacle" parent="." unique_id=804147482 node_paths=PackedStringArray("planet") instance=ExtResource("10_2mu0v")]
 transform = Transform3D(50, 0, 0, 0, 50, 0, 0, 0, 50, 4505.5327, 0, 0)
@@ -84,6 +92,14 @@ orbit_speed = 1.0
 clockwise = true
 orbit_axis = Vector3(0, 0, 0)
 start_angle = 124.541
+
+[node name="DeadZone" parent="." node_paths=PackedStringArray("center") instance=ExtResource("13_deadzone")]
+center = NodePath("../BigAssPlanet")
+radius = 6000.0
+return_time = 5.0
+
+[node name="DeadZoneWarning" parent="." node_paths=PackedStringArray("dead_zone") instance=ExtResource("14_dzwarn")]
+dead_zone = NodePath("../DeadZone")
 
 [node name="AsteroidMission" parent="." unique_id=1861415494 instance=ExtResource("8_7x1jh")]
 transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 536.87946, -943.4909, -1927.428)

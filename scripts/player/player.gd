@@ -13,10 +13,23 @@ extends Node3D
 @export_group("Orbit lock")
 
 @export var min_lock_altitude := 10.0
-@export var max_lock_altitude := 500.0
+@export var max_lock_altitude := 700.0
 @export var orbit_speed_multiplier := 2.0
 @export var orbit_boost_response := 3.0
 @export var orbit_align_speed := 4.0
+## Seconds thrust must be held while locked before the boost kicks in.
+@export var orbit_charge_time := 2.0
+## Orbit time scale the ship slows down to while the boost is charging.
+@export var orbit_charge_slow_scale := 0.4
+## Controller rumble (weak, strong motor) reached at the end of the charge
+## and held for as long as the boost lasts.
+@export var orbit_charge_peak_weak := 0.6
+@export var orbit_charge_peak_strong := 1.0
+## Screen shake played once when the orbit charge completes and the boost kicks in.
+@export var orbit_boost_shake_strength := 0.4
+@export var orbit_boost_shake_duration := 0.5
+@export var orbit_boost_shake_frequency := 25.0
+@export var orbit_boost_shake_rotation_deg := 1.0
 
 @export_group("Fuel")
 @export var fuel_drain_rate := 20.0
@@ -30,9 +43,16 @@ extends Node3D
 
 @export_group("Effects")
 @export var thrust_effect: GPUParticles3D
+## Stronger blue thrust shown instead of thrust_effect while the orbit is locked.
+@export var thrust_in_orbit_effect: GPUParticles3D
 @export var explosion: PackedScene = preload("res://scenes/effects/explosion_ship.tscn")
 ## How far the explosion is pushed out from the impact point, away from what was hit.
 @export var explosion_offset := 2.0
+## Screen shake played when the ship dies.
+@export var death_shake_strength := 1.0
+@export var death_shake_duration := 1.0
+@export var death_shake_frequency := 18.0
+@export var death_shake_rotation_deg := 3.0
 
 signal orbit_lock_changed(locked: bool)
 
@@ -42,6 +62,8 @@ var _locked_source: Node3D
 var _lock_time := 0.0
 ## Current orbit time scale: 1 when coasting, up to orbit_speed_multiplier.
 var _orbit_time_scale := 1.0
+## Seconds thrust has been held during the current locked-orbit charge.
+var _orbit_charge := 0.0
 var _is_dead := false
 var _was_thrusting := false
 
@@ -50,7 +72,7 @@ func _ready() -> void:
 	add_to_group("player")
 	fuel_component.changed.connect(_on_fuel_changed)
 	mass_component.add_mass(fuel_component.fuel * mass_to_fuel_ratio)
-	thrust_effect.emitting = false
+	_set_thrust_emitting(false)
 
 	# RigidBody3D only emits body_entered with contact monitoring on.
 	ship.contact_monitor = true
@@ -78,15 +100,25 @@ func _get_contact_point(body: Node) -> Vector3:
 	return ship.global_position
 
 
+func is_dead() -> bool:
+	return _is_dead
+
+
 func on_dead(hit_point: Vector3 = ship.global_position) -> void:
 	if _is_dead:
 		return
 	_is_dead = true
 	Input.start_joy_vibration(0, 1.0, 1.0, 3.0)
 	_spawn_explosion(hit_point)
+	ScreenShakeHandler.shake(
+		death_shake_strength,
+		death_shake_duration,
+		death_shake_frequency,
+		death_shake_rotation_deg,
+	)
 
 	# Hide and stop the ship (ThrustEffect is a child, so it hides too).
-	thrust_effect.emitting = false
+	_set_thrust_emitting(false)
 	ship.hide()
 	
 	ship.set_deferred(&"freeze", true)
@@ -176,6 +208,12 @@ func get_locked_source() -> Node3D:
 	return _locked_source
 
 
+## True once the locked-orbit boost has finished charging and is firing.
+func is_orbit_boosting() -> bool:
+	return _locked_orbit != null and _is_thrust_pressed() \
+			and fuel_component.fuel > 0.0 and _orbit_charge >= orbit_charge_time
+
+
 func is_orbit_locked() -> bool:
 	return _locked_orbit != null
 
@@ -189,6 +227,7 @@ func lock_orbit() -> bool:
 	_locked_orbit = gravity_effect.orbit_around(_locked_source)
 	_lock_time = 0.0
 	_orbit_time_scale = 1.0
+	_orbit_charge = 0.0
 	gravity_effect.enabled = false
 
 	# Taken out of the physics simulation
@@ -208,6 +247,10 @@ func unlock_orbit() -> void:
 	ship.linear_velocity = _locked_orbit.velocity_at(_lock_time)
 	ship.angular_velocity = Vector3.ZERO
 	_orbit_time_scale = 1.0
+	_orbit_charge = 0.0
+	if _was_thrusting and not _is_dead:
+		Input.stop_joy_vibration(0)
+	_was_thrusting = false
 	_locked_orbit = null
 	_locked_source = null
 	gravity_effect.enabled = true
@@ -239,23 +282,55 @@ func _align_to_orbit(rel_position: Vector3, velocity: Vector3, delta: float) -> 
 	ship.global_basis = Basis(current.slerp(target, weight))
 
 
-## Space while locked actys as a turbio
+## Space while locked charges a boost: the ship first slows down for
+## orbit_charge_time while the rumble builds, then speeds along the orbit.
 func _apply_orbit_boost(delta: float) -> void:
+	var held := _is_thrust_pressed() and fuel_component.fuel > 0.0
+	var was_charged := _orbit_charge >= orbit_charge_time
+	if held:
+		_orbit_charge = minf(_orbit_charge + delta, orbit_charge_time)
+	else:
+		_orbit_charge = 0.0
+	var charged := held and _orbit_charge >= orbit_charge_time
+	_set_thrust_emitting(charged)
+	if charged and not was_charged:
+		ScreenShakeHandler.shake(
+			orbit_boost_shake_strength,
+			orbit_boost_shake_duration,
+			orbit_boost_shake_frequency,
+			orbit_boost_shake_rotation_deg,
+		)
 
-	var boosting := _is_thrust_pressed() and fuel_component.fuel > 0.0
-	thrust_effect.emitting = boosting
+	var target_scale := 1.0
+	if charged:
+		target_scale = orbit_speed_multiplier
+	elif held:
+		target_scale = orbit_charge_slow_scale
 
-	var target_scale := orbit_speed_multiplier if boosting else 1.0
-	
 	_orbit_time_scale = move_toward(
 		_orbit_time_scale,
 		target_scale,
 		orbit_boost_response * maxf(orbit_speed_multiplier - 1.0, 1.0) * delta,
 	)
-	if boosting:
+	if charged:
 		##maybe this should consume a different type of fuel???
 		fuel_component.add_fuel(-fuel_drain_rate * delta)
 
+	# Rumble ramps up to the peak over the charge, then stays there while boosting.
+	if held:
+		var t := _orbit_charge / orbit_charge_time if orbit_charge_time > 0.0 else 1.0
+		Input.start_joy_vibration(
+			0, orbit_charge_peak_weak * t, orbit_charge_peak_strong * t, 0.2)
+	elif _was_thrusting:
+		Input.stop_joy_vibration(0)
+	_was_thrusting = held
+
+
+## Shows the thrust trail, using the orbit variant while the orbit is locked.
+func _set_thrust_emitting(on: bool) -> void:
+	var in_orbit := is_orbit_locked()
+	thrust_effect.emitting = on and not in_orbit
+	thrust_in_orbit_effect.emitting = on and in_orbit
 
 
 func _apply_rotation(delta: float) -> void:
@@ -288,7 +363,7 @@ func _apply_rotation(delta: float) -> void:
 func _apply_thrust(delta: float) -> void:
 
 	var thrusting := _is_thrust_pressed() and fuel_component.fuel > 0.0
-	thrust_effect.emitting = thrusting
+	_set_thrust_emitting(thrusting)
 	
 	if thrusting:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)

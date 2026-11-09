@@ -76,8 +76,7 @@ func _find_player() -> bool:
 
 
 func _build_ui() -> void:
-	var mono := SystemFont.new()
-	mono.font_names = PackedStringArray(["Menlo", "Consolas", "DejaVu Sans Mono", "monospace"])
+	var mono: Font = preload("res://resources/Fonts/PixelSans/PixelifySans-Regular.ttf")
 
 	_panel = PanelContainer.new()
 	_panel_style = StyleBoxFlat.new()

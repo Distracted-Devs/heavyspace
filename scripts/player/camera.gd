@@ -7,12 +7,17 @@ extends Camera3D
 @export var zoom_step := 1.0
 @export var sensitivity := 0.005
 @export var key_rotate_speed := 2.0 # radians per second (arrow keys / right stick)
+## Extra distance added while the player's locked-orbit boost is firing.
+@export var boost_zoom_out := 6.0
+## How quickly the camera eases in/out of the boost zoom.
+@export var boost_zoom_speed := 3.0
 
 var yaw := 0.0
 var pitch := -0.3 # negative = camera starts above, looking down
 var follow_axes := Vector3.ZERO
 var follow_weight := Vector3.ZERO
 var follow_lerp_speed := 4.0
+var _boost_zoom := 0.0
 
 
 func _ready() -> void:
@@ -57,8 +62,13 @@ func _physics_process(delta: float) -> void:
 	follow_weight = follow_weight.lerp(follow_axes, 1.0 - exp(-follow_lerp_speed * delta))
 	var follow := Basis.from_euler(target.global_basis.get_euler() * follow_weight)
 	var orbit := follow * Basis.from_euler(Vector3(pitch, yaw, 0.0))
-	global_basis = orbit
-	global_position = target.global_position + orbit * Vector3(0, 0, distance)
+
+	var player := get_parent() as Player
+	var boosting := player != null and player.is_orbit_boosting()
+	_boost_zoom = lerpf(_boost_zoom, boost_zoom_out if boosting else 0.0,
+			1.0 - exp(-boost_zoom_speed * delta))
+	global_position = target.global_position + orbit * Vector3(0, 0, distance + _boost_zoom)
+	global_basis = orbit * ScreenShakeHandler.get_rotation_basis()
 
 
 func _apply_key_rotation(delta: float) -> void:

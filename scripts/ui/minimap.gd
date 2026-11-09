@@ -30,6 +30,8 @@ extends CanvasLayer
 @export var auto_font_size: bool = true
 ## Font size as a fraction of the map size (when auto_font_size is on).
 @export var font_size_ratio: float = 0.075
+## Gap between the bottom of the map and the label, in pixels.
+@export var forecast_bottom_gap_px: float = 1.0
 
 @export_group("Grid")
 ## Number of cells along each side of the map.
@@ -80,6 +82,8 @@ const IMPACT_COLOUR := Color(1.0, 0.25, 0.2)
 const ESCAPE_COLOUR := Color(1.0, 0.8, 0.2)
 const SHIP_COLOUR := Color(1.0, 0.15, 0.15)
 const POI_COLOUR := Color(1.0, 0.85, 0.1)
+const DEAD_ZONE_COLOUR := Color(1.0, 0.1, 0.1, 0.9)
+const DEAD_ZONE_SEGMENTS := 128
 
 ## Ship marker length as a fraction of the visible radius.
 const MARKER_SIZE := 0.16
@@ -87,6 +91,16 @@ const MARKER_SIZE := 0.16
 const POI_SIZE := 0.05
 const LOCKED_ORBIT_SEGMENTS := 128
 const LOCK_PULSE_HZ := 0.8
+## Input action that locks / unlocks the orbit; its binding is shown in the label.
+const LOCK_ACTION := &"toggle_orbit_lock"
+
+## Joypad button names by layout, indexed by JoyButton (0-14).
+const JOY_NAMES_XBOX := ["A", "B", "X", "Y", "VIEW", "GUIDE", "MENU", "LS", "RS",
+		"LB", "RB", "D-UP", "D-DOWN", "D-LEFT", "D-RIGHT"]
+const JOY_NAMES_PLAYSTATION := ["CROSS", "CIRCLE", "SQUARE", "TRIANGLE", "SHARE", "PS",
+		"OPTIONS", "L3", "R3", "L1", "R1", "D-UP", "D-DOWN", "D-LEFT", "D-RIGHT"]
+const JOY_NAMES_NINTENDO := ["B", "A", "Y", "X", "-", "HOME", "+", "LS", "RS",
+		"L", "R", "D-UP", "D-DOWN", "D-LEFT", "D-RIGHT"]
 
 ## Transparent 12x12 grid of thin lines: the "tech hack" background.
 const GRID_SHADER := """
@@ -114,6 +128,7 @@ var _camera: Camera3D
 var _sun: DirectionalLight3D
 var _ship_marker: Node3D
 var _path_mesh: ImmediateMesh
+var _dead_zone_mesh: ImmediateMesh
 var _planet_nodes := { } # body -> map Node3D
 var _poi_nodes := { } # point of interest -> map MeshInstance3D
 var _poi_mesh: SphereMesh
@@ -151,6 +166,7 @@ func _process(delta: float) -> void:
 	_update_zoom(ship, focus, delta)
 	_update_ship_marker(ship, focus)
 	_draw_path(focus)
+	_draw_dead_zones(focus)
 	_update_camera(ship, focus)
 	_update_status()
 
@@ -248,6 +264,47 @@ func _forecast_colour(forecast: String) -> Color:
 	return PATH_COLOUR
 
 
+## The label text: the forecast, plus the lock / unlock prompt when stable.
+func _status_text(forecast: String) -> String:
+	if forecast != "STABLE":
+		return forecast
+	var button := _lock_button_name()
+	if button.is_empty():
+		return "STABLE ORBIT"
+	if player.is_orbit_locked():
+		return "STABLE ORBIT - PRESS [%s] TO BREAK ORBIT" % button
+	return "STABLE ORBIT - PRESS [%s] TO LOCK" % button
+
+
+## Name of the lock binding: the controller button when a joypad is plugged
+## in, otherwise the keyboard key. "" if the action has no matching binding.
+func _lock_button_name() -> String:
+	var joypads := Input.get_connected_joypads()
+	var use_joypad := not joypads.is_empty()
+	for event in InputMap.action_get_events(LOCK_ACTION):
+		if use_joypad and event is InputEventJoypadButton:
+			return _joy_button_name(event.button_index, Input.get_joy_name(joypads[0]))
+		if not use_joypad and event is InputEventKey:
+			var keycode: Key = event.keycode
+			if keycode == KEY_NONE:
+				keycode = DisplayServer.keyboard_get_keycode_from_physical(event.physical_keycode)
+			return OS.get_keycode_string(keycode).to_upper()
+	return ""
+
+
+func _joy_button_name(button: int, joy_name: String) -> String:
+	var lower := joy_name.to_lower()
+	var names: Array = JOY_NAMES_XBOX
+	if lower.contains("ps3") or lower.contains("ps4") or lower.contains("ps5") or lower.contains("playstation") \
+			or lower.contains("dualshock") or lower.contains("dualsense"):
+		names = JOY_NAMES_PLAYSTATION
+	elif lower.contains("nintendo") or lower.contains("switch") or lower.contains("joy-con"):
+		names = JOY_NAMES_NINTENDO
+	if button >= 0 and button < names.size():
+		return names[button]
+	return "BUTTON %d" % button
+
+
 func _lock_pulse() -> float:
 	return 0.5 - 0.5 * cos(_time * LOCK_PULSE_HZ * TAU)
 
@@ -255,7 +312,7 @@ func _lock_pulse() -> float:
 func _update_status() -> void:
 	var forecast := _forecast()
 	var colour := _forecast_colour(forecast)
-	_status.text = forecast
+	_status.text = _status_text(forecast)
 	var blink := 0.5 + 0.5 * cos(_time * forecast_blink_speed * TAU)
 	_status.modulate = Color(colour, lerpf(forecast_blink_min_alpha, 1.0, blink))
 
@@ -309,6 +366,8 @@ func _build_ui() -> void:
 	else:
 		panel.add_child(_status)
 	_status.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# The lock prompt can be wider than the map; wrap it onto two lines.
+	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -331,7 +390,7 @@ func _update_layout() -> void:
 	_frame.offset_top = margin
 	_frame.offset_bottom = margin + size
 	_grid_material.set_shader_parameter("size", Vector2(size, size))
-	_status.offset_bottom = -size * 0.03
+	_status.offset_bottom = -forecast_bottom_gap_px
 	if auto_font_size:
 		var font_size := maxi(10, int(size * font_size_ratio))
 		if _status.label_settings:
@@ -387,6 +446,18 @@ func _build_world() -> void:
 	line_material.no_depth_test = true
 	path_instance.material_override = line_material
 	_root.add_child(path_instance)
+
+	# Dead zone boundary: red ring, on top.
+	_dead_zone_mesh = ImmediateMesh.new()
+	var zone_instance := MeshInstance3D.new()
+	zone_instance.mesh = _dead_zone_mesh
+	var zone_material := _unshaded(Color.WHITE)
+	zone_material.vertex_color_use_as_albedo = true
+	zone_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	zone_material.no_depth_test = true
+	zone_material.render_priority = 8
+	zone_instance.material_override = zone_material
+	_root.add_child(zone_instance)
 
 	# Points of interest: blinking yellow dots, on top.
 	_poi_material = _unshaded(POI_COLOUR)
@@ -560,6 +631,31 @@ func _draw_path(focus: Node3D) -> void:
 		_path_mesh.surface_set_color(c)
 		_path_mesh.surface_add_vertex(_to_map(_predicted[i], focus))
 	_path_mesh.surface_end()
+
+
+## Draws each DeadZone as a red ring: the sphere's cross-section through its
+## centre on the orbit plane the map is looking at. Blinks while outside.
+func _draw_dead_zones(focus: Node3D) -> void:
+	_dead_zone_mesh.clear_surfaces()
+	for node in get_tree().get_nodes_in_group(&"dead_zone"):
+		var zone := node as DeadZone
+		if zone == null:
+			continue
+		var colour := DEAD_ZONE_COLOUR
+		if zone.is_player_outside():
+			colour.a *= 1.0 if fmod(_time * 3.0, 1.0) < 0.5 else 0.3
+		var centre := _to_map(zone.global_position, focus)
+		var u := _plane_normal.cross(Vector3.UP)
+		if u.length_squared() < 0.0001:
+			u = _plane_normal.cross(Vector3.RIGHT)
+		u = u.normalized()
+		var v := _plane_normal.cross(u).normalized()
+		_dead_zone_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+		for i in DEAD_ZONE_SEGMENTS + 1:
+			var angle := TAU * i / DEAD_ZONE_SEGMENTS
+			_dead_zone_mesh.surface_set_color(colour)
+			_dead_zone_mesh.surface_add_vertex(centre + (u * cos(angle) + v * sin(angle)) * zone.radius)
+		_dead_zone_mesh.surface_end()
 
 
 ## Looks down on the orbit plane, tilted toward the ship, ship at the top.

@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://cl7nm66ny067p"]
+
+[ext_resource type="Script" uid="uid://cr3030bbniwp7" path="res://scripts/ui/restart_prompt.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://bwigr4g83p41y" path="res://resources/Fonts/PixelSans/PixelifySans-Regular.ttf" id="2_font"]
+
+[node name="RestartHint" type="CanvasLayer" unique_id=652915249]
+layer = 10
+
+[node name="Label" type="Label" parent="." unique_id=849162041]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -26.0
+offset_right = 300.0
+offset_bottom = -8.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "Press R to restart"
+vertical_alignment = 2
+script = ExtResource("1_script")
+template = "Press %s to restart"
+controller_button = "Start"
+all_caps = false
+blink = false

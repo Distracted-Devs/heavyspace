@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dpcf2wtymmhno" path="res://scripts/components/fuel_component.gd" id="4_lvxji"]
 [ext_resource type="Script" uid="uid://dke8yv62eulki" path="res://scripts/components/gravity_effect.gd" id="5_p47bc"]
 [ext_resource type="PackedScene" uid="uid://12yqyb2fybqn" path="res://scenes/effects/thrust_effect.tscn" id="6_75vfm"]
+[ext_resource type="PackedScene" uid="uid://1qyaj7jvcwx1" path="res://scenes/effects/thrust_in_orbit.tscn" id="7_orbit"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7x1jh"]
 albedo_color = Color(0.8683663, 0, 0.3938961, 1)
@@ -19,17 +20,21 @@ radius = 0.50158125
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2mu0v"]
 albedo_color = Color(0.31293863, 0.99999994, 0.8929373, 1)
 
-[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component", "gravity_effect", "ship", "thrust_effect")]
+[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component", "gravity_effect", "ship", "thrust_effect", "thrust_in_orbit_effect")]
 script = ExtResource("1_4fnjr")
 rotation_correction_speed = 0.1
 rotation_correction_multiplier = 5.0
 rotation_correction_exponent = 0.6
 min_lock_altitude = 2.0
+orbit_speed_multiplier = 5.0
 mass_component = NodePath("Ship/MassComponent")
 fuel_component = NodePath("Ship/FuelComponent")
 gravity_effect = NodePath("Ship/GravityEffect")
 ship = NodePath("Ship")
 thrust_effect = NodePath("Ship/ThrustEffect")
+thrust_in_orbit_effect = NodePath("Ship/ThrustInOrbit")
+death_shake_strength = 8.0
+death_shake_duration = 2.0
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1998297707 node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.90940315, 0.41591582, 0, -0.41591582, 0.90940315, 0, 1.4504993, 3.1636226)
@@ -78,4 +83,7 @@ script = ExtResource("5_p47bc")
 body = NodePath("..")
 
 [node name="ThrustEffect" parent="Ship" unique_id=163164834 instance=ExtResource("6_75vfm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052609205, 0, 1.3490169)
+
+[node name="ThrustInOrbit" parent="Ship" unique_id=1846203918 instance=ExtResource("7_orbit")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052609205, 0, 1.3490169)
