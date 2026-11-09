@@ -13,6 +13,8 @@ planet = NodePath("Planet")
 
 [node name="Player" parent="." unique_id=125079120 instance=ExtResource("2_48ne7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
+roll_amount = 0.5
+turn_amount = 0.5
 
 [node name="Planet" parent="." unique_id=1294799979 instance=ExtResource("2_yautc")]
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0.075116396, -0.45757604, -7.6461267)
@@ -22,5 +24,5 @@ script = ExtResource("3_fr1um")
 collectable = ExtResource("4_v45ci")
 player = NodePath("../Player")
 planet = NodePath("../Planet")
-cell_side_length = 2.0
+cell_side_length = 10.0
 grid_side_n_cells = 20

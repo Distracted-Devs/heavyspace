@@ -8,7 +8,7 @@
 
 # Dev Tips
 
-- Never make edits or build
+- Never make edits or build, EVER. Even when shown an error, DO NOT MAKE EDITS.
 - Always check the file structure in src/ first.
 
 # AI Tips
