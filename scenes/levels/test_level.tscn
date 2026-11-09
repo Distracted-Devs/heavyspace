@@ -6,7 +6,7 @@
 [node name="TestLevel" type="Node3D" unique_id=1744272397]
 
 [node name="Player" parent="." unique_id=125079120 instance=ExtResource("2_48ne7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5245516, -2.5296087)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
 
 [node name="TestPlanet" parent="." unique_id=1294799979 instance=ExtResource("2_yautc")]
-transform = Transform3D(7.5448785, 0.042832766, 0, -0.042832766, 7.5448785, 0, 0, 0, 7.545, 0, 0, 5.2478614)
+transform = Transform3D(-7.545, 0, -6.5960484e-07, 0, 7.545, 0, 6.5960484e-07, 0, -7.545, 0.075116396, -0.45757604, -7.6461267)
