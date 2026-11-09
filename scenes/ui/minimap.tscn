@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://ba3ejxia8n30j"]
-
-[ext_resource type="Script" uid="uid://b4smiewfyii4p" path="res://scripts/ui/minimap.gd" id="1_map"]
-
-[node name="OrbitMinimap" type="CanvasLayer" unique_id=1179555850]
-script = ExtResource("1_map")
