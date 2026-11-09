@@ -1,0 +1,301 @@
+[gd_scene format=3 uid="uid://cbbh5kccqwnx7"]
+
+[ext_resource type="Script" uid="uid://cvfvo3fpl878s" path="res://scripts/effects/goal_explosion_effect.gd" id="1_goalfx"]
+
+[sub_resource type="Gradient" id="Gradient_flash"]
+offsets = PackedFloat32Array(0, 0.2, 0.55, 1)
+colors = PackedColorArray(6, 8, 6, 1, 2.5, 7, 3, 1, 0.6, 3.5, 1, 0.6, 0, 0.6, 0.2, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_flash"]
+gradient = SubResource("Gradient_flash")
+
+[sub_resource type="Curve" id="Curve_flash_scale"]
+_data = [Vector2(0, 0.2), 0.0, 6.0, 0, 0, Vector2(0.2, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -1.5, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_flash_scale"]
+curve = SubResource("Curve_flash_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_flash"]
+emission_shape = 1
+emission_sphere_radius = 1.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 1.0
+initial_velocity_max = 4.0
+gravity = Vector3(0, 0, 0)
+damping_min = 3.0
+damping_max = 6.0
+scale_min = 12.0
+scale_max = 18.0
+scale_curve = SubResource("CurveTexture_flash_scale")
+color_ramp = SubResource("GradientTexture_flash")
+
+[sub_resource type="StandardMaterial3D" id="Material_additive"]
+transparency = 1
+blend_mode = 1
+cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="Mesh_flash"]
+material = SubResource("Material_additive")
+radial_segments = 16
+rings = 8
+
+[sub_resource type="Gradient" id="Gradient_shockwave"]
+offsets = PackedFloat32Array(0, 0.15, 0.6, 1)
+colors = PackedColorArray(5, 8, 5, 1, 1.5, 6, 2, 1, 0.3, 2.5, 0.8, 0.6, 0, 0.5, 0.15, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_shockwave"]
+gradient = SubResource("Gradient_shockwave")
+
+[sub_resource type="Curve" id="Curve_shockwave_scale"]
+_data = [Vector2(0, 0.02), 0.0, 3.5, 0, 0, Vector2(1, 1), 0.3, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_shockwave_scale"]
+curve = SubResource("Curve_shockwave_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_shockwave"]
+gravity = Vector3(0, 0, 0)
+scale_min = 90.0
+scale_max = 90.0
+scale_curve = SubResource("CurveTexture_shockwave_scale")
+color_ramp = SubResource("GradientTexture_shockwave")
+
+[sub_resource type="TorusMesh" id="Mesh_shockwave"]
+material = SubResource("Material_additive")
+inner_radius = 0.46
+outer_radius = 0.5
+ring_segments = 6
+
+[sub_resource type="Gradient" id="Gradient_burst"]
+offsets = PackedFloat32Array(0, 0.1, 0.3, 0.55, 0.8, 1)
+colors = PackedColorArray(4, 6, 4, 1, 1.2, 5, 1.5, 1, 0.3, 2.5, 0.6, 1, 0.08, 0.8, 0.25, 0.9, 0.05, 0.18, 0.1, 0.5, 0.02, 0.05, 0.04, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_burst"]
+gradient = SubResource("Gradient_burst")
+
+[sub_resource type="Curve" id="Curve_burst_scale"]
+_data = [Vector2(0, 0.2), 0.0, 4.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.15), -1.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_burst_scale"]
+curve = SubResource("Curve_burst_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_burst"]
+emission_shape = 1
+emission_sphere_radius = 3.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 18.0
+initial_velocity_max = 50.0
+gravity = Vector3(0, 0, 0)
+damping_min = 10.0
+damping_max = 20.0
+scale_min = 3.0
+scale_max = 7.0
+scale_curve = SubResource("CurveTexture_burst_scale")
+color_ramp = SubResource("GradientTexture_burst")
+turbulence_enabled = true
+turbulence_noise_strength = 3.0
+turbulence_noise_scale = 6.0
+turbulence_influence_min = 0.05
+turbulence_influence_max = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_burst"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="Mesh_burst"]
+material = SubResource("Material_burst")
+radial_segments = 12
+rings = 6
+
+[sub_resource type="Gradient" id="Gradient_sparks"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(5, 8, 5, 1, 1, 5, 1.5, 1, 0, 1.5, 0.4, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_sparks"]
+gradient = SubResource("Gradient_sparks")
+
+[sub_resource type="Curve" id="Curve_sparks_scale"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -1.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_sparks_scale"]
+curve = SubResource("Curve_sparks_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_sparks"]
+particle_flag_align_y = true
+emission_shape = 1
+emission_sphere_radius = 2.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 40.0
+initial_velocity_max = 95.0
+gravity = Vector3(0, 0, 0)
+damping_min = 15.0
+damping_max = 30.0
+scale_min = 0.6
+scale_max = 1.4
+scale_curve = SubResource("CurveTexture_sparks_scale")
+color_ramp = SubResource("GradientTexture_sparks")
+
+[sub_resource type="BoxMesh" id="Mesh_sparks"]
+material = SubResource("Material_additive")
+size = Vector3(0.25, 3, 0.25)
+
+[sub_resource type="Gradient" id="Gradient_debris"]
+offsets = PackedFloat32Array(0, 0.15, 0.7, 1)
+colors = PackedColorArray(1.5, 4, 1.5, 1, 0.35, 0.5, 0.35, 1, 0.22, 0.26, 0.22, 1, 0.15, 0.17, 0.15, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_debris"]
+gradient = SubResource("Gradient_debris")
+
+[sub_resource type="Curve" id="Curve_debris_scale"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.8, 0.9), 0.0, 0.0, 0, 0, Vector2(1, 0), -4.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_debris_scale"]
+curve = SubResource("Curve_debris_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_debris"]
+particle_flag_rotate_y = true
+emission_shape = 1
+emission_sphere_radius = 3.0
+angle_min = -180.0
+angle_max = 180.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 15.0
+initial_velocity_max = 45.0
+angular_velocity_min = -360.0
+angular_velocity_max = 360.0
+gravity = Vector3(0, 0, 0)
+damping_min = 2.0
+damping_max = 5.0
+scale_min = 0.6
+scale_max = 2.2
+scale_curve = SubResource("CurveTexture_debris_scale")
+color_ramp = SubResource("GradientTexture_debris")
+
+[sub_resource type="StandardMaterial3D" id="Material_debris"]
+transparency = 1
+vertex_color_use_as_albedo = true
+emission_enabled = true
+emission = Color(0.1, 0.9, 0.3, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_debris"]
+material = SubResource("Material_debris")
+size = Vector3(1, 0.7, 0.85)
+
+[sub_resource type="Gradient" id="Gradient_dust"]
+offsets = PackedFloat32Array(0, 0.08, 0.25, 0.6, 1)
+colors = PackedColorArray(0.2, 1.2, 0.4, 0, 0.12, 0.45, 0.2, 0.7, 0.1, 0.2, 0.13, 0.6, 0.08, 0.1, 0.09, 0.4, 0.06, 0.07, 0.06, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_dust"]
+gradient = SubResource("Gradient_dust")
+
+[sub_resource type="Curve" id="Curve_dust_scale"]
+_data = [Vector2(0, 0.3), 0.0, 2.0, 0, 0, Vector2(0.4, 0.85), 0.5, 0.5, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_dust_scale"]
+curve = SubResource("Curve_dust_scale")
+
+[sub_resource type="ParticleProcessMaterial" id="ProcessMaterial_dust"]
+emission_shape = 1
+emission_sphere_radius = 6.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 3.0
+initial_velocity_max = 12.0
+gravity = Vector3(0, 0, 0)
+damping_min = 1.0
+damping_max = 2.5
+scale_min = 7.0
+scale_max = 14.0
+scale_curve = SubResource("CurveTexture_dust_scale")
+color_ramp = SubResource("GradientTexture_dust")
+turbulence_enabled = true
+turbulence_noise_strength = 2.0
+turbulence_noise_scale = 10.0
+turbulence_influence_min = 0.05
+turbulence_influence_max = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_dust"]
+transparency = 1
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="Mesh_dust"]
+material = SubResource("Material_dust")
+radial_segments = 10
+rings = 5
+
+[node name="GoalExplosionEffect" type="Node3D" unique_id=2086382395]
+script = ExtResource("1_goalfx")
+
+[node name="Flash" type="GPUParticles3D" parent="." unique_id=991988763]
+emitting = false
+amount = 20
+lifetime = 0.7
+one_shot = true
+explosiveness = 1.0
+randomness = 0.3
+visibility_aabb = AABB(-25, -25, -25, 50, 50, 50)
+process_material = SubResource("ProcessMaterial_flash")
+draw_pass_1 = SubResource("Mesh_flash")
+
+[node name="Shockwave" type="GPUParticles3D" parent="." unique_id=1477568385]
+amount = 1
+lifetime = 1.4
+one_shot = true
+explosiveness = 1.0
+visibility_aabb = AABB(-50, -5, -50, 100, 10, 100)
+process_material = SubResource("ProcessMaterial_shockwave")
+draw_pass_1 = SubResource("Mesh_shockwave")
+
+[node name="Burst" type="GPUParticles3D" parent="." unique_id=1477590080]
+amount = 360
+lifetime = 2.6
+one_shot = true
+explosiveness = 0.92
+randomness = 0.5
+visibility_aabb = AABB(-50, -50, -50, 100, 100, 100)
+process_material = SubResource("ProcessMaterial_burst")
+draw_pass_1 = SubResource("Mesh_burst")
+
+[node name="Sparks" type="GPUParticles3D" parent="." unique_id=7096328]
+amount = 180
+lifetime = 1.4
+one_shot = true
+explosiveness = 1.0
+randomness = 0.4
+visibility_aabb = AABB(-70, -70, -70, 140, 140, 140)
+process_material = SubResource("ProcessMaterial_sparks")
+draw_pass_1 = SubResource("Mesh_sparks")
+
+[node name="Debris" type="GPUParticles3D" parent="." unique_id=934054088]
+amount = 70
+lifetime = 4.5
+one_shot = true
+explosiveness = 0.95
+randomness = 0.4
+visibility_aabb = AABB(-90, -90, -90, 180, 180, 180)
+process_material = SubResource("ProcessMaterial_debris")
+draw_pass_1 = SubResource("Mesh_debris")
+
+[node name="Dust" type="GPUParticles3D" parent="." unique_id=2121647747]
+emitting = false
+amount = 110
+lifetime = 7.0
+one_shot = true
+explosiveness = 0.75
+randomness = 0.4
+visibility_aabb = AABB(-60, -60, -60, 120, 120, 120)
+process_material = SubResource("ProcessMaterial_dust")
+draw_pass_1 = SubResource("Mesh_dust")

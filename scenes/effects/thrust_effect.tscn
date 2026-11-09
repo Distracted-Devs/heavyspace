@@ -7,6 +7,13 @@ point_count = 3
 [sub_resource type="CurveTexture" id="CurveTexture_scale"]
 curve = SubResource("Curve_scale")
 
+[sub_resource type="Gradient" id="Gradient_fire"]
+offsets = PackedFloat32Array(0, 0.25, 0.55, 1)
+colors = PackedColorArray(1, 0.9, 0.2, 1, 1, 0.5, 0.05, 1, 0.85, 0.08, 0.02, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_fire"]
+gradient = SubResource("Gradient_fire")
+
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_thrust"]
 emission_shape_scale = Vector3(0.1, 0.1, 1)
 emission_shape = 6
@@ -23,9 +30,11 @@ gravity = Vector3(0, 0, 0)
 scale_min = 2.0
 scale_max = 4.0
 scale_curve = SubResource("CurveTexture_scale")
+color_ramp = SubResource("GradientTexture1D_fire")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_thrust"]
 shading_mode = 0
+vertex_color_use_as_albedo = true
 
 [sub_resource type="SphereMesh" id="SphereMesh_thrust"]
 material = SubResource("StandardMaterial3D_thrust")

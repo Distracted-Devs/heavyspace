@@ -53,6 +53,14 @@ extends Node3D
 @export var death_shake_duration := 1.0
 @export var death_shake_frequency := 18.0
 @export var death_shake_rotation_deg := 3.0
+## Feedback played when the ship reaches a mission element (asteroid, goal).
+@export var mission_rumble_weak := 0.5
+@export var mission_rumble_strong := 0.35
+@export var mission_rumble_duration := 0.25
+@export var mission_shake_strength := 0.25
+@export var mission_shake_duration := 0.35
+@export var mission_shake_frequency := 16.0
+@export var mission_shake_rotation_deg := 0.6
 
 signal orbit_lock_changed(locked: bool)
 
@@ -66,6 +74,8 @@ var _orbit_time_scale := 1.0
 var _orbit_charge := 0.0
 var _is_dead := false
 var _was_thrusting := false
+## Seconds left on the mission-impact rumble; thrust rumble won't override it meanwhile.
+var _impact_rumble_left := 0.0
 
 
 func _ready() -> void:
@@ -124,6 +134,22 @@ func on_dead(hit_point: Vector3 = ship.global_position) -> void:
 	ship.set_deferred(&"freeze", true)
 
 
+## Short controller rumble and a gentle screen shake when the ship hits a
+## mission element, so reaching an objective feels like it landed.
+func play_mission_impact() -> void:
+	if _is_dead:
+		return
+	_impact_rumble_left = mission_rumble_duration
+	Input.start_joy_vibration(
+		0, mission_rumble_weak, mission_rumble_strong, mission_rumble_duration)
+	ScreenShakeHandler.shake(
+		mission_shake_strength,
+		mission_shake_duration,
+		mission_shake_frequency,
+		mission_shake_rotation_deg,
+	)
+
+
 func _spawn_explosion(at: Vector3) -> void:
 	if explosion == null:
 		return
@@ -141,6 +167,7 @@ func _spawn_explosion(at: Vector3) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_impact_rumble_left = maxf(_impact_rumble_left - delta, 0.0)
 	if _is_dead:
 		return
 	if _locked_orbit:
@@ -248,7 +275,7 @@ func unlock_orbit() -> void:
 	ship.angular_velocity = Vector3.ZERO
 	_orbit_time_scale = 1.0
 	_orbit_charge = 0.0
-	if _was_thrusting and not _is_dead:
+	if _was_thrusting and not _is_dead and _impact_rumble_left <= 0.0:
 		Input.stop_joy_vibration(0)
 	_was_thrusting = false
 	_locked_orbit = null
@@ -316,8 +343,10 @@ func _apply_orbit_boost(delta: float) -> void:
 		##maybe this should consume a different type of fuel???
 		fuel_component.add_fuel(-fuel_drain_rate * delta)
 
-	# Rumble ramps up to the peak over the charge, then stays there while boosting.
-	if held:
+	# Rumble ramps up to the peak over the charge, then stays there while boosting
+	if _impact_rumble_left > 0.0:
+		pass # Let the mission-impact rumble play out.
+	elif held:
 		var t := _orbit_charge / orbit_charge_time if orbit_charge_time > 0.0 else 1.0
 		Input.start_joy_vibration(
 			0, orbit_charge_peak_weak * t, orbit_charge_peak_strong * t, 0.2)
@@ -334,8 +363,7 @@ func _set_thrust_emitting(on: bool) -> void:
 
 
 func _apply_rotation(delta: float) -> void:
-	# Keyboard: A/D roll, W/S pitch, Q/E yaw.
-	# Controller: left stick pitch/yaw (analog), LB/RB roll.
+
 	var roll := clampf(
 		int(Input.is_physical_key_pressed(KEY_A)) - int(Input.is_physical_key_pressed(KEY_D))
 		+ Input.get_axis(&"ship_roll_right", &"ship_roll_left"),
@@ -372,8 +400,10 @@ func _apply_thrust(delta: float) -> void:
 	# Don't touch the rumble once dead, or it would cancel the death vibration.
 	if _is_dead:
 		return
-	if thrusting:
-		Input.start_joy_vibration(0, 0.25, 0.4, 0.5)
+	if _impact_rumble_left > 0.0:
+		pass # Let the mission-impact rumble play out.
+	elif thrusting:
+		Input.start_joy_vibration(0, 0.1, 0.2, 0.5)
 	elif _was_thrusting:
 		Input.stop_joy_vibration(0)
 	_was_thrusting = thrusting

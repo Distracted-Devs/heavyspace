@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://resources/shaders/rotating_planet.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://resources/textures/earth.jpg" id="2_earth"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/albedo_texture = ExtResource("2_earth")
+shader_parameter/albedo_tint = Color(1, 1, 1, 1)
+shader_parameter/roughness = 0.8
+shader_parameter/rotation_axis = Vector3(0, 1, 0)
+shader_parameter/axial_tilt_degrees = 23.4
+shader_parameter/rotation_speed_degrees = 3.0
+shader_parameter/start_angle_degrees = 0.0
+shader_parameter/flip_horizontal = false

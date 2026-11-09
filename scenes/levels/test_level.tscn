@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://cu326b8lov3cj" path="res://scenes/obstacles/asteroid_obstacle.tscn" id="10_2mu0v"]
 [ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="10_sun"]
 [ext_resource type="PackedScene" path="res://scenes/ui/restart_prompt.tscn" id="11_restart"]
-[ext_resource type="PackedScene" path="res://scenes/ui/restart_hint.tscn" id="12_hint"]
+[ext_resource type="PackedScene" uid="uid://cl7nm66ny067p" path="res://scenes/ui/restart_hint.tscn" id="12_hint"]
 [ext_resource type="PackedScene" path="res://scenes/levels/dead_zone.tscn" id="13_deadzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dead_zone_warning.tscn" id="14_dzwarn"]
 
@@ -53,6 +53,7 @@ light_intensity = 6.0
 
 [node name="PlayerShip" parent="." unique_id=1639055760 instance=ExtResource("2_48ne7")]
 transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 1235.3691, 2600.1729)
+thrust_force = 30.0
 rotation_correction_speed = 0.5
 rotation_correction_multiplier = 1.0
 rotation_correction_exponent = 0.75
@@ -72,9 +73,9 @@ mass = 8000000.0
 
 [node name="PixelateOverlay" parent="." unique_id=2044842021 instance=ExtResource("9_pix")]
 
-[node name="RestartPrompt" parent="." instance=ExtResource("11_restart")]
+[node name="RestartPrompt" parent="." unique_id=194693097 instance=ExtResource("11_restart")]
 
-[node name="RestartHint" parent="." instance=ExtResource("12_hint")]
+[node name="RestartHint" parent="." unique_id=1902681171 instance=ExtResource("12_hint")]
 
 [node name="Asteroid_Obstacle" parent="." unique_id=804147482 node_paths=PackedStringArray("planet") instance=ExtResource("10_2mu0v")]
 transform = Transform3D(50, 0, 0, 0, 50, 0, 0, 0, 50, 4505.5327, 0, 0)
@@ -93,15 +94,20 @@ clockwise = true
 orbit_axis = Vector3(0, 0, 0)
 start_angle = 124.541
 
-[node name="DeadZone" parent="." node_paths=PackedStringArray("center") instance=ExtResource("13_deadzone")]
+[node name="DeadZone" parent="." unique_id=1284114030 node_paths=PackedStringArray("center") instance=ExtResource("13_deadzone")]
 center = NodePath("../BigAssPlanet")
-radius = 6000.0
-return_time = 5.0
+radius = 4000.0
 
-[node name="DeadZoneWarning" parent="." node_paths=PackedStringArray("dead_zone") instance=ExtResource("14_dzwarn")]
+[node name="DeadZoneWarning" parent="." unique_id=644469351 node_paths=PackedStringArray("dead_zone") instance=ExtResource("14_dzwarn")]
 dead_zone = NodePath("../DeadZone")
 
 [node name="AsteroidMission" parent="." unique_id=1861415494 instance=ExtResource("8_7x1jh")]
-transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 536.87946, -943.4909, -1927.428)
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 900.34784, -943.4909, -2498.9946)
+
+[node name="AsteroidMission3" parent="." unique_id=1147948896 instance=ExtResource("8_7x1jh")]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, -3176.3945, 1325.8826, -1519.0106)
+
+[node name="AsteroidMission2" parent="." unique_id=643837449 instance=ExtResource("8_7x1jh")]
+transform = Transform3D(50, 0, 0, 0, 50, 0, 0, 0, 50, 311.5067, -1864.7949, 62.939575)
 
 [editable path="BigAssPlanet"]
