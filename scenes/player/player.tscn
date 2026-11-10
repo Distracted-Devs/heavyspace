@@ -2,13 +2,12 @@
 
 [ext_resource type="Script" uid="uid://4sk2uo38r44x" path="res://scripts/player/player.gd" id="1_4fnjr"]
 [ext_resource type="Script" uid="uid://ckrj26q2d0ft8" path="res://scripts/player/camera.gd" id="2_42gqe"]
+[ext_resource type="PackedScene" uid="uid://cr53gb3boofw0" path="res://scenes/bodies/LowPolySpaceShip.fbx" id="3_0owmy"]
 [ext_resource type="Script" uid="uid://cieyl2wcg3ad" path="res://scripts/components/mass_component.gd" id="3_gmlin"]
 [ext_resource type="Script" uid="uid://dpcf2wtymmhno" path="res://scripts/components/fuel_component.gd" id="4_lvxji"]
 [ext_resource type="Script" uid="uid://dke8yv62eulki" path="res://scripts/components/gravity_effect.gd" id="5_p47bc"]
 [ext_resource type="PackedScene" uid="uid://12yqyb2fybqn" path="res://scenes/effects/thrust_effect.tscn" id="6_75vfm"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7x1jh"]
-albedo_color = Color(0.8683663, 0, 0.3938961, 1)
+[ext_resource type="PackedScene" uid="uid://blsncj007vhk3" path="res://resources/VFX/FartMobile.tscn" id="8_qek5x"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hfwtw"]
 albedo_color = Color(1, 0.47516352, 0.6080538, 1)
@@ -43,12 +42,16 @@ gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
 
+[node name="LowPolySpaceShip" parent="Ship" unique_id=299765975 instance=ExtResource("3_0owmy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.1561011)
+
 [node name="Body" type="CSGSphere3D" parent="Ship" unique_id=1217962877]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 3.355, 0, 0, 0)
-material = SubResource("StandardMaterial3D_7x1jh")
+visible = false
 
 [node name="Wings" type="CSGSphere3D" parent="Ship" unique_id=344383690]
 transform = Transform3D(1.29, 0, 0, 0, 0.115, 0, 0, 0, 0.35, 0, 0, 0.49779224)
+visible = false
 radius = 1.377
 material = SubResource("StandardMaterial3D_hfwtw")
 
@@ -58,6 +61,7 @@ shape = SubResource("SphereShape3D_7l7pj")
 
 [node name="Cockpit" type="CSGSphere3D" parent="Ship" unique_id=1604488220]
 transform = Transform3D(0.595, 0, 0, 0, 0.955, 0, 0, 0, 1.156, 0, 0.16910243, -0.56070554)
+visible = false
 material = SubResource("StandardMaterial3D_2mu0v")
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Ship" unique_id=473594166]
@@ -79,3 +83,7 @@ body = NodePath("..")
 
 [node name="ThrustEffect" parent="Ship" unique_id=163164834 instance=ExtResource("6_75vfm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052609205, 0, 1.3490169)
+visible = false
+
+[node name="VFX_ToonySmoke_green" parent="Ship" unique_id=936880320 instance=ExtResource("8_qek5x")]
+transform = Transform3D(1, 0, 0, 0, -0.054793775, -0.9984978, 0, 0.9984978, -0.054793775, 0, 0, 0.6822386)

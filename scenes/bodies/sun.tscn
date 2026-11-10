@@ -1,47 +1,68 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://cx3kcbani22gq"]
 
-[ext_resource type="Script" path="res://scripts/bodies/sun.gd" id="1_sun"]
-[ext_resource type="Shader" path="res://resources/shaders/sun_surface.gdshader" id="2_surf"]
-[ext_resource type="Shader" path="res://resources/shaders/sun_corona.gdshader" id="3_cor"]
+[ext_resource type="Script" uid="uid://thbkwur5hr8x" path="res://scripts/bodies/sun.gd" id="1_sun"]
+[ext_resource type="Shader" uid="uid://70hsam6i1scs" path="res://resources/shaders/VW_sun_surface.gdshader" id="2_surf"]
+[ext_resource type="Shader" uid="uid://br2mcwe8rnga3" path="res://resources/shaders/sun_corona.gdshader" id="3_cor"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_surface"]
 render_priority = 0
 shader = ExtResource("2_surf")
+shader_parameter/sunset_bottom = Color(1, 0.75, 0.08, 1)
+shader_parameter/sunset_middle = Color(1, 0.35, 0.12, 1)
+shader_parameter/sunset_top = Color(1, 0.02, 0.42, 1)
+shader_parameter/sun_energy = 2.5
+shader_parameter/limb_power = 0.6
+shader_parameter/edge_brightness = 0.45
+shader_parameter/half_height = 0.5
+shader_parameter/gradient_center_y = 0.0
+shader_parameter/stripe_count = 24.0
+shader_parameter/stripe_strength = 0.22
+shader_parameter/stripe_width = 0.3
+shader_parameter/wave_amount = 0.06
+shader_parameter/wave_speed = 0.3
+shader_parameter/wave_frequency = 9.0
 
 [sub_resource type="SphereMesh" id="SphereMesh_sun"]
 material = SubResource("ShaderMaterial_surface")
 radius = 1.0
 height = 2.0
-radial_segments = 64
-rings = 32
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_corona"]
 render_priority = 0
 shader = ExtResource("3_cor")
+shader_parameter/color = Color(1, 0.55, 0.2, 1)
+shader_parameter/intensity = 3.0
+shader_parameter/falloff = 3.0
 
 [sub_resource type="QuadMesh" id="QuadMesh_corona"]
 material = SubResource("ShaderMaterial_corona")
 size = Vector2(2, 2)
 
-[node name="Sun" type="Node3D"]
+[node name="Sun" type="Node3D" unique_id=937721311]
+process_priority = 1000
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1385.6, 1600, 2400)
 script = ExtResource("1_sun")
 
-[node name="Body" type="MeshInstance3D" parent="."]
+[node name="Body" type="MeshInstance3D" parent="." unique_id=2101107362]
+transform = Transform3D(650, 0, 0, 0, 650, 0, 0, 0, 650, 0, 0, 0)
 cast_shadow = 0
 mesh = SubResource("SphereMesh_sun")
 
-[node name="Corona" type="MeshInstance3D" parent="."]
+[node name="Corona" type="MeshInstance3D" parent="." unique_id=1253633025]
+transform = Transform3D(1950, 0, 0, 0, 1950, 0, 0, 0, 1950, 0, 0, 0)
 cast_shadow = 0
 mesh = SubResource("QuadMesh_corona")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=83035914]
+transform = Transform3D(0.8660317, -0.24999586, 0.43300238, 0, 0.8660238, 0.50000274, -0.49998897, -0.43301824, 0.7500041, 0, 0, 0)
 light_color = Color(1, 0.88, 0.72, 1)
 light_energy = 3.0
 shadow_enabled = true
+shadow_opacity = 0.85
 directional_shadow_max_distance = 3000.0
 
-[node name="FillLight" type="DirectionalLight3D" parent="."]
+[node name="FillLight" type="DirectionalLight3D" parent="." unique_id=2072403269]
+transform = Transform3D(-0.41867152, -0.38728982, -0.8214139, 0, 0.90450364, -0.42646596, 0.90813774, -0.17854916, -0.37868991, 0, 0, 0)
 light_color = Color(0.55, 0.65, 1, 1)
 light_energy = 0.6
 light_specular = 0.2
-shadow_enabled = false

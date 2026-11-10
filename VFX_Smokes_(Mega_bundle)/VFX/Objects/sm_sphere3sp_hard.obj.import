@@ -1,0 +1,22 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://bthhqih0xhxwl"
+path="res://.godot/imported/sm_sphere3sp_hard.obj-10825bafc0bdc1b47028fc267225deae.mesh"
+
+[deps]
+
+files=["res://.godot/imported/sm_sphere3sp_hard.obj-10825bafc0bdc1b47028fc267225deae.mesh"]
+
+source_file="res://VFX/Objects/sm_sphere3sp_hard.obj"
+dest_files=["res://.godot/imported/sm_sphere3sp_hard.obj-10825bafc0bdc1b47028fc267225deae.mesh", "res://.godot/imported/sm_sphere3sp_hard.obj-10825bafc0bdc1b47028fc267225deae.mesh"]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+optimize_mesh=true
+force_disable_mesh_compression=false

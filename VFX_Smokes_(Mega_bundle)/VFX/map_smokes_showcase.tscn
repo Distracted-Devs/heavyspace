@@ -1,0 +1,303 @@
+[gd_scene load_steps=57 format=3 uid="uid://8hd1v8f3weny"]
+
+[ext_resource type="PackedScene" uid="uid://cv0u43rpk4mp1" path="res://VFX/Scenes/VFX_Smoke_A.tscn" id="1_t4shl"]
+[ext_resource type="PackedScene" uid="uid://db588q10cueuw" path="res://VFX/Scenes/VFX_Smoke_B_green.tscn" id="2_ox0cf"]
+[ext_resource type="PackedScene" uid="uid://d4jnpnljg4sel" path="res://VFX/Scenes/VFX_Smoke_B_blue.tscn" id="3_re54o"]
+[ext_resource type="PackedScene" uid="uid://d3exw52tx65m7" path="res://VFX/Scenes/VFX_Smoke_B_red.tscn" id="4_yywk0"]
+[ext_resource type="PackedScene" uid="uid://cn4ptoqsuyxed" path="res://VFX/Scenes/VFX_Smoke_C.tscn" id="5_dtbo0"]
+[ext_resource type="PackedScene" uid="uid://bkt3sl22fcqxm" path="res://VFX/Scenes/VFX_Smoke_C_green.tscn" id="6_t47o6"]
+[ext_resource type="PackedScene" uid="uid://bwdxfceph7fk3" path="res://VFX/Scenes/VFX_Smoke_C_blue.tscn" id="7_fn2lq"]
+[ext_resource type="PackedScene" uid="uid://q7807y4vuql4" path="res://VFX/Scenes/VFX_Smoke_C_red.tscn" id="8_kuf12"]
+[ext_resource type="PackedScene" uid="uid://ctfdakvxmcgh3" path="res://VFX/Scenes/VFX_Smoke_C_fired.tscn" id="9_iouea"]
+[ext_resource type="PackedScene" uid="uid://dfmgnskhwelkh" path="res://VFX/Scenes/VFX_Smoke_W_ispy.tscn" id="10_l51ih"]
+[ext_resource type="PackedScene" uid="uid://crxsrrxxaaerp" path="res://VFX/Scenes/VFX_Smoke_D.tscn" id="11_8cxtt"]
+[ext_resource type="PackedScene" uid="uid://cefgedo0vabuk" path="res://VFX/Scenes/VFX_Smoke_E_greenring.tscn" id="12_ytmq4"]
+[ext_resource type="PackedScene" uid="uid://cymkq6id8acmg" path="res://VFX/Scenes/VFX_Smoke_G_ring.tscn" id="13_r8jja"]
+[ext_resource type="PackedScene" uid="uid://b6b3ktvijax3g" path="res://VFX/Scenes/VFX_Smoke_Dirty.tscn" id="14_f64eg"]
+[ext_resource type="PackedScene" uid="uid://drkar5y8g70pa" path="res://VFX/Scenes/VFX_Smoke_E.tscn" id="15_d1q8c"]
+[ext_resource type="PackedScene" uid="uid://brh367h7skxqn" path="res://VFX/Scenes/VFX_Smoke_F.tscn" id="16_2dpb2"]
+[ext_resource type="PackedScene" uid="uid://cnriac7anmbu6" path="res://VFX/Scenes/VFX_Smoke_F_purple.tscn" id="17_p1t7i"]
+[ext_resource type="PackedScene" uid="uid://cteeuqenc4d13" path="res://VFX/Scenes/VFX_Cell_smoke_a_white.tscn" id="20_3b8pl"]
+[ext_resource type="PackedScene" uid="uid://dtkvpjpahvqti" path="res://VFX/Scenes/VFX_Stylized_smoke_A_white.tscn" id="20_hme1r"]
+[ext_resource type="PackedScene" uid="uid://bwwf4sbcochuh" path="res://VFX/Scenes/VFX_Cell_smoke_a_purple.tscn" id="21_a7v1f"]
+[ext_resource type="PackedScene" uid="uid://wmot5xni6r77" path="res://VFX/Scenes/VFX_Stylized_smoke_A_black.tscn" id="21_tpaso"]
+[ext_resource type="PackedScene" uid="uid://c3ncyu8kxcjcf" path="res://VFX/Scenes/VFX_Cell_smoke_a_red.tscn" id="22_a3fl4"]
+[ext_resource type="PackedScene" uid="uid://drvknqp36n1wa" path="res://VFX/Scenes/VFX_Stylized_smoke_A_green.tscn" id="22_bahdi"]
+[ext_resource type="PackedScene" uid="uid://d26jhk2h482ax" path="res://VFX/Scenes/VFX_Cell_smoke_a_green.tscn" id="23_r2dow"]
+[ext_resource type="PackedScene" uid="uid://cc7oqrd3cfys7" path="res://VFX/Scenes/VFX_Stylized_smoke_A_blue.tscn" id="23_vwmsg"]
+[ext_resource type="PackedScene" uid="uid://dudpewhyp3tjr" path="res://VFX/Scenes/VFX_Cell_smoke_a_gray.tscn" id="24_7rvkj"]
+[ext_resource type="PackedScene" uid="uid://du5oj3cb55vku" path="res://VFX/Scenes/VFX_Stylized_smoke_A_red.tscn" id="24_fyel8"]
+[ext_resource type="PackedScene" uid="uid://4k4lwy26c2sc" path="res://VFX/Scenes/VFX_Stylized_smoke_ring_1.tscn" id="25_agmhc"]
+[ext_resource type="PackedScene" uid="uid://dqm6n877wj6px" path="res://VFX/Scenes/VFX_Stylized_smoke_ring_2.tscn" id="26_5g6fs"]
+[ext_resource type="PackedScene" uid="uid://dhtnx4pu1viu5" path="res://VFX/Scenes/VFX_Stylized_smoke_ring_3.tscn" id="27_kaoud"]
+[ext_resource type="PackedScene" uid="uid://b77e64aand7n2" path="res://VFX/Scenes/VFX_Toony_smoke_Gray.tscn" id="28_3dyb0"]
+[ext_resource type="PackedScene" uid="uid://bcgrr3ri6gemg" path="res://VFX/Scenes/VFX_Toony_smoke_Blue.tscn" id="29_u37on"]
+[ext_resource type="PackedScene" uid="uid://blsncj007vhk3" path="res://VFX/Scenes/VFX_Toony_smoke_green.tscn" id="30_itklm"]
+[ext_resource type="PackedScene" uid="uid://d2pgcsipjulhc" path="res://VFX/Scenes/VFX_Toony_smoke_Red.tscn" id="31_b0l8t"]
+[ext_resource type="PackedScene" uid="uid://chg52jgockkvt" path="res://VFX/Scenes/VFX_Puff_Reallistic1.tscn" id="32_0u7sb"]
+[ext_resource type="PackedScene" uid="uid://ccdifaij7iykp" path="res://VFX/Scenes/VFX_Puff_run.tscn" id="33_jnskx"]
+[ext_resource type="PackedScene" uid="uid://bj3cgi2csord" path="res://VFX/Scenes/VFX_puff_big.tscn" id="34_c7l4k"]
+[ext_resource type="PackedScene" uid="uid://bf1di88octb5a" path="res://VFX/Scenes/VFX_Puff_style_b.tscn" id="35_j1wt0"]
+[ext_resource type="PackedScene" uid="uid://daloay2sivouw" path="res://VFX/Scenes/VFX_Puff_style_C.tscn" id="36_6k4jd"]
+[ext_resource type="PackedScene" uid="uid://83cknj0mrpso" path="res://VFX/Scenes/VFX_Puff_style_colored.tscn" id="37_3k0u0"]
+[ext_resource type="Texture2D" uid="uid://bqy267pnvahao" path="res://VFX/Misc/T_C0L0R3DPUFF.png" id="38_vjl87"]
+[ext_resource type="Texture2D" uid="uid://b4ybiialjuvc" path="res://VFX/Misc/T_C0L0R3DSM0K3.png" id="39_8ilhk"]
+[ext_resource type="Texture2D" uid="uid://cmjwkeqco1amt" path="res://VFX/Misc/T_C0L0R3DSTYLIZED.png" id="40_alxgi"]
+[ext_resource type="Texture2D" uid="uid://d35nyjnyvep6y" path="res://VFX/Misc/T_R34LL1STSM0K3.png" id="41_2qqwr"]
+[ext_resource type="Texture2D" uid="uid://b5tgrucbjmlag" path="res://VFX/Misc/T_SM0K3R1NG.png" id="42_ot7yh"]
+[ext_resource type="Texture2D" uid="uid://cvkxmhyxv75j1" path="res://VFX/Misc/T_STYL1Z3DPUFF.png" id="43_5jdhn"]
+[ext_resource type="Texture2D" uid="uid://0a6dtsk8ppoy" path="res://VFX/Misc/T_STYL1Z3DSM0K3.png" id="44_ldy7n"]
+[ext_resource type="Texture2D" uid="uid://rdcnxinx6rkf" path="res://VFX/Misc/T_STYL1Z3DSM0k3R1NGS.png" id="45_w0qmp"]
+[ext_resource type="PackedScene" uid="uid://dvyq137rgwo7e" path="res://VFX/Scenes/VFX_Smoke_Dust_Ring.tscn" id="46_3w61g"]
+[ext_resource type="PackedScene" uid="uid://k0t6634hufs1" path="res://VFX/Scenes/VFX_Smoke_z_puff.tscn" id="47_23lyx"]
+[ext_resource type="PackedScene" uid="uid://cgs41e8vpi6w7" path="res://VFX/Scenes/VFX_Smoke_z.tscn" id="48_naa2j"]
+
+[sub_resource type="GDScript" id="GDScript_xihgf"]
+resource_name = "VFX_showcaser"
+script/source = "@tool
+extends Node
+
+enum {ANTICIPATION, HIT}
+
+@export var my_bool:bool = false:
+	set(new_my_bool):
+		my_bool = new_my_bool
+		self.play_all_animations(my_bool)
+
+func _ready() -> void:
+	$misc/AnimationPlayer.play(\"Init\")
+
+func _run():
+	$misc/AnimationPlayer.play(\"Init\")
+
+	
+func play_all_animations(_type:bool)->void:
+	
+	match _type:
+		true:
+			$VFX_Puff_styleB.find_child(\"AnimationPlayer\").play(\"Init\");
+			$VFX_Puff_StyleC.find_child(\"AnimationPlayer\").play(\"Init\");
+			
+		false:
+			$VFX_Puff_StyleColored.find_child(\"AnimationPlayer\").play(\"Init\");
+			$VFX_Puff_hit.find_child(\"AnimationPlayer\").play(\"Init\");
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7hrgv"]
+albedo_color = Color(0.20871, 0.20871, 0.20871, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_veof6"]
+size = Vector2(90, 70)
+
+[sub_resource type="Animation" id="Animation_rudg4"]
+resource_name = "Init"
+length = 3.5
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("..:my_bool")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.566667, 2.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_n0wxa"]
+_data = {
+"Init": SubResource("Animation_rudg4")
+}
+
+[node name="map1" type="Node"]
+script = SubResource("GDScript_xihgf")
+
+[node name="floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -4.54056)
+material_override = SubResource("StandardMaterial3D_7hrgv")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_veof6")
+metadata/_edit_lock_ = true
+
+[node name="VFX_Smoke_A" parent="." instance=ExtResource("1_t4shl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -3)
+
+[node name="VFX_Smoke_B_green" parent="." instance=ExtResource("2_ox0cf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 2, 14)
+
+[node name="VFX_Smoke_B_blue" parent="." instance=ExtResource("3_re54o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2, 14)
+
+[node name="VFX_Smoke_B_red" parent="." instance=ExtResource("4_yywk0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 2, 14)
+
+[node name="VFX_Smoke_Z_Puff" parent="." instance=ExtResource("47_23lyx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.008, 1.987, 13.838)
+
+[node name="VFX_Smoke_C" parent="." instance=ExtResource("5_dtbo0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -3)
+amount = 120
+
+[node name="VFX_Smoke_C_green" parent="." instance=ExtResource("6_t47o6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.0271, 0, 6)
+
+[node name="VFX_Smoke_C_blue" parent="." instance=ExtResource("7_fn2lq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.0271, 0, 6)
+
+[node name="VFX_Smoke_C_red" parent="." instance=ExtResource("8_kuf12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.0271, 0, 6)
+
+[node name="VFX_Smoke_C_fired" parent="." instance=ExtResource("9_iouea")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.0271, 0, 6)
+
+[node name="VFX_Smoke_W_ispy" parent="." instance=ExtResource("10_l51ih")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.718, 2.26, -13)
+
+[node name="VFX_Smoke_D" parent="." instance=ExtResource("11_8cxtt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -3)
+
+[node name="VFX_Smoke_E_Greenring" parent="." instance=ExtResource("12_ytmq4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.646, 1.423, -13.432)
+
+[node name="VFX_Smoke_G_ring" parent="." instance=ExtResource("13_r8jja")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.765, 1.423, -13.432)
+
+[node name="VFX_Smoke_Dirty" parent="." instance=ExtResource("14_f64eg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.111, 1.423, -13.945)
+
+[node name="VFX_Smoke_E" parent="." instance=ExtResource("15_d1q8c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -3)
+
+[node name="VFX_Smoke_F" parent="." instance=ExtResource("16_2dpb2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -3)
+
+[node name="VFX_Smoke_F_purple" parent="." instance=ExtResource("17_p1t7i")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.02705, 0, 6)
+
+[node name="VFX_StylizedSmoke_A_white" parent="." instance=ExtResource("20_hme1r")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1, 1)
+
+[node name="VFX_CellShadedSmoke_A_white" parent="." instance=ExtResource("20_3b8pl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.08512, 1.35536, 1.06725)
+
+[node name="VFX_CellShadedSmoke_A_purple" parent="." instance=ExtResource("21_a7v1f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.3511, 1.35536, 22.2814)
+
+[node name="VFX_CellShadedSmoke_A_red" parent="." instance=ExtResource("22_a3fl4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5817, 1.35536, 22.2814)
+
+[node name="VFX_CellShadedSmoke_A_green" parent="." instance=ExtResource("23_r2dow")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.83, 1.35536, 22.2814)
+
+[node name="VFX_CellShadedSmoke_A_gray" parent="." instance=ExtResource("24_7rvkj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.52, 1.35536, 1.06725)
+
+[node name="VFX_StylizedSmoke_A_black" parent="." instance=ExtResource("21_tpaso")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 1, 1)
+
+[node name="VFX_StylizedSmoke_A_green" parent="." instance=ExtResource("22_bahdi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.628, 1.294, 12.142)
+
+[node name="VFX_StylizedSmoke_A_blue" parent="." instance=ExtResource("23_vwmsg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.226, 1.294, 12.142)
+
+[node name="VFX_StylizedSmoke_A_Red" parent="." instance=ExtResource("24_fyel8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.639, 1.294, 12.142)
+
+[node name="VFX_StylizedSmoke_ring1" parent="." instance=ExtResource("25_agmhc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.912, 1.294, -14.255)
+
+[node name="VFX_StylizedSmoke_ring2" parent="." instance=ExtResource("26_5g6fs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.001, 1.294, -14.126)
+
+[node name="VFX_StylizedSmoke_ring3" parent="." instance=ExtResource("27_kaoud")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.167, 2.972, -13.206)
+
+[node name="VFX_ToonySmoke_gray" parent="." instance=ExtResource("28_3dyb0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 1, 1)
+
+[node name="VFX_ToonySmoke_blue" parent="." instance=ExtResource("29_u37on")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.905, 0.727, 11.877)
+
+[node name="VFX_ToonySmoke_green" parent="." instance=ExtResource("30_itklm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.222, 0.727, 11.877)
+
+[node name="VFX_ToonySmoke_red" parent="." instance=ExtResource("31_b0l8t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.134, 0.727, 11.877)
+
+[node name="VFX_Puff_Reallistic1" parent="." instance=ExtResource("32_0u7sb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 3, -13)
+emitting = true
+one_shot = false
+
+[node name="VFX_puff_run" parent="." instance=ExtResource("33_jnskx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2, -27)
+emitting = true
+one_shot = false
+
+[node name="VFX_Smoke_Dust_ring" parent="." instance=ExtResource("46_3w61g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.9401, 1.41872, -22.272)
+
+[node name="VFX_Smoke_Z" parent="." instance=ExtResource("48_naa2j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.519, 0.978, -3.408)
+
+[node name="VFX_Puff_hit" parent="." instance=ExtResource("34_c7l4k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1, -28)
+
+[node name="VFX_Puff_styleB" parent="." instance=ExtResource("35_j1wt0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -28)
+
+[node name="VFX_Puff_StyleC" parent="." instance=ExtResource("36_6k4jd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 2, -28)
+
+[node name="VFX_Puff_StyleColored" parent="." instance=ExtResource("37_3k0u0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, -28)
+
+[node name="misc" type="Node" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="misc"]
+libraries = {
+"": SubResource("AnimationLibrary_n0wxa")
+}
+
+[node name="text3D" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -18.5417, 1, 18)
+texture = ExtResource("38_vjl87")
+metadata/_edit_lock_ = true
+
+[node name="text3D2" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -18.5417, 1, 9)
+texture = ExtResource("39_8ilhk")
+metadata/_edit_lock_ = true
+
+[node name="text3D3" type="Sprite3D" parent="misc"]
+transform = Transform3D(1.2, 0, 0, 0, 0.848528, 0.848528, 0, -0.848528, 0.848528, 18, 1, 27.579)
+texture = ExtResource("40_alxgi")
+metadata/_edit_lock_ = true
+
+[node name="text3D4" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -18.5417, 1, 0)
+texture = ExtResource("41_2qqwr")
+metadata/_edit_lock_ = true
+
+[node name="text3D5" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -18.5417, 1, -9)
+texture = ExtResource("42_ot7yh")
+metadata/_edit_lock_ = true
+
+[node name="text3D6" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 18, 1, -23)
+texture = ExtResource("43_5jdhn")
+metadata/_edit_lock_ = true
+
+[node name="text3D7" type="Sprite3D" parent="misc"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 18, 1, 6)
+texture = ExtResource("44_ldy7n")
+metadata/_edit_lock_ = true
+
+[node name="text3D8" type="Sprite3D" parent="misc"]
+transform = Transform3D(1.3, 0, 0, 0, 0.919239, 0.919239, 0, -0.919239, 0.919239, 18, 1, -6)
+texture = ExtResource("45_w0qmp")
+metadata/_edit_lock_ = true

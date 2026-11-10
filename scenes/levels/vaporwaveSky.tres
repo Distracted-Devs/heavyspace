@@ -1,0 +1,8 @@
+[gd_resource type="VisualShader" format=3 uid="uid://jtl0d0tiol5r"]
+
+[resource]
+mode = 3
+flags/use_half_res_pass = false
+flags/use_quarter_res_pass = false
+flags/disable_fog = false
+flags/use_debanding = false

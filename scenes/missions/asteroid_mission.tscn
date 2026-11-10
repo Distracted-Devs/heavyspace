@@ -1,10 +1,31 @@
 [gd_scene format=3 uid="uid://ctu8cin2qq85k"]
 
 [ext_resource type="Script" uid="uid://cbl2p4vkmnbbj" path="res://scripts/missions/asteroid_mission.gd" id="1_asteroid"]
-[ext_resource type="Texture2D" uid="uid://dprhu2jh874s2" path="res://resources/textures/mars.jpg" id="2_yyjyp"]
+[ext_resource type="Shader" uid="uid://d1rss632uonv7" path="res://resources/shaders/VW_Mars.gdshader" id="2_yyjyp"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c4xsx"]
-albedo_texture = ExtResource("2_yyjyp")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_c4xsx"]
+render_priority = 0
+shader = ExtResource("2_yyjyp")
+shader_parameter/deep_water = Color(0.3897446, 0.020689936, 0.031003976, 1)
+shader_parameter/shallow_water = Color(0.7718815, 0.14696655, 0.25497472, 1)
+shader_parameter/beach_color = Color(1, 0.08, 0.55, 1)
+shader_parameter/lowland_color = Color(0.89393306, 0.24955359, 0.039747916, 1)
+shader_parameter/highland_color = Color(0.97943205, 0.6007504, 0.44238657, 1)
+shader_parameter/peak_color = Color(0.9999998, 0.3788228, 0.16749015, 1)
+shader_parameter/contour_color = Color(0.65556127, 0, 0.20188534, 1)
+shader_parameter/rim_color = Color(0.9863295, 0.54614246, 0.6268971, 1)
+shader_parameter/planet_radius = 5.67500026886398
+shader_parameter/continent_scale = 2.3350000871625
+shader_parameter/sea_level = 0.30000000773023
+shader_parameter/bump_height = 0.1250000059375
+shader_parameter/mountain_detail = 0.55
+shader_parameter/pattern_offset = Vector3(3.2, 7.1, 1.8)
+shader_parameter/contour_count = 18.0
+shader_parameter/contour_width = 0.045
+shader_parameter/contour_energy = 1.5
+shader_parameter/surface_brightness = 1.0
+shader_parameter/edge_brightness = 0.45
+shader_parameter/rim_energy = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asteroid"]
 albedo_color = Color(0.45, 0.4, 0.36, 1)
@@ -26,7 +47,7 @@ solid_body = NodePath("StaticBody3D")
 detect_area = NodePath("DetectArea")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1542912725]
-material_override = SubResource("StandardMaterial3D_c4xsx")
+material_override = SubResource("ShaderMaterial_c4xsx")
 mesh = SubResource("SphereMesh_asteroid")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1438926773]
