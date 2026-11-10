@@ -1,11 +1,17 @@
 [gd_scene format=3 uid="uid://cy1nypgfcqngy"]
 
 [ext_resource type="Script" uid="uid://bgqkir0gjxq54" path="res://scripts/bodies/mass_collectable.gd" id="1_bmbob"]
+[ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://resources/textures/earth.jpg" id="2_hjxvr"]
+[ext_resource type="Script" uid="uid://bk10v02e6yctf" path="res://scripts/components/component_gravity.gd" id="3_spopx"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="MassCollectable" type="Node3D" unique_id=354161295]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v45ci"]
+albedo_texture = ExtResource("2_hjxvr")
+
+[node name="MassCollectable" type="Node3D" unique_id=354161295 node_paths=PackedStringArray("gravity_component")]
 script = ExtResource("1_bmbob")
+gravity_component = NodePath("GravityComponent")
 
 [node name="Area3D" type="Area3D" parent="." unique_id=1264377945]
 
@@ -13,3 +19,8 @@ script = ExtResource("1_bmbob")
 shape = SubResource("SphereShape3D_7l7pj")
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="Area3D" unique_id=1544665345]
+material = SubResource("StandardMaterial3D_v45ci")
+
+[node name="GravityComponent" type="Node" parent="." unique_id=1497873365]
+script = ExtResource("3_spopx")
+mass = 0.1

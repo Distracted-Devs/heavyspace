@@ -4,26 +4,24 @@ extends Node
 @export_group("Setup")
 @export var collectable: PackedScene
 @export var player: Player
-@export var planet: Planet
 
 @export_group("Parameters")
 @export var spawn_chance := 0.2
 @export var cell_side_length := 100.0
-@export var grid_side_n_cells: int = 10
-@export var size_scaling_mean: float = 1.0
-@export var size_scaling_variance: float = 0.3
-@export var position_jitter: float = 20.0
-@export var n_spawns_per_cell: int = 2
-@export var spawn_queue_per_frame: int = 10
+@export var grid_side_n_cells := 10
+@export var size_scaling_mean := 1.0
+@export var size_scaling_variance := 0.3
+@export var position_jitter := 20.0
+@export var n_spawns_per_cell := 2
+@export var spawn_queue_per_frame := 10
+
 @export var chance_of_much_bigger_spawn: float = 0.01
-@export var big_spawn_scaling: float = 20.0
+@export var big_spawn_scaling: float = 10.0
 
 var player_centre := Vector3i.ZERO
 var previous_player_centre := Vector3i.ZERO
 @onready var half_grid_side_n_cells: int = roundi(grid_side_n_cells / 2.0)
 @onready var max_grid_distance: float = cell_side_length * grid_side_n_cells
-# 6 sides of the cube
-# @onready var spawn_queue_size: int = grid_side_n_cells ** 2 * 6
 
 var rng = RandomNumberGenerator.new()
 
@@ -48,10 +46,9 @@ func _ready() -> void:
 				var new_cell = Cell.new()
 				spawn_grid[cell_position] = new_cell
 				if (rng.randf() < spawn_chance):
-					if (global_cell_position - planet.global_position).length() > planet.radius:
-						new_cell.position = cell_position
-						new_cell.global_position = global_cell_position
-						create_collectables(new_cell)
+					new_cell.position = cell_position
+					new_cell.global_position = global_cell_position
+					create_collectables(new_cell, false)
 
 
 func _process(_delta: float) -> void:
@@ -89,27 +86,29 @@ func _process(_delta: float) -> void:
 				):
 					continue
 
-				# TODO add collectables removal
-				# remove_collectable....
 				var global_cell_position: Vector3 = cell_position * cell_side_length
 				if cell_position not in spawn_grid:
 					var new_cell = Cell.new()
 					spawn_grid[cell_position] = new_cell
 					if (rng.randf() < spawn_chance):
-						if (global_cell_position - planet.global_position).length() > planet.radius:
-							new_cell.position = cell_position
-							new_cell.global_position = global_cell_position
-							spawn_queue.append(new_cell)
+						new_cell.position = cell_position
+						new_cell.global_position = global_cell_position
+						spawn_queue.append(new_cell)
 
 	previous_player_centre = player_centre
 
 
-func create_collectables(new_cell: Cell) -> void:
+func create_collectables(new_cell: Cell, is_big_spawn_enabled: bool = true) -> void:
 	var new_scale = Vector3.ONE * rng.randfn(size_scaling_mean, size_scaling_variance)
+	var new_mass = rng.randf_range(0.0001, player.current_mass - 0.0001)
+
 	var n_spawns = n_spawns_per_cell
-	if (rng.randf() < chance_of_much_bigger_spawn):
-		new_scale *= big_spawn_scaling
-		n_spawns = 1
+
+	if is_big_spawn_enabled:
+		if (rng.randf() < chance_of_much_bigger_spawn):
+			new_scale *= big_spawn_scaling
+			new_mass *= big_spawn_scaling
+			n_spawns = 1
 
 	for spawn_index in range(n_spawns):
 		var new_collectable: MassCollectable = collectable.instantiate()
@@ -119,6 +118,7 @@ func create_collectables(new_cell: Cell) -> void:
 		new_collectable.start_scale = Vector3.ONE * 0.01
 		new_collectable.end_scale = new_scale
 		new_collectable.player = player
+		new_collectable.gravity_component.mass = new_mass
 		spawn_grid[new_cell.position] = new_cell
 		new_cell.nodes.append(new_collectable)
 
