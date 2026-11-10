@@ -46,5 +46,10 @@ func _process(delta: float) -> void:
 
 		if distance_to_player < 1.0:
 			queue_free()
+			_on_picked_up()
 
 	previous_player_position = current_player_position
+
+
+func _on_picked_up():
+	player.current_mass += gravity_component.mass

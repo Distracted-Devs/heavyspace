@@ -100,7 +100,7 @@ func _process(_delta: float) -> void:
 
 func create_collectables(new_cell: Cell, is_big_spawn_enabled: bool = true) -> void:
 	var new_scale = Vector3.ONE * rng.randfn(size_scaling_mean, size_scaling_variance)
-	var new_mass = rng.randf_range(0.0001, player.current_mass - 0.0001)
+	var new_mass = rng.randf_range(0.1, player.current_mass - 0.0001)
 
 	var n_spawns = n_spawns_per_cell
 

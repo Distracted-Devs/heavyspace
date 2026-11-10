@@ -26,7 +26,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	pass
+	print(self.current_mass)
 
 
 func _physics_process(_delta: float) -> void:
@@ -45,6 +45,7 @@ func _physics_process(_delta: float) -> void:
 	if Input.is_action_pressed("roll_left"):
 		body.angular_velocity += roll_amount * body.basis.z * _delta
 
+	# TODO - make dependant on mass
 	if Input.is_action_pressed("bottom_thruster"):
 		apply_linear_velocity(_delta, body.basis.y, bottom_thrust_scaling)
 
@@ -81,7 +82,6 @@ func apply_gravity(_delta: float):
 				source_dir * self.current_mass * gravity_source.mass * gravity_constant
 				/ (distance_to_source * distance_to_source)
 			)
-			print(gravity_force.length())
 			body.apply_force(gravity_force)
 
 
