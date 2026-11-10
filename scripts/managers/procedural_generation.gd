@@ -118,6 +118,7 @@ func create_collectables(new_cell: Cell) -> void:
 		new_collectable.scale = Vector3.ONE * 0.01
 		new_collectable.start_scale = Vector3.ONE * 0.01
 		new_collectable.end_scale = new_scale
+		new_collectable.player = player
 		spawn_grid[new_cell.position] = new_cell
 		new_cell.nodes.append(new_collectable)
 
@@ -128,7 +129,8 @@ func jitter_vector(v: Vector3, jitter: float):
 
 func remove_collectable(spawn_position: Vector3i) -> void:
 	for node in spawn_grid[spawn_position].nodes:
-		node.queue_free()
+		if node:
+			node.queue_free()
 	spawn_grid.erase(spawn_position)
 
 

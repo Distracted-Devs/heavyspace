@@ -27,7 +27,7 @@ transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0.085, -0.11)
 shape = SubResource("SphereShape3D_7l7pj")
 
 [node name="Camera3D" type="Camera3D" parent="PhysicsBody" unique_id=44102908]
-transform = Transform3D(1, 0, 0, 0, 0.9297765, 0.36812454, 0, -0.36812454, 0.9297765, 0, 0.564, 1)
+transform = Transform3D(1, 0, 0, 0, 0.9297765, 0.36812454, 0, -0.36812454, 0.9297765, 0, 1.4817256, 2.2951407)
 doppler_tracking = 2
 current = true
 
