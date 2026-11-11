@@ -18,6 +18,9 @@ func complete() -> void:
 	# Stop showing on the minimap once done.
 	remove_from_group(GROUP)
 	_spawn_completion_effect()
+	var sfx := SoundEffectManager.find(get_tree())
+	if sfx:
+		sfx.play_sound_effect(SoundEffectManager.MISSION_DESTROY)
 	# Missions only complete when the ship reaches them, so give it some impact.
 	for player in get_tree().get_nodes_in_group(&"player"):
 		if player is Player:

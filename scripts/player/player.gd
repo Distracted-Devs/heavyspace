@@ -72,6 +72,8 @@ var _is_dead := false
 var _was_thrusting := false
 ## Seconds left on the mission-impact rumble; thrust rumble won't override it meanwhile.
 var _impact_rumble_left := 0.0
+## Player playing the thrust sound while thrusting (null when not thrusting).
+var _thrust_sound: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -140,6 +142,9 @@ func on_dead(hit_point: Vector3 = ship.global_position) -> void:
 	_is_dead = true
 	Input.start_joy_vibration(0, 1.0, 1.0, 3.0)
 	_spawn_explosion(hit_point)
+	var sfx := SoundEffectManager.find(get_tree())
+	if sfx:
+		sfx.play_sound_effect(SoundEffectManager.PLAYER_DESTROY)
 	ScreenShakeHandler.shake(
 		death_shake_strength,
 		death_shake_duration,
@@ -370,6 +375,20 @@ func _set_thrust_emitting(on: bool) -> void:
 	var in_orbit := is_orbit_locked()
 	thrust_effect.emitting = on and not in_orbit
 	thrust_in_orbit_effect.emitting = on and in_orbit
+	_set_thrust_sound(on and not GameState.in_menu)
+
+
+## Starts the thrust sound when thrust begins and stops it when thrust ends.
+func _set_thrust_sound(on: bool) -> void:
+	if on == (_thrust_sound != null):
+		return
+	if on:
+		var sfx := SoundEffectManager.find(get_tree())
+		if sfx:
+			_thrust_sound = sfx.play_sound_effect(SoundEffectManager.THRUST)
+	else:
+		_thrust_sound.stop()
+		_thrust_sound = null
 
 
 func _apply_rotation(delta: float) -> void:
