@@ -1,10 +1,8 @@
 [gd_scene format=3 uid="uid://ctu8cin2qq85k"]
 
 [ext_resource type="Script" uid="uid://cbl2p4vkmnbbj" path="res://scripts/missions/asteroid_mission.gd" id="1_asteroid"]
-[ext_resource type="Texture2D" uid="uid://dprhu2jh874s2" path="res://resources/textures/mars.jpg" id="2_yyjyp"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c4xsx"]
-albedo_texture = ExtResource("2_yyjyp")
+[ext_resource type="Material" path="res://resources/materials/rotation_mars.tres" id="2_rotmars"]
+[ext_resource type="PackedScene" path="res://scenes/effects/mission_hint.tscn" id="3_hint"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asteroid"]
 albedo_color = Color(0.45, 0.4, 0.36, 1)
@@ -26,7 +24,7 @@ solid_body = NodePath("StaticBody3D")
 detect_area = NodePath("DetectArea")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1542912725]
-material_override = SubResource("StandardMaterial3D_c4xsx")
+material_override = ExtResource("2_rotmars")
 mesh = SubResource("SphereMesh_asteroid")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1438926773]
@@ -38,3 +36,6 @@ shape = SubResource("SphereShape3D_solid")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DetectArea" unique_id=40489975]
 shape = SubResource("SphereShape3D_detect")
+
+[node name="MissionHint" parent="." instance=ExtResource("3_hint")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)

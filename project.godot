@@ -11,22 +11,19 @@ config_version=5
 [application]
 
 config/name="Heavy Space"
-run/main_scene="res://scenes/levels/test_level.tscn"
+run/main_scene="res://scenes/levels/game.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 ScreenShakeHandler="*res://scripts/autoload/screen_shake_handler.gd"
+GameState="*res://scripts/autoload/game_state.gd"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[global_group]
-
-collector=""
 
 [input]
 

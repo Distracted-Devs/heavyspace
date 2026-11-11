@@ -2,21 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqno0163dqbia"
-path.s3tc="res://.godot/imported/space.jpeg-32908ac5e479c1a7eb8cff5d3ab826f2.s3tc.ctex"
+uid="uid://b48aqlmd4pgk7"
+path="res://.godot/imported/jupiter.jpg-a72d130b45faa7f0ce70999f4270a905.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/textures/space.jpeg"
-dest_files=["res://.godot/imported/space.jpeg-32908ac5e479c1a7eb8cff5d3ab826f2.s3tc.ctex"]
+source_file="res://resources/textures/jupiter.jpg"
+dest_files=["res://.godot/imported/jupiter.jpg-a72d130b45faa7f0ce70999f4270a905.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -24,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -38,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

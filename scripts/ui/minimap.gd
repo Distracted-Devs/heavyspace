@@ -63,6 +63,14 @@ extends CanvasLayer
 ## How quickly the map zooms to fit the orbit.
 @export var zoom_smoothing: float = 2.0
 
+@export_group("Planets")
+## Size of the pixelation blocks on the planets, in pixels (1 = off).
+@export_range(1, 32, 1) var planet_pixel_size: int = 4:
+	set(value):
+		planet_pixel_size = value
+		if _pixelate:
+			_pixelate.pixel_size = value
+
 @export_group("Prediction")
 ## Longest the path is simulated, in seconds. Stops early after one full turn
 ## around the planet or on impact.
@@ -75,7 +83,6 @@ extends CanvasLayer
 ## Blinks per second.
 @export var poi_blink_speed: float = 1.5
 
-const HOLO_COLOUR := Color(0.3, 0.9, 1.0)
 const PATH_COLOUR := Color(0.3, 0.9, 1.0)
 const STABLE_COLOUR := Color(0.3, 1.0, 0.5)
 const IMPACT_COLOUR := Color(1.0, 0.25, 0.2)
@@ -119,13 +126,15 @@ void fragment() {
 """
 
 var _panel_style: StyleBoxFlat
+var _border_style: StyleBoxFlat
+var _title: Label
 var _frame: Control
 var _status: Label
 var _grid_material: ShaderMaterial
+var _pixelate: PixelateEffect
 
 var _root: Node3D
 var _camera: Camera3D
-var _sun: DirectionalLight3D
 var _ship_marker: Node3D
 var _path_mesh: ImmediateMesh
 var _dead_zone_mesh: ImmediateMesh
@@ -315,16 +324,18 @@ func _update_status() -> void:
 	_status.text = _status_text(forecast)
 	var blink := 0.5 + 0.5 * cos(_time * forecast_blink_speed * TAU)
 	_status.modulate = Color(colour, lerpf(forecast_blink_min_alpha, 1.0, blink))
+	# Frame flashes red when an impact is coming.
+	var alarm := forecast == "IMPACT" and fmod(_time * 4.0, 1.0) < 0.5
+	_border_style.border_color = ArcadeUI.DANGER_COLOUR if alarm else ArcadeUI.FRAME_COLOUR
 
 # --- UI --------------------------------------------------------------------------
 
 
 func _build_ui() -> void:
+	# Background + hard drop shadow here; the white frame is a separate overlay
+	# drawn on top of the map so the grid and planets can't cover it.
 	var panel := Panel.new()
-	_panel_style = StyleBoxFlat.new()
-	_panel_style.bg_color = Color.TRANSPARENT
-	_panel_style.border_color = Color(HOLO_COLOUR, 0.6)
-	_panel_style.set_border_width_all(1)
+	_panel_style = ArcadeUI.make_frame_style()
 	panel.add_theme_stylebox_override("panel", _panel_style)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.anchor_left = 1.0
@@ -353,10 +364,27 @@ func _build_ui() -> void:
 	var viewport := SubViewport.new()
 	viewport.own_world_3d = true
 	viewport.transparent_bg = true
-	viewport.msaa_3d = Viewport.MSAA_4X
+	# No MSAA: the planets are pixelated after the opaque pass, which MSAA's
+	# later resolve would overwrite.
+	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	container.add_child(viewport)
 	_root = Node3D.new()
 	viewport.add_child(_root)
+
+	panel.add_child(ArcadeUI.make_scanlines())
+
+	var border := Panel.new()
+	border.set_anchors_preset(Control.PRESET_FULL_RECT)
+	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_border_style = StyleBoxFlat.new()
+	_border_style.draw_center = false
+	_border_style.border_color = ArcadeUI.FRAME_COLOUR
+	border.add_theme_stylebox_override("panel", _border_style)
+	panel.add_child(border)
+
+	_title = ArcadeUI.make_label("ORBIT")
+	_title.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	panel.add_child(_title)
 
 	# The forecast label lives in minimap.tscn so it can be styled there; it's
 	# moved inside the map panel and stretched over it at runtime.
@@ -390,7 +418,13 @@ func _update_layout() -> void:
 	_frame.offset_top = margin
 	_frame.offset_bottom = margin + size
 	_grid_material.set_shader_parameter("size", Vector2(size, size))
-	_status.offset_bottom = -forecast_bottom_gap_px
+	var border := ArcadeUI.border_px(screen_height)
+	_panel_style.set_border_width_all(0)
+	_panel_style.shadow_offset = Vector2(border, border)
+	_border_style.set_border_width_all(int(border))
+	_title.position = Vector2(border * 3.0, border * 2.0)
+	_title.add_theme_font_size_override("font_size", maxi(9, ArcadeUI.font_size(screen_height) - 4))
+	_status.offset_bottom = -forecast_bottom_gap_px - border * 2.0
 	if auto_font_size:
 		var font_size := maxi(10, int(size * font_size_ratio))
 		if _status.label_settings:
@@ -407,6 +441,15 @@ func _build_world() -> void:
 	_root.add_child(_camera)
 	_camera.current = true
 
+	# Same pixelation as the main camera, applied only to opaque geometry (the
+	# planets); the path, markers and rings are transparent and drawn on top.
+	_pixelate = PixelateEffect.new()
+	_pixelate.before_transparent = true
+	_pixelate.pixel_size = planet_pixel_size
+	var compositor := Compositor.new()
+	compositor.compositor_effects = [_pixelate]
+	_camera.compositor = compositor
+
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_CLEAR_COLOR
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -415,8 +458,7 @@ func _build_world() -> void:
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
 	_root.add_child(world_environment)
-	_sun = DirectionalLight3D.new()
-	_camera.add_child(_sun) # lit from the viewer
+	_camera.add_child(DirectionalLight3D.new()) # lit from the viewer
 
 	# Ship: a red cone along -Z (the nose), always drawn on top.
 	_ship_marker = Node3D.new()
@@ -428,6 +470,8 @@ func _build_world() -> void:
 	cone.radial_segments = 4
 	cone.rings = 1
 	var marker_material := _unshaded(SHIP_COLOUR)
+	# Transparent so it's drawn after the planet pixelation and stays crisp.
+	marker_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	marker_material.no_depth_test = true
 	marker_material.render_priority = 10
 	cone.material = marker_material

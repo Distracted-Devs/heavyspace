@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://resources/shaders/mission_hint.gdshader" id="1_hint"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hint"]
+render_priority = 0
+shader = ExtResource("1_hint")
+shader_parameter/color = Color(1, 0.82, 0.1, 1)
+shader_parameter/intensity = 4.0
+shader_parameter/period = 3.0
+shader_parameter/pulse_duration = 1.6
+shader_parameter/start_radius = 0.333
+shader_parameter/ring_width = 0.045
+shader_parameter/echo_delay = 0.25
+shader_parameter/echo_strength = 0.5
+shader_parameter/halo_strength = 0.35
+shader_parameter/idle_glow = 0.15
+shader_parameter/time_offset = 0.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_hint"]
+material = SubResource("ShaderMaterial_hint")
+custom_aabb = AABB(-3, -3, -3, 6, 6, 6)
+size = Vector2(6, 6)
+
+[node name="MissionHint" type="Node3D"]
+
+[node name="Pulse" type="MeshInstance3D" parent="." groups=["exclude_from_bounds"]]
+cast_shadow = 0
+mesh = SubResource("QuadMesh_hint")

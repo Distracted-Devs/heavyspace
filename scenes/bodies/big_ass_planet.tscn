@@ -2,8 +2,16 @@
 
 [ext_resource type="PackedScene" uid="uid://ceoq6hv771dqh" path="res://scenes/bodies/gravity_body.tscn" id="1_t700u"]
 [ext_resource type="Material" path="res://resources/materials/rotation_earth.tres" id="2_rotearth"]
+[ext_resource type="Material" path="res://resources/materials/atmosphere_earth.tres" id="3_atmo"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_t700u"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_atmo"]
+material = ExtResource("3_atmo")
+radius = 0.55
+height = 1.1
+radial_segments = 96
+rings = 48
 
 [node name="BigAssPlanet" unique_id=213988570 groups=["gravity", "deadly"] instance=ExtResource("1_t700u")]
 mass = 1.0
@@ -18,3 +26,7 @@ material = ExtResource("2_rotearth")
 
 [node name="GravityComponent" parent="." index="1" unique_id=1053459281]
 mass = 500000.0
+
+[node name="Atmosphere" type="MeshInstance3D" parent="." index="2"]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_atmo")

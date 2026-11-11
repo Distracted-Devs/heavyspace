@@ -90,23 +90,9 @@ func shake_at(
 	shake(strength * attenuation, duration, frequency, rotation_deg * attenuation, falloff)
 
 
-## Cancels every running shake immediately.
-func stop_all() -> void:
-	_shakes.clear()
-
-
-func is_shaking() -> bool:
-	return not _shakes.is_empty()
-
-
 ## Current rotation offset. Multiply the camera's basis by this after positioning it.
 func get_rotation_basis() -> Basis:
 	return Basis.from_euler(_rotation)
-
-
-## Current translation offset (x = right, y = up) in meters.
-func get_offset() -> Vector2:
-	return _offset
 
 
 func _process(delta: float) -> void:

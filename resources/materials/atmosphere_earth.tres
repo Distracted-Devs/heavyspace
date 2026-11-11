@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cwtjiil2xwrr7"]
+
+[ext_resource type="Shader" uid="uid://bl1hh1l7srwvo" path="res://resources/shaders/atmosphere.gdshader" id="1_shader"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/atmosphere_color = Color(0.35, 0.65, 1, 1)
+shader_parameter/sunset_color = Color(1, 0.45, 0.2, 1)
+shader_parameter/intensity = 1.5
+shader_parameter/falloff = 2.0
+shader_parameter/planet_ratio = 0.909
+shader_parameter/terminator_softness = 0.35
+shader_parameter/sunset_width = 0.35
+shader_parameter/night_glow = 0.05

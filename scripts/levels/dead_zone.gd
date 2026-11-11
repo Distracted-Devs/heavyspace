@@ -14,8 +14,6 @@ extends Node3D
 signal player_exited
 ## Emitted when the ship comes back inside in time.
 signal player_returned
-## Emitted every frame while outside, with the seconds left.
-signal countdown_changed(seconds_left: float)
 ## Emitted when the countdown hits zero (the player is killed).
 signal time_ran_out
 
@@ -74,7 +72,6 @@ func _process(delta: float) -> void:
 
 	if _outside:
 		_time_left = maxf(0.0, _time_left - delta)
-		countdown_changed.emit(_time_left)
 		if _time_left <= 0.0:
 			_outside = false
 			time_ran_out.emit()

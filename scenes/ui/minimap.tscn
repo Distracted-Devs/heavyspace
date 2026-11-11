@@ -1,11 +1,16 @@
 [gd_scene format=3 uid="uid://ba3ejxia8n30j"]
 
 [ext_resource type="Script" uid="uid://b4smiewfyii4p" path="res://scripts/ui/minimap.gd" id="1_map"]
-[ext_resource type="FontFile" uid="uid://bwigr4g83p41y" path="res://resources/Fonts/PixelSans/PixelifySans-Regular.ttf" id="2_font"]
+[ext_resource type="FontFile" uid="uid://c24eu7i6f2hkg" path="res://resources/Fonts/PixelSans/PixelifySans-Bold.ttf" id="2_font"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_forecast"]
 font = ExtResource("2_font")
 font_size = 20
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 0.85)
+shadow_offset = Vector2(2, 2)
 
 [node name="OrbitMinimap" type="CanvasLayer" unique_id=1179555850 node_paths=PackedStringArray("forecast_label")]
 script = ExtResource("1_map")

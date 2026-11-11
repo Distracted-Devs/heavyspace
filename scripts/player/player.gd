@@ -33,10 +33,8 @@ extends Node3D
 
 @export_group("Fuel")
 @export var fuel_drain_rate := 20.0
-@export var mass_to_fuel_ratio := .01
 
 @export_group("Components")
-@export var mass_component: MassComponent
 @export var fuel_component: FuelComponent
 @export var gravity_effect: GravityEffect
 @export var ship: RigidBody3D
@@ -62,8 +60,6 @@ extends Node3D
 @export var mission_shake_frequency := 16.0
 @export var mission_shake_rotation_deg := 0.6
 
-signal orbit_lock_changed(locked: bool)
-
 ## The orbit the ship is riding while locked (null when free-flying).
 var _locked_orbit: Orbit
 var _locked_source: Node3D
@@ -80,8 +76,6 @@ var _impact_rumble_left := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
-	fuel_component.changed.connect(_on_fuel_changed)
-	mass_component.add_mass(fuel_component.fuel * mass_to_fuel_ratio)
 	_set_thrust_emitting(false)
 
 	# RigidBody3D only emits body_entered with contact monitoring on.
@@ -89,8 +83,34 @@ func _ready() -> void:
 	ship.max_contacts_reported = maxi(ship.max_contacts_reported, 4)
 	ship.body_entered.connect(_on_ship_body_entered)
 
+	if GameState.in_menu:
+		_enter_menu_mode()
+		GameState.game_started.connect(_exit_menu_mode, CONNECT_ONE_SHOT)
+
+
+# --- Main menu -----------------------------------------------------------------
+
+
+## Parks the ship for the title screen: frozen in place, no gravity, and the
+## thrust trail running (it's in local coords, so it reads as flying).
+func _enter_menu_mode() -> void:
+	gravity_effect.enabled = false
+	ship.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	ship.freeze = true
+	_set_thrust_emitting(true)
+
+
+func _exit_menu_mode() -> void:
+	ship.freeze = false
+	ship.linear_velocity = Vector3.ZERO
+	ship.angular_velocity = Vector3.ZERO
+	gravity_effect.enabled = true
+	_set_thrust_emitting(false)
+
 
 func _on_ship_body_entered(body: Node) -> void:
+	if GameState.in_menu:
+		return
 	if body.is_in_group(&"deadly"):
 		var hit := _get_contact_point(body)
 		var away := ship.global_position - hit
@@ -130,7 +150,6 @@ func on_dead(hit_point: Vector3 = ship.global_position) -> void:
 	# Hide and stop the ship (ThrustEffect is a child, so it hides too).
 	_set_thrust_emitting(false)
 	ship.hide()
-	
 	ship.set_deferred(&"freeze", true)
 
 
@@ -168,7 +187,7 @@ func _spawn_explosion(at: Vector3) -> void:
 
 func _physics_process(delta: float) -> void:
 	_impact_rumble_left = maxf(_impact_rumble_left - delta, 0.0)
-	if _is_dead:
+	if _is_dead or GameState.in_menu:
 		return
 	if _locked_orbit:
 		# Locked: no steering, Space only speeds the ship along the orbit.
@@ -181,12 +200,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if GameState.in_menu:
+		return
 	if event.is_action_pressed(&"toggle_orbit_lock") and not event.is_echo():
 		if _locked_orbit:
 			unlock_orbit()
 		else:
 			lock_orbit()
-
 
 
 # --- Orbit lock ----------------------------------------------------------------
@@ -204,13 +224,6 @@ func get_current_orbit() -> Orbit:
 		return _locked_orbit
 	var source := get_orbit_source()
 	return gravity_effect.orbit_around(source)
-
-
-
-func get_ship_velocity() -> Vector3:
-	if _locked_orbit:
-		return _locked_orbit.velocity_at(_lock_time) * _orbit_time_scale
-	return ship.linear_velocity
 
 
 ## Velocity used to draw and predict the orbit (ignores the boost time scale).
@@ -262,7 +275,6 @@ func lock_orbit() -> bool:
 	ship.freeze = true
 	ship.linear_velocity = Vector3.ZERO
 	ship.angular_velocity = Vector3.ZERO
-	orbit_lock_changed.emit(true)
 	return true
 
 
@@ -281,7 +293,6 @@ func unlock_orbit() -> void:
 	_locked_orbit = null
 	_locked_source = null
 	gravity_effect.enabled = true
-	orbit_lock_changed.emit(false)
 
 
 func _follow_locked_orbit(delta: float) -> void:
@@ -293,7 +304,6 @@ func _follow_locked_orbit(delta: float) -> void:
 	var rel_position := _locked_orbit.position_at(_lock_time)
 	ship.global_position = _locked_source.global_position + rel_position
 	_align_to_orbit(rel_position, _locked_orbit.velocity_at(_lock_time), delta)
-
 
 
 ## points away from the body it's orbiting.
@@ -363,7 +373,6 @@ func _set_thrust_emitting(on: bool) -> void:
 
 
 func _apply_rotation(delta: float) -> void:
-
 	var roll := clampf(
 		int(Input.is_physical_key_pressed(KEY_A)) - int(Input.is_physical_key_pressed(KEY_D))
 		+ Input.get_axis(&"ship_roll_right", &"ship_roll_left"),
@@ -389,10 +398,9 @@ func _apply_rotation(delta: float) -> void:
 
 
 func _apply_thrust(delta: float) -> void:
-
 	var thrusting := _is_thrust_pressed() and fuel_component.fuel > 0.0
 	_set_thrust_emitting(thrusting)
-	
+
 	if thrusting:
 		ship.apply_central_force(-ship.global_basis.z * thrust_force)
 		fuel_component.add_fuel(-fuel_drain_rate * delta)
@@ -413,14 +421,6 @@ func _apply_thrust(delta: float) -> void:
 func _is_thrust_pressed() -> bool:
 	return Input.is_physical_key_pressed(KEY_SPACE) or Input.is_action_pressed(&"ship_thrust")
 
-
-func _get_mass(node: Node) -> float:
-	if node is RigidBody3D:
-		return node.mass
-	return node.get_meta("mass", 1.0)
-
-func _on_fuel_changed(_new_fuel: float, delta_fuel: float) -> void:
-	mass_component.add_mass(delta_fuel * mass_to_fuel_ratio)
 
 func _apply_rotation_correction(_delta: float) -> void:
 	var closest_gravity_body: GravityBody
@@ -448,7 +448,6 @@ func _apply_rotation_correction(_delta: float) -> void:
 		(altitude + 1.0) ** rotation_correction_exponent
 	)
 	var rotation_correction: float = rotation_correction_coefficient * rotation_correction_speed
-	# print(closest_gravity_body_distance - closest_gravity_body_radius)
 
 	# if too far away, exit
 	if rotation_correction < 0.01:

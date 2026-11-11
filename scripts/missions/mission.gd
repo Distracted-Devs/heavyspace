@@ -44,7 +44,8 @@ func get_world_radius() -> float:
 	var found := false
 	for node in find_children("*", "VisualInstance3D", true, false):
 		var vi := node as VisualInstance3D
-		if not vi.is_visible_in_tree():
+		# Skip hidden visuals and helpers like the mission_hint pulse quad.
+		if not vi.is_visible_in_tree() or vi.is_in_group(&"exclude_from_bounds"):
 			continue
 		var box := vi.global_transform * vi.get_aabb()
 		bounds = box if not found else bounds.merge(box)

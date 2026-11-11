@@ -1,20 +1,20 @@
 [gd_scene format=3 uid="uid://dtys8e1tss8dd"]
 
-[ext_resource type="Script" uid="uid://db5alj460rtpt" path="res://scripts/levels/test_level.gd" id="1_48ne7"]
+[ext_resource type="Script" uid="uid://db5alj460rtpt" path="res://scripts/levels/game.gd" id="1_48ne7"]
 [ext_resource type="Texture2D" uid="uid://b4u1e2rcjlw00" path="res://resources/textures/milkyway.exr" id="1_v45ci"]
 [ext_resource type="PackedScene" uid="uid://bji83neuivaio" path="res://scenes/player/player.tscn" id="2_48ne7"]
 [ext_resource type="PackedScene" uid="uid://d4soxyul74t3" path="res://scenes/bodies/big_ass_planet.tscn" id="3_6xh4u"]
-[ext_resource type="PackedScene" uid="uid://4euwmx6ycuaw" path="res://scenes/collectables/FuelPickup.tscn" id="4_48ne7"]
 [ext_resource type="PackedScene" uid="uid://ba3ejxia8n30j" path="res://scenes/ui/minimap.tscn" id="4_v45ci"]
 [ext_resource type="PackedScene" uid="uid://huxn3knhtqvl" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" uid="uid://ctu8cin2qq85k" path="res://scenes/missions/asteroid_mission.tscn" id="8_7x1jh"]
-[ext_resource type="PackedScene" uid="uid://dbdwhryww2fc8" path="res://scenes/ui/pixelate_overlay.tscn" id="9_pix"]
 [ext_resource type="PackedScene" uid="uid://cu326b8lov3cj" path="res://scenes/obstacles/asteroid_obstacle.tscn" id="10_2mu0v"]
 [ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="10_sun"]
 [ext_resource type="PackedScene" path="res://scenes/ui/restart_prompt.tscn" id="11_restart"]
 [ext_resource type="PackedScene" uid="uid://cl7nm66ny067p" path="res://scenes/ui/restart_hint.tscn" id="12_hint"]
 [ext_resource type="PackedScene" path="res://scenes/levels/dead_zone.tscn" id="13_deadzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dead_zone_warning.tscn" id="14_dzwarn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/objective_tracker.tscn" id="15_objective"]
+[ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="16_mainmenu"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_gcb5y"]
 panorama = ExtResource("1_v45ci")
@@ -34,12 +34,8 @@ glow_intensity = 1.2
 glow_bloom = 0.15
 glow_hdr_threshold = 1.2
 
-[node name="SpaceshipTest" type="Node3D" unique_id=1596929932 node_paths=PackedStringArray("planet")]
+[node name="Game" type="Node3D" unique_id=1596929932]
 script = ExtResource("1_48ne7")
-planet = NodePath("BigAssPlanet")
-pickup = ExtResource("4_48ne7")
-number_of_mass_pickups = 100
-spawn_radius_from_planet = 1100.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1291008803]
 environment = SubResource("Environment_space")
@@ -71,7 +67,11 @@ mass = 8000000.0
 
 [node name="HUD" parent="." unique_id=795487204 instance=ExtResource("5_hud")]
 
-[node name="PixelateOverlay" parent="." unique_id=2044842021 instance=ExtResource("9_pix")]
+[node name="ObjectiveTracker" parent="." node_paths=PackedStringArray("minimap") instance=ExtResource("15_objective")]
+minimap = NodePath("../OrbitMinimap")
+
+[node name="MainMenu" parent="." node_paths=PackedStringArray("hide_during_menu") instance=ExtResource("16_mainmenu")]
+hide_during_menu = [NodePath("../HUD"), NodePath("../OrbitMinimap"), NodePath("../ObjectiveTracker"), NodePath("../RestartHint")]
 
 [node name="RestartPrompt" parent="." unique_id=194693097 instance=ExtResource("11_restart")]
 

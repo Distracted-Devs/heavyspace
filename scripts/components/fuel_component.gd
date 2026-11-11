@@ -3,7 +3,6 @@ extends Node
 
 signal changed(new_fuel: float, delta_fuel: float)
 
-@export var player: Player
 @export var starting_fuel: float = 200.0
 ## Full tank. Values below starting_fuel are raised to it, so by default the
 ## tank starts full. Pickups can't fill past this.

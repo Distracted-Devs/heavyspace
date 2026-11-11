@@ -2,17 +2,30 @@
 
 [ext_resource type="Script" uid="uid://4sk2uo38r44x" path="res://scripts/player/player.gd" id="1_4fnjr"]
 [ext_resource type="Script" uid="uid://ckrj26q2d0ft8" path="res://scripts/player/camera.gd" id="2_42gqe"]
-[ext_resource type="Script" uid="uid://cieyl2wcg3ad" path="res://scripts/components/mass_component.gd" id="3_gmlin"]
 [ext_resource type="Script" uid="uid://dpcf2wtymmhno" path="res://scripts/components/fuel_component.gd" id="4_lvxji"]
 [ext_resource type="Script" uid="uid://dke8yv62eulki" path="res://scripts/components/gravity_effect.gd" id="5_p47bc"]
 [ext_resource type="PackedScene" uid="uid://12yqyb2fybqn" path="res://scenes/effects/thrust_effect.tscn" id="6_75vfm"]
 [ext_resource type="PackedScene" uid="uid://1qyaj7jvcwx1" path="res://scenes/effects/thrust_in_orbit.tscn" id="7_orbit"]
+[ext_resource type="Script" uid="uid://dgyf3b64ddj2f" path="res://scripts/effects/pixelate_effect.gd" id="8_pixfx"]
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_pix"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("8_pixfx")
+before_transparent = null
+
+[sub_resource type="Compositor" id="Compositor_pix"]
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_pix")])
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7x1jh"]
-albedo_color = Color(0.8683663, 0, 0.3938961, 1)
+albedo_color = Color(0.74250555, 0.8671512, 0.9999991, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hfwtw"]
-albedo_color = Color(1, 0.47516352, 0.6080538, 1)
+albedo_color = Color(0.7919991, 0.79199916, 0.7919991, 1)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 radius = 0.50158125
@@ -20,30 +33,30 @@ radius = 0.50158125
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2mu0v"]
 albedo_color = Color(0.31293863, 0.99999994, 0.8929373, 1)
 
-[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("mass_component", "fuel_component", "gravity_effect", "ship", "thrust_effect", "thrust_in_orbit_effect")]
+[node name="PlayerShip" type="Node3D" unique_id=146044525 node_paths=PackedStringArray("fuel_component", "gravity_effect", "ship", "thrust_effect", "thrust_in_orbit_effect")]
 script = ExtResource("1_4fnjr")
 rotation_correction_speed = 0.1
 rotation_correction_multiplier = 5.0
 rotation_correction_exponent = 0.6
 min_lock_altitude = 2.0
 orbit_speed_multiplier = 5.0
-mass_component = NodePath("Ship/MassComponent")
+death_shake_strength = 8.0
+death_shake_duration = 2.0
 fuel_component = NodePath("Ship/FuelComponent")
 gravity_effect = NodePath("Ship/GravityEffect")
 ship = NodePath("Ship")
 thrust_effect = NodePath("Ship/ThrustEffect")
 thrust_in_orbit_effect = NodePath("Ship/ThrustInOrbit")
-death_shake_strength = 8.0
-death_shake_duration = 2.0
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1998297707 node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.90940315, 0.41591582, 0, -0.41591582, 0.90940315, 0, 1.4504993, 3.1636226)
+compositor = SubResource("Compositor_pix")
 current = true
 far = 50000.0
 script = ExtResource("2_42gqe")
 target = NodePath("../Ship")
 
-[node name="Ship" type="RigidBody3D" parent="." unique_id=1578687592 groups=["collector"]]
+[node name="Ship" type="RigidBody3D" parent="." unique_id=1578687592]
 gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -69,13 +82,8 @@ material = SubResource("StandardMaterial3D_2mu0v")
 transform = Transform3D(1, 0, 0, 0, 0.28598067, 0.9582354, 0, -0.9582354, 0.28598067, 0, 4.0296354, 1.761426)
 spot_range = 6.570576
 
-[node name="MassComponent" type="Node" parent="Ship" unique_id=326633105 node_paths=PackedStringArray("player")]
-script = ExtResource("3_gmlin")
-player = NodePath("../..")
-
-[node name="FuelComponent" type="Node" parent="Ship" unique_id=97571167 node_paths=PackedStringArray("player")]
+[node name="FuelComponent" type="Node" parent="Ship" unique_id=97571167]
 script = ExtResource("4_lvxji")
-player = NodePath("../..")
 starting_fuel = 2000.0
 
 [node name="GravityEffect" type="Node" parent="Ship" unique_id=1703276924 node_paths=PackedStringArray("body")]
