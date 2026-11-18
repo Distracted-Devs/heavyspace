@@ -7,17 +7,29 @@ Each step below is a single unit of work: break it down, enact it, check its
 "Done" contract, commit, then move on. Steps are ordered so that each one
 leaves the project opening and running.
 
-## 0.1 Test harness
+## 0.1 Test harness ✅
 Do this first so every later step has a pass/fail contract.
-- Add GUT (9.x, pure GDScript) under `addons/gut/`. Check it supports
-  Godot 4.7 before committing. gdUnit4 is the alternative if it doesn't.
-- Create `tests/` mirroring `scripts/` (e.g. `tests/player/test_player.gd`).
-- Add a `.gutconfig.json` pointing at `tests/`.
-- Write down the headless commands in `docs/developer_instructions.md`:
-  - Smoke: `godot --headless --quit` (the project opens with no script errors)
-  - Tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit`
-- **Done:** a single placeholder test passes headless, and the smoke command
-  prints no `SCRIPT ERROR` / `ERROR` lines.
+- Added GUT 9.7.1 under `addons/gut/` (the 9.7 line is made for Godot 4.7),
+  enabled the plugin, and added `.gutconfig.json` pointing at `tests/`.
+- Added `scripts/core/contract.gd` (`require` / `ensure` / `invariant`). A
+  broken contract calls `push_error` once, and GUT 9.7 fails any test with an
+  unexpected `push_error`. No separate violation log or base test class is
+  needed.
+- Added project settings `heavy_space/contracts/enabled` and
+  `heavy_space/contracts/break_on_violation`.
+- Wrote down the headless commands in `docs/developer_instructions.md`.
+- **Done:** `tests/core/test_contract.gd` passes headless (5/5), a test that
+  breaks a contract without expecting it fails with exit code 1, and the
+  smoke command prints no errors.
+
+## Contracts
+Agree each API's contracts here, with the user, before building it.
+
+### Contract (`scripts/core/contract.gd`)
+- A broken check reports exactly one `push_error` (naming its kind and
+  message) and returns `false`.
+- A passing check has no side effects and returns `true`.
+- With checks disabled, nothing is reported and every check returns `true`.
 
 ## 0.2 Housekeeping
 - `docs/developer_instructions.md`: the British English example is backwards

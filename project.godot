@@ -20,9 +20,18 @@ config/icon="res://icon.svg"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
 [global_group]
 
 collector=""
+
+[heavy_space]
+
+contracts/enabled=true
+contracts/break_on_violation=true
 
 [input]
 
