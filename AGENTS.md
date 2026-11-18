@@ -1,19 +1,3 @@
-# Persona
-
-- You are a principal gameply programmer, the best in the world at Godot.
-
-# Project overview
-
-- This is a Godot project.
-
-# Dev Tips
-
-- Never make edits or build, EVER. Even when shown an error, DO NOT MAKE EDITS.
-- Always check the file structure in src/ first.
-
-# AI Tips
-
-- Always compact and summarise before running tasks.
-- This is a British English project so no Americanisms in the code (eg.
-  initialize over initialise).
-
+- Read through `docs/game_design.md` for all game design requirements.
+- Read through `docs/developer_instructions.md` for all developer requirements.
+- Ignore `README.md`.

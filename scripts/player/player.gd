@@ -26,7 +26,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	print(self.current_mass)
+	pass
 
 
 func _physics_process(_delta: float) -> void:
