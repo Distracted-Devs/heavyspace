@@ -1,0 +1,14 @@
+#!/bin/sh
+# Formats GDScript with the project settings and reports lines still too long.
+# Usage: .githooks/format [files or directories...] (default: scripts tests)
+
+root="$(git rev-parse --show-toplevel)"
+. "$root/.githooks/gdscript.sh"
+cd "$root" || exit 1
+
+[ "$#" -eq 0 ] && set -- scripts tests
+
+"$formatter" --max-line-length "$MAX_LINE_LENGTH" "$@" || exit 1
+"$formatter" lint --max-line-length "$MAX_LINE_LENGTH" "$@" 2>&1 \
+	| grep ':max-line-length:' && exit 1
+exit 0

@@ -31,7 +31,7 @@ Agree each API's contracts here, with the user, before building it.
 - A passing check has no side effects and returns `true`.
 - With checks disabled, nothing is reported and every check returns `true`.
 
-## 0.2 Housekeeping
+## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
   (it should read "initialise over initialize"), and fix the typos
   ("effiecient", "changed be humans").

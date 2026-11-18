@@ -1,0 +1,38 @@
+#!/bin/sh
+# Checks the staged GDScript (not the working tree) for formatting and line
+# length. Fix with .githooks/format, then stage again.
+
+. "$(git rev-parse --show-toplevel)/.githooks/gdscript.sh"
+
+files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.gd' ':!addons/')
+[ -z "$files" ] && exit 0
+
+staged=$(mktemp -d)
+trap 'rm -rf "$staged"' EXIT
+echo "$files" | git checkout-index --stdin --prefix="$staged/"
+cd "$staged" || exit 1
+
+status=0
+
+unformatted=$(echo "$files" \
+	| xargs "$formatter" --check --max-line-length "$MAX_LINE_LENGTH" 2>&1 \
+	| grep -Fx "$files")
+if [ -n "$unformatted" ]; then
+	echo "pre-commit: staged files not formatted:" >&2
+	echo "$unformatted" | sed 's/^/  /' >&2
+	status=1
+fi
+
+too_long=$(echo "$files" \
+	| xargs "$formatter" lint --max-line-length "$MAX_LINE_LENGTH" 2>&1 \
+	| grep ':max-line-length:')
+if [ -n "$too_long" ]; then
+	echo "pre-commit: lines over $MAX_LINE_LENGTH characters:" >&2
+	echo "$too_long" | sed 's/^/  /' >&2
+	status=1
+fi
+
+if [ "$status" -ne 0 ]; then
+	echo "Run .githooks/format, shorten any long lines it can't wrap, then stage again." >&2
+fi
+exit "$status"

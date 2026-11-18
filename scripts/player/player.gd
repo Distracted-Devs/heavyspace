@@ -25,45 +25,40 @@ func _ready() -> void:
 	add_to_group("gravity_affected")
 
 
-func _process(_delta: float) -> void:
-	pass
-
-
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 
 	if Input.is_action_pressed("turn_right"):
-		body.angular_velocity -= turn_amount * body.basis.y * _delta
+		body.angular_velocity -= turn_amount * body.basis.y * delta
 
 	if Input.is_action_pressed("turn_left"):
-		body.angular_velocity += turn_amount * body.basis.y * _delta
+		body.angular_velocity += turn_amount * body.basis.y * delta
 
 	if Input.is_action_pressed("roll_right"):
-		body.angular_velocity -= roll_amount * body.basis.z * _delta
+		body.angular_velocity -= roll_amount * body.basis.z * delta
 
 	if Input.is_action_pressed("roll_left"):
-		body.angular_velocity += roll_amount * body.basis.z * _delta
+		body.angular_velocity += roll_amount * body.basis.z * delta
 
-	# TODO - make dependant on mass
+	# TODO - make dependent on mass
 	if Input.is_action_pressed("bottom_thruster"):
-		apply_linear_velocity(_delta, body.basis.y, bottom_thrust_scaling)
+		apply_linear_velocity(delta, body.basis.y, bottom_thrust_scaling)
 
 	if Input.is_action_pressed("top_thruster"):
-		apply_linear_velocity(_delta, -body.basis.y, bottom_thrust_scaling)
+		apply_linear_velocity(delta, -body.basis.y, bottom_thrust_scaling)
 
 	if Input.is_action_pressed("back_thruster"):
-		apply_linear_velocity(_delta, -body.basis.z, back_thrust_scaling)
+		apply_linear_velocity(delta, -body.basis.z, back_thrust_scaling)
 
-	if Input.is_action_just_pressed("stop_motion"):
-		body.linear_velocity = Vector3.ZERO
-		body.angular_velocity = Vector3.ZERO
-
-	apply_gravity(_delta)
+	apply_gravity(delta)
 
 
 func apply_linear_velocity(delta: float, direction: Vector3, scaling: float):
-	body.linear_velocity += direction * sqrt(thrust_mass / current_mass) * thrust_rate * scaling * delta
+	var mass_scaling := sqrt(thrust_mass / current_mass)
+	body.linear_velocity += (
+		direction * mass_scaling * thrust_rate * scaling * delta
+	)
 
 
 func apply_gravity(_delta: float):
@@ -75,11 +70,14 @@ func apply_gravity(_delta: float):
 			if self.current_mass > gravity_source.mass:
 				continue
 
-			var source_dir: Vector3 = gravity_source.source_position - body.global_position
+			var source_dir: Vector3 = (
+				gravity_source.source_position - body.global_position
+			)
 			var distance_to_source := source_dir.length()
 			source_dir = source_dir.normalized()
 			var gravity_force: Vector3 = (
-				source_dir * self.current_mass * gravity_source.mass * gravity_constant
+				source_dir * self.current_mass
+				* gravity_source.mass * gravity_constant
 				/ (distance_to_source * distance_to_source)
 			)
 			body.apply_force(gravity_force)

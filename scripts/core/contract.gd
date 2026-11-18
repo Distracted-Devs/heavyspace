@@ -7,7 +7,10 @@ const ERROR_PREFIX := "[Contract]"
 static var enabled: bool = (
 	OS.is_debug_build() and ProjectSettings.get_setting(SETTING_ENABLED, true)
 )
-static var break_on_violation: bool = ProjectSettings.get_setting(SETTING_BREAK_ON_VIOLATION, true)
+static var break_on_violation: bool = ProjectSettings.get_setting(
+	SETTING_BREAK_ON_VIOLATION,
+	true,
+)
 
 
 static func require(condition: bool, message: String) -> bool:
@@ -28,6 +31,7 @@ static func _check(condition: bool, kind: String, message: String) -> bool:
 
 	push_error("%s %s broken: %s" % [ERROR_PREFIX, kind, message])
 	if break_on_violation and EngineDebugger.is_active():
-		# The debugger stops here; step up the call stack to find the API that broke its contract.
+		# The debugger stops here; step up the call stack to find the API
+		# that broke its contract.
 		breakpoint
 	return false
