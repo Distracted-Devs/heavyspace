@@ -5,6 +5,8 @@
     - Where possible effects, abilities, etc must be modular, prioritising many smaller scripts over single larger ones
 - Test-driven development
     - Each feature must be modular and testable and expose parameters to be changed be humans for game feel
+    - The focus on testing is not in making sure each function has a unit test but that APIs have contracts with pre- and post-conditions and invariants
+    - Always ask the user for help in defining the contracts.
 
 # Dev tips
 - Always check the file structure first using `ls`.
@@ -13,4 +15,5 @@
 - Always parameterise where possible and surface using `@export` and `@export_group`
 - Ignore all other branches and treat this as the core branch with a single developer.
 - UNDER NO CIRCUMSTANCES make changes to the other branches.
+- Run Godot headless to check changes run.
 
