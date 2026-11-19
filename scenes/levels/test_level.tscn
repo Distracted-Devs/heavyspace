@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dmeysin25g6c5" path="res://scripts/levels/test_level.gd" id="1_48ne7"]
 [ext_resource type="PackedScene" uid="uid://binwpba4o8jv3" path="res://scenes/player/player.tscn" id="2_48ne7"]
 [ext_resource type="PackedScene" uid="uid://mbq44dx6vywp" path="res://scenes/bodies/test_planet.tscn" id="3_planet"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="4_debug"]
 
 [node name="TestLevel" type="Node3D" unique_id=1744272397]
 script = ExtResource("1_48ne7")
@@ -13,3 +14,6 @@ gravity_constant = 0.0
 
 [node name="Planet" parent="." instance=ExtResource("3_planet")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -300)
+
+[node name="DebugOverlay" parent="." node_paths=PackedStringArray("player") instance=ExtResource("4_debug")]
+player = NodePath("../Player")

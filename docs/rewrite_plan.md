@@ -40,11 +40,28 @@ Agree each API's contracts here, with the user, before building it.
   shape, and the mesh radius, the shape radius and `GravityComponent.radius`
   all equal `radius`.
 
-### Player (`scripts/player/player.gd`, moves to `MassComponent` in 0.6)
+### MassComponent (`scripts/components/mass_component.gd`)
 - Setting `current_mass` requires `current_mass > 0`. A non-positive mass is
   reported and ignored, so the player keeps its old mass.
 - After `current_mass` is set (and from `_ready`, where it starts at
   `starting_mass`), `body.mass` equals `current_mass`.
+- Each accepted set emits `mass_changed` once. A rejected set doesn't emit it.
+
+### InputComponent (`scripts/components/input_component.gd`)
+- After each physics frame, every axis of `thrust_intent` and
+  `rotation_intent` is within [-1, 1]. The base class checks this after
+  calling `_update_intent`, so every implementation (e.g.
+  `PlayerInputComponent`) is held to it.
+
+### ThrusterComponent (`scripts/components/thruster_component.gd`)
+- Applying thrust requires every axis of the thrust intent to be within
+  [-1, 1], and `back_thrust_force` to be ≥ 0. If either is broken, it's
+  reported and no force is applied.
+
+### RotationComponent (`scripts/components/rotation_component.gd`)
+- Applying rotation requires every axis of the rotation intent to be within
+  [-1, 1], and `turn_torque` and `roll_torque` to be ≥ 0. If either is
+  broken, it's reported and no torque is applied.
 
 ## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
@@ -90,9 +107,9 @@ Agree each API's contracts here, with the user, before building it.
   reaches the surface in about 22s.
 - Stop-gap: `GravityComponent._ready` now sets `source_position`. Without
   this, the first physics tick saw the source at the origin and flung the
-  player away. 0.7 removes the cached field entirely.
+  player away. 0.9 removes the cached field entirely.
 - The planet node comes after the Player in the level because of the
-  startup-order bug (fixed in 0.6/0.7).
+  startup-order bug (fixed in 0.8).
 - **Done:** smoke passes; `tests/bodies/test_planet.gd` passes (the radius
   contract, each planet owning its collider sphere, and the level planet
   being heavier than the player's starting
@@ -101,7 +118,7 @@ Agree each API's contracts here, with the user, before building it.
 
 ## 0.5 Movement correctness ✅
 Tested with gravity off: the level sets the player's `gravity_constant` to 0
-until 0.7. The planet stays in the level as a solid obstacle.
+until 0.9. The planet stays in the level as a solid obstacle.
 - Thrust and rotation now use `body.global_basis` instead of `body.basis`.
 - The player's RigidBody uses `linear_damp_mode` Replace with
   `linear_damp = 0`, so velocity no longer decays under the project default.
@@ -126,49 +143,75 @@ until 0.7. The planet stays in the level as a solid obstacle.
   - `body.mass` follows `current_mass`, and a non-positive mass is reported
     and ignored.
 
-## 0.6 Design paradigms (structure)
-Bring the existing code in line with `developer_instructions.md` before
-Phase 1 adds to it. This step moves code around; the gravity *maths* is
-fixed in 0.7, so gravity stays off until then.
-- **Player entity root:** make the root of `player.tscn` the `RigidBody3D`
-  itself, rather than a `Node3D` wrapping one. Then `Player.global_position`
-  is the ship's position and no system has to know about `player.body`.
-- **Split `player.gd` into components** (children of the player entity, one
-  small script each, each with `@export`/`@export_group` parameters):
-  - `FlightInputComponent`: reads `Input` and outputs an intent (thrust
-    vector, rotation vector). This is the only place that touches `Input`, so
-    controller support in Phase 1 is a single-file change, and other
-    components can be tested with fake intent.
-  - `ThrusterComponent`: intent → force.
-  - `RotationComponent`: intent → torque.
-  - `MassComponent`: `current_mass`, a `mass_changed` signal, and it keeps
-    `body.mass` in sync (takes over the 0.5 setter and its contract).
-  - `GravityReceiverComponent`: asks the registry for sources and applies
-    gravity, carrying over today's maths unchanged.
-  - Restarting goes to the level or a game manager, not the player.
-- **Gravity registry (data-oriented):** a `GravityRegistry` autoload.
+## 0.6 Player components ✅
+Gravity stays off in the level (`gravity_constant = 0`), and its code stays
+on the player root, unchanged, until 0.7.
+- The root of `player.tscn` is now the `RigidBody3D` (`Player`), so
+  `Player.global_position` is the ship's position and `player.body` is gone.
+- `player.gd` is split into components (`scripts/components/`), each wired
+  through `@export` node paths:
+  - `InputComponent`: the base class (interface) for anything that drives
+    a ship. It holds `thrust_intent` (z only: forward is -1) and
+    `rotation_intent` (y: turn, z: roll), runs before the other components
+    (`process_physics_priority = -1`), and implementations override
+    `_update_intent`. The thruster and rotation components take any
+    `InputComponent` as `flight_input`, so they aren't tied to the player
+    (e.g. an AI input later). The base class on its own intends nothing,
+    which tests use as fake intent.
+  - `PlayerInputComponent`: the only script that reads `Input`.
+  - `ThrusterComponent.apply_thrust(intent)`: intent → force, with
+    `back_thrust_force`. The vertical thrusters (`top_thruster`,
+    `bottom_thruster`, `vertical_thrust_force`) were removed; the ship only
+    thrusts forward.
+  - `RotationComponent.apply_rotation(intent)`: intent → torque, with
+    `turn_torque` and `roll_torque`.
+  - `MassComponent`: `starting_mass`, `current_mass` and `mass_changed`, and
+    it keeps `body.mass` in sync.
+  - `Intent.is_within_unit` (`scripts/core/intent.gd`) is the shared
+    [-1, 1] check.
+- Restarting moved to `TestLevel._unhandled_input`.
+- Added a debug overlay (`scenes/ui/debug_overlay.tscn`, `DebugOverlay`) to
+  the test level. It shows the player's position, rotation, velocity, spin
+  and mass, and is hidden in release builds. `decimals` is exported.
+- **Done:** all 0.5 tests pass against the new components
+  (`tests/player/test_player.gd`). Each component has its own test file in
+  `tests/components/` (with the `FakeBody` helper). `Input.` only appears in
+  `PlayerInputComponent`. The suite passes 38/38.
+  - Manual (user): check the flight feels the same as at the end of 0.5.
+
+## 0.7 Gravity component
+Agree the `GravityComponent` and `GravityReceiverComponent` contracts with the
+user before building (e.g. bad mass or radius). Also decide whether a source
+of exactly the player's mass pulls (today it does; the design doc says only
+bigger mass pulls).
+- **Naming:** rename `component_gravity.gd` → `gravity_component.gd` so file
+  names match class names (`snake_case` of `class_name`). Move the `.uid`
+  with it so the UID is kept.
+- **`GravityReceiverComponent`:** move the player's gravity code into its own
+  component, carrying over today's maths and today's source list unchanged
+  (the registry replaces the list in 0.8).
+- **Done:** each gravity component has its own test file, and the 0.4 and 0.6
+  tests still pass.
+
+## 0.8 Gravity registry
+Agree the `GravityRegistry` contract with the user before building (e.g.
+duplicate register, stray unregister, the packed arrays staying the same
+length, what `sources_heavier_than` returns).
+- **Data-oriented registry:** a `GravityRegistry` autoload.
   `GravityComponent` registers itself in `_enter_tree` and unregisters in
   `_exit_tree`. Receivers ask the registry each physics frame. Store
   positions/masses/radii in parallel `Packed*Array`s behind a small API
   (`register`, `unregister`, `sources_heavier_than(mass)`), so Phase 2 can
-  scale to thousands of sources without changing the callers. This replaces
-  the `gravity_affected` group and the player's own source list, which
-  removes the `append`/`erase` bug and the startup-order bug (0.7 tests both).
-- **Naming:** rename `component_gravity.gd` → `gravity_component.gd` so file
-  names match class names (`snake_case` of `class_name`). Rename in the
-  editor so UIDs are kept.
-- **Done:**
-  - All 0.5 tests still pass against the new components.
-  - Each component has its own test file.
-  - `Input` is only referenced in `FlightInputComponent`
-    (`grep -r "Input\." scripts/`).
-  - Manual: the flight feels the same as it did at the end of 0.5.
+  scale to thousands of sources without changing the callers.
+- This replaces the `gravity_affected` group and the receiver's own source
+  list, which removes the `append`/`erase` bug and the startup-order bug.
+- **Done (tests):**
+  - A freed source is no longer returned by the registry.
+  - A source added *before* the player is ready still pulls on the player.
 
-## 0.7 Gravity correctness
+## 0.9 Gravity correctness
 Fix the gravity maths in `GravityReceiverComponent` / `GravityComponent`,
 then turn gravity back on in the level (`gravity_constant = 10`).
-- Registration: check the 0.6 registry fixed both bugs (a freed source is
-  dropped; a source registered before the player is ready still pulls).
 - `source_position` is copied from the parent in `_process`, which runs one
   frame behind physics (the `# TODO - fragile`). Read the parent's
   `global_position` when it's needed (or refresh the registry's packed
@@ -176,18 +219,14 @@ then turn gravity back on in the level (`gravity_constant = 10`).
   0.4 stop-gap in `GravityComponent._ready`.
 - The force uses `F = G·m·M / r²` with `body.mass` already synced (0.5), so
   the acceleration doesn't depend on the player's mass, as Newton says.
-  Only sources strictly heavier than the player pull.
 - No softening: use `GravityComponent.radius` and clamp `r` to at least the
   radius, so the force can't blow up near a centre or divide by zero.
 - Use `apply_central_force` (clearer about intent than `apply_force` with no
   offset).
-- Agree the `GravityRegistry` and `GravityComponent` contracts before
-  building (bad mass/radius, duplicate register, stray unregister).
 - **Done (tests):**
-  - A freed source is no longer returned by the registry.
-  - A source added *before* the player is ready still pulls on the player.
   - The acceleration towards a source is the same at player mass 1 and 100.
-  - A source with mass ≤ the player's mass gives zero force.
+  - A source that isn't heavier than the player (as agreed in 0.7) gives
+    zero force.
   - The force at distance 0 is finite.
   - The 0.4 60s drift run still lands the player on the planet surface.
 

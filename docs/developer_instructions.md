@@ -7,6 +7,8 @@
     - Each feature must be modular and testable and expose parameters to be changed by humans for game feel
     - The focus on testing is not in making sure each function has a unit test but that APIs have contracts with pre- and post-conditions and invariants
     - Always ask the user for help in defining the contracts.
+    - Discuss each contract with the user, and get their agreement, before writing it. Propose the pre-conditions, post-conditions and invariants, then record the agreed version in the Contracts section of `docs/rewrite_plan.md` before writing any code for that API.
+    - Contracts come first: when a step builds several APIs, split it so each API is its own step, with its contract agreed at the start of that step.
 
 # Dev tips
 - Always check the file structure first using `ls`.

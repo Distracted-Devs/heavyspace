@@ -39,7 +39,7 @@ func test_level_planet_is_heavier_than_player_starting_mass() -> void:
 		"Planet/GravityComponent"
 	)
 	var player: Player = level.get_node("Player")
-	assert_gt(planet_gravity.mass, player.starting_mass)
+	assert_gt(planet_gravity.mass, player.mass_component.starting_mass)
 
 
 func test_each_planet_owns_its_collider_sphere() -> void:

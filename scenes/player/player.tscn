@@ -1,35 +1,57 @@
 [gd_scene format=3 uid="uid://binwpba4o8jv3"]
 
 [ext_resource type="Script" uid="uid://brorjo3xoln7b" path="res://scripts/player/player.gd" id="1_4fnjr"]
+[ext_resource type="Script" uid="uid://02i66c6extpk" path="res://scripts/components/player_input_component.gd" id="2_input"]
+[ext_resource type="Script" uid="uid://d6bxegrhkqxo" path="res://scripts/components/thruster_component.gd" id="3_thrust"]
+[ext_resource type="Script" uid="uid://b0mwjb12j7mv7" path="res://scripts/components/rotation_component.gd" id="4_rotate"]
+[ext_resource type="Script" uid="uid://n0curlft74ix" path="res://scripts/components/mass_component.gd" id="5_mass"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="Node3D" unique_id=1196993607 node_paths=PackedStringArray("body")]
-script = ExtResource("1_4fnjr")
-body = NodePath("PhysicsBody")
-
-[node name="PhysicsBody" type="RigidBody3D" parent="." unique_id=1645358274]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component")]
 gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
+script = ExtResource("1_4fnjr")
+flight_input = NodePath("PlayerInputComponent")
+thruster = NodePath("ThrusterComponent")
+rotator = NodePath("RotationComponent")
+mass_component = NodePath("MassComponent")
 
-[node name="Mesh" type="Node3D" parent="PhysicsBody" unique_id=971868309]
+[node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
-[node name="Wings" type="CSGSphere3D" parent="PhysicsBody/Mesh" unique_id=1955995611]
+[node name="Wings" type="CSGSphere3D" parent="Mesh" unique_id=1955995611]
 transform = Transform3D(0.845, 0, 0, 0, 0.07, 0, 0, 0, 0.23, 0, 0, 0.08)
 
-[node name="Body" type="CSGSphere3D" parent="PhysicsBody/Mesh" unique_id=800424819]
+[node name="Body" type="CSGSphere3D" parent="Mesh" unique_id=800424819]
 transform = Transform3D(0.205, 0, 0, 0, 0.265, 0, 0, 0, 0.75, 0, 0, 0)
 
-[node name="Cockpit" type="CSGSphere3D" parent="PhysicsBody/Mesh" unique_id=1088768577]
+[node name="Cockpit" type="CSGSphere3D" parent="Mesh" unique_id=1088768577]
 transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0.085, -0.11)
 
-[node name="Collider" type="CollisionShape3D" parent="PhysicsBody" unique_id=506654686]
+[node name="Collider" type="CollisionShape3D" parent="." unique_id=506654686]
 shape = SubResource("SphereShape3D_7l7pj")
 
-[node name="Camera3D" type="Camera3D" parent="PhysicsBody" unique_id=44102908]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=44102908]
 transform = Transform3D(1, 0, 0, 0, 0.9297765, 0.36812454, 0, -0.36812454, 0.9297765, 0, 1.4817256, 2.2951407)
 doppler_tracking = 2
 current = true
 
-[node name="SpotLight3D" type="SpotLight3D" parent="PhysicsBody/Camera3D" unique_id=1445095080]
+[node name="SpotLight3D" type="SpotLight3D" parent="Camera3D" unique_id=1445095080]
+
+[node name="PlayerInputComponent" type="Node" parent="." unique_id=1645358274]
+script = ExtResource("2_input")
+
+[node name="ThrusterComponent" type="Node" parent="." unique_id=1645358275 node_paths=PackedStringArray("body", "flight_input")]
+script = ExtResource("3_thrust")
+body = NodePath("..")
+flight_input = NodePath("../PlayerInputComponent")
+
+[node name="RotationComponent" type="Node" parent="." unique_id=1645358276 node_paths=PackedStringArray("body", "flight_input")]
+script = ExtResource("4_rotate")
+body = NodePath("..")
+flight_input = NodePath("../PlayerInputComponent")
+
+[node name="MassComponent" type="Node" parent="." unique_id=1645358277 node_paths=PackedStringArray("body")]
+script = ExtResource("5_mass")
+body = NodePath("..")

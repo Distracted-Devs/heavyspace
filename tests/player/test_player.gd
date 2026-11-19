@@ -27,11 +27,11 @@ func _spawn_player(position := Vector3.ZERO) -> Player:
 func test_back_thrust_follows_visual_forward_when_root_is_rotated() -> void:
 	var player := _spawn_player()
 	player.rotation.y = PI / 2.0
-	var forward := -player.body.global_basis.z
+	var forward := -player.global_basis.z
 	Input.action_press("back_thruster")
 	await wait_physics_frames(THRUST_FRAMES)
 	assert_almost_eq(
-		player.body.linear_velocity.normalized(),
+		player.linear_velocity.normalized(),
 		forward,
 		Vector3.ONE * 1e-3,
 	)
@@ -41,20 +41,20 @@ func test_back_thrust_follows_visual_forward_when_root_is_rotated() -> void:
 func test_velocity_is_constant_with_no_input_or_sources() -> void:
 	var player := _spawn_player()
 	var velocity := Vector3(1.0, 2.0, -3.0)
-	player.body.linear_velocity = velocity
+	player.linear_velocity = velocity
 	await wait_physics_frames(THRUST_FRAMES)
-	assert_almost_eq(player.body.linear_velocity, velocity, Vector3.ONE * 1e-4)
+	assert_almost_eq(player.linear_velocity, velocity, Vector3.ONE * 1e-4)
 
 
 func test_twice_the_mass_halves_thrust_acceleration() -> void:
 	var light := _spawn_player()
 	var heavy := _spawn_player(Vector3.RIGHT * 10.0)
-	light.current_mass = 1.0
-	heavy.current_mass = 2.0
+	light.mass_component.current_mass = 1.0
+	heavy.mass_component.current_mass = 2.0
 	Input.action_press("back_thruster")
 	await wait_physics_frames(THRUST_FRAMES)
-	var light_speed := light.body.linear_velocity.length()
-	var heavy_speed := heavy.body.linear_velocity.length()
+	var light_speed := light.linear_velocity.length()
+	var heavy_speed := heavy.linear_velocity.length()
 	assert_gt(light_speed, 0.0)
 	assert_almost_eq(heavy_speed / light_speed, 0.5, 1e-3)
 
@@ -63,30 +63,19 @@ func test_twice_the_mass_halves_rotational_acceleration() -> void:
 	for action in ["turn_left", "roll_left"]:
 		var light := _spawn_player()
 		var heavy := _spawn_player(Vector3.RIGHT * 10.0)
-		light.current_mass = 1.0
-		heavy.current_mass = 2.0
+		light.mass_component.current_mass = 1.0
+		heavy.mass_component.current_mass = 2.0
 		Input.action_press(action)
 		await wait_physics_frames(THRUST_FRAMES)
 		Input.action_release(action)
-		var light_spin := light.body.angular_velocity.length()
-		var heavy_spin := heavy.body.angular_velocity.length()
+		var light_spin := light.angular_velocity.length()
+		var heavy_spin := heavy.angular_velocity.length()
 		assert_gt(light_spin, 0.0, action)
 		assert_almost_eq(heavy_spin / light_spin, 0.5, 1e-3, action)
 
 
-func test_current_mass_keeps_body_mass_in_sync() -> void:
+func test_player_mass_follows_mass_component() -> void:
 	var player := _spawn_player()
-	assert_eq(player.body.mass, player.starting_mass)
-	player.current_mass = 3.5
-	assert_eq(player.body.mass, 3.5)
-
-
-func test_non_positive_current_mass_is_reported_and_ignored() -> void:
-	var player := _spawn_player()
-	player.current_mass = 2.0
-	player.current_mass = 0.0
-	assert_push_error(
-		"[Contract] Pre-condition broken: current_mass must be positive"
-	)
-	assert_eq(player.current_mass, 2.0)
-	assert_eq(player.body.mass, 2.0)
+	assert_eq(player.mass, player.mass_component.starting_mass)
+	player.mass_component.current_mass = 3.5
+	assert_eq(player.mass, 3.5)
