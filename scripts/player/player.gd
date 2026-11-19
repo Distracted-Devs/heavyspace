@@ -4,24 +4,33 @@ extends Node3D
 @export_group("Components")
 @export var body: RigidBody3D
 
-@export_group("Movement")
-@export var roll_amount := 2.0 * PI / 4.0
-@export var turn_amount := 2.0 * PI / 4.0
-@export var bottom_thrust_scaling := 0.1
-@export var back_thrust_scaling := 0.1
+@export_group("Rotation")
+@export var roll_torque := 0.05
+@export var turn_torque := 0.05
+
+@export_group("Thrust")
+@export var vertical_thrust_force := 1.0
+@export var back_thrust_force := 1.0
+
+@export_group("Gravity")
 @export var gravity_constant := 0.001
 
 @export_group("Properties")
 @export var starting_mass := 1.0
-@export var thrust_mass := 1.0
-@export var thrust_rate := 1.0
 
-@onready var current_mass: float = starting_mass
+var current_mass := 1.0:
+	set(value):
+		if not Contract.require(value > 0.0, "current_mass must be positive"):
+			return
+		current_mass = value
+		if body:
+			body.mass = value
 
 var gravity_sources: Array[GravityComponent] = []
 
 
 func _ready() -> void:
+	current_mass = starting_mass
 	add_to_group("gravity_affected")
 
 
@@ -29,36 +38,30 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 
+	var body_basis := body.global_basis
+
 	if Input.is_action_pressed("turn_right"):
-		body.angular_velocity -= turn_amount * body.basis.y * delta
+		body.apply_torque(-body_basis.y * turn_torque)
 
 	if Input.is_action_pressed("turn_left"):
-		body.angular_velocity += turn_amount * body.basis.y * delta
+		body.apply_torque(body_basis.y * turn_torque)
 
 	if Input.is_action_pressed("roll_right"):
-		body.angular_velocity -= roll_amount * body.basis.z * delta
+		body.apply_torque(-body_basis.z * roll_torque)
 
 	if Input.is_action_pressed("roll_left"):
-		body.angular_velocity += roll_amount * body.basis.z * delta
+		body.apply_torque(body_basis.z * roll_torque)
 
-	# TODO - make dependent on mass
 	if Input.is_action_pressed("bottom_thruster"):
-		apply_linear_velocity(delta, body.basis.y, bottom_thrust_scaling)
+		body.apply_central_force(body_basis.y * vertical_thrust_force)
 
 	if Input.is_action_pressed("top_thruster"):
-		apply_linear_velocity(delta, -body.basis.y, bottom_thrust_scaling)
+		body.apply_central_force(-body_basis.y * vertical_thrust_force)
 
 	if Input.is_action_pressed("back_thruster"):
-		apply_linear_velocity(delta, -body.basis.z, back_thrust_scaling)
+		body.apply_central_force(-body_basis.z * back_thrust_force)
 
 	apply_gravity(delta)
-
-
-func apply_linear_velocity(delta: float, direction: Vector3, scaling: float):
-	var mass_scaling := sqrt(thrust_mass / current_mass)
-	body.linear_velocity += (
-		direction * mass_scaling * thrust_rate * scaling * delta
-	)
 
 
 func apply_gravity(_delta: float):

@@ -9,11 +9,7 @@ script = ExtResource("1_48ne7")
 
 [node name="Player" parent="." unique_id=125079120 instance=ExtResource("2_48ne7")]
 transform = Transform3D(0.9998477, -0.017452406, 0, 0.017452406, 0.9998477, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
-roll_amount = 0.5
-turn_amount = 0.5
-bottom_thrust_scaling = 1.0
-back_thrust_scaling = 1.0
-gravity_constant = 10.0
+gravity_constant = 0.0
 
 [node name="Planet" parent="." instance=ExtResource("3_planet")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -300)

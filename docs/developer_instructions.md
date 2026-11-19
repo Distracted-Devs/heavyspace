@@ -20,6 +20,7 @@
 - After every change to GDScript, run `.githooks/format <changed files>` (no arguments formats `scripts/` and `tests/`). It runs gdscript-formatter with the project's 80-character line limit and lists any lines still too long. It exits 1 until they're fixed.
     - The formatter can't wrap every long line. For those, wrap the expression in brackets or split it with a local variable, then run the formatter again.
     - Don't run gdscript-formatter directly with its default settings. Its default line limit is 100, not 80.
+- After every change to GDScript, also run `.githooks/warnings <changed files>` (no arguments checks every tracked script outside `addons/`). It starts the Godot editor's language server headless and prints the same warnings the editor shows (e.g. a local variable shadowing a `Node3D` property). It exits 1 until they're fixed. Name locals so they don't shadow, e.g. `body_basis` rather than `basis`.
 
 # Testing
 - Tests use GUT (`addons/gut/`, v9.7.1, made for Godot 4.7). Configuration is in `.gutconfig.json`.
