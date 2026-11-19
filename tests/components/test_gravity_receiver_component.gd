@@ -62,8 +62,19 @@ func test_lighter_source_does_not_pull() -> void:
 func test_freed_source_no_longer_pulls() -> void:
 	var gravity := _spawn_source(100.0)
 	gravity.get_parent().free()
-	assert_eq(_receiver.gravity_sources, [])
 	assert_eq(await _velocity_after_one_pull(), Vector3.ZERO)
+
+
+func test_source_added_before_receiver_still_pulls() -> void:
+	_receiver.free()
+	_spawn_source(100.0)
+	_receiver = GravityReceiverComponent.new()
+	_receiver.body = _body
+	_receiver.gravity_constant = 1.0
+	_body.add_child(_receiver)
+	_receiver.set_physics_process(false)
+	var velocity := await _velocity_after_one_pull()
+	assert_gt(velocity.length(), 0.0)
 
 
 func test_negative_gravity_constant_is_reported_and_applies_no_force() -> void:

@@ -1,16 +1,11 @@
 extends GutTest
 
 var _was_enabled: bool
-var _receiver: GravityReceiverComponent
 
 
 func before_each() -> void:
 	_was_enabled = Contract.enabled
 	Contract.enabled = true
-	var body: RigidBody3D = add_child_autofree(FakeBody.make())
-	_receiver = GravityReceiverComponent.new()
-	_receiver.body = body
-	body.add_child(_receiver)
 
 
 func after_each() -> void:
@@ -24,27 +19,38 @@ func _spawn_source(parent: Node) -> GravityComponent:
 	return gravity
 
 
-func test_source_registers_with_receivers_at_parent_position() -> void:
+func test_source_registers_at_parent_position_on_entering_tree() -> void:
 	var parent := Node3D.new()
 	parent.position = Vector3(1.0, 2.0, 3.0)
 	var gravity := _spawn_source(parent)
-	assert_eq(_receiver.gravity_sources, [gravity])
-	assert_eq(gravity.source_position, Vector3(1.0, 2.0, 3.0))
+	var index := GravityRegistry.index_of(gravity)
+	assert_gte(index, 0)
+	assert_eq(GravityRegistry.positions[index], Vector3(1.0, 2.0, 3.0))
 
 
-func test_freed_source_unregisters_from_receivers() -> void:
+func test_source_unregisters_on_leaving_tree() -> void:
 	var parent := Node3D.new()
-	_spawn_source(parent)
-	parent.free()
-	assert_eq(_receiver.gravity_sources, [])
+	var gravity := _spawn_source(parent)
+	parent.remove_child(gravity)
+	assert_eq(GravityRegistry.index_of(gravity), -1)
+	gravity.free()
+
+
+func test_mass_and_radius_changes_reach_the_registry() -> void:
+	var gravity := _spawn_source(Node3D.new())
+	gravity.mass = 7.0
+	gravity.radius = 3.0
+	var index := GravityRegistry.index_of(gravity)
+	assert_eq(GravityRegistry.masses[index], 7.0)
+	assert_eq(GravityRegistry.radii[index], 3.0)
 
 
 func test_non_node3d_parent_is_reported_and_does_not_register() -> void:
-	_spawn_source(Node.new())
+	var gravity := _spawn_source(Node.new())
 	assert_push_error(
 		"[Contract] Pre-condition broken: parent must be a Node3D"
 	)
-	assert_eq(_receiver.gravity_sources, [])
+	assert_eq(GravityRegistry.index_of(gravity), -1)
 
 
 func test_non_positive_mass_is_reported_and_ignored() -> void:

@@ -77,6 +77,21 @@ Agree each API's contracts here, with the user, before building it.
   or smaller mass gives no force (as the design doc says).
 - A freed source is dropped from the source list and gives no force.
 
+### GravityRegistry (`scripts/core/gravity_registry.gd`, autoload)
+- `register(source)` requires a non-null source that isn't already
+  registered. A null or duplicate source is reported and ignored.
+- `unregister(source)` and `update(source)` require the source to be
+  registered. A stray call is reported and ignored. A `GravityComponent` that
+  never registered (non-`Node3D` parent) doesn't unregister.
+- Invariant: after every register and unregister, `positions`, `masses` and
+  `radii` (parallel packed arrays) all have length `count()`.
+- `sources_heavier_than(mass)` returns the indices of every source with a
+  mass strictly greater than `mass`, and no others. The indices are only
+  valid until the next register or unregister.
+- A source's mass and radius setters push changes to the registry. The
+  registry refreshes positions once per physics frame, before the receivers
+  run (`process_physics_priority = -2`).
+
 ## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
   (it should read "initialise over initialize"), and fix the typos
@@ -209,30 +224,30 @@ Agreed: only a source *strictly* heavier than the player pulls.
   `tests/components/test_gravity_receiver_component.gd` pass, along with the
   0.4 and 0.6 tests. The suite passes 48/48.
 
-## 0.8 Gravity registry
-Agree the `GravityRegistry` contract with the user before building (e.g.
-duplicate register, stray unregister, the packed arrays staying the same
-length, what `sources_heavier_than` returns).
-- **Data-oriented registry:** a `GravityRegistry` autoload.
-  `GravityComponent` registers itself in `_enter_tree` and unregisters in
-  `_exit_tree`. Receivers ask the registry each physics frame. Store
-  positions/masses/radii in parallel `Packed*Array`s behind a small API
-  (`register`, `unregister`, `sources_heavier_than(mass)`), so Phase 2 can
-  scale to thousands of sources without changing the callers.
-- This replaces the `gravity_affected` group and the receiver's own source
-  list, which removes the startup-order bug.
-- **Done (tests):**
-  - A freed source is no longer returned by the registry.
-  - A source added *before* the player is ready still pulls on the player.
+## 0.8 Gravity registry ✅
+Agreed: `sources_heavier_than` returns packed indices. Mass and radius are
+pushed to the registry, and positions are refreshed each physics frame.
+- `GravityRegistry` autoload (`scripts/core/gravity_registry.gd`). It holds
+  parallel `PackedVector3Array positions`, `PackedFloat64Array masses` and
+  `PackedFloat64Array radii`, plus a source → index dictionary, and removes
+  sources with an O(1) swap-remove. The API is `register`, `unregister`,
+  `update`, `count`, `index_of` and `sources_heavier_than(mass)`.
+- `GravityComponent` registers in `_enter_tree` and unregisters in
+  `_exit_tree`. `GravityReceiverComponent` reads the registry's packed
+  arrays each physics frame. The `gravity_affected` group and the
+  receiver's own source list are gone, along with the startup-order bug.
+- **Done:** `tests/core/test_gravity_registry.gd` covers the contract. The
+  receiver tests show that a freed source no longer pulls, and that a source
+  added before the receiver still pulls. The suite passes 58/58.
 
 ## 0.9 Gravity correctness
 Fix the gravity maths in `GravityReceiverComponent` / `GravityComponent`,
 then turn gravity back on in the level (`gravity_constant = 10`).
 - `source_position` is copied from the parent in `_process`, which runs one
-  frame behind physics (the `# TODO - fragile`). Read the parent's
-  `global_position` when it's needed (or refresh the registry's packed
-  positions each physics frame) and remove the cached field, including the
-  0.4 stop-gap in `GravityComponent._ready`.
+  frame behind physics (the `# TODO - fragile`). Make the registry's
+  per-physics-frame refresh read each source parent's `global_position`, and
+  remove the cached field, including the stop-gap in
+  `GravityComponent._enter_tree`.
 - The force uses `F = G·m·M / r²` with `body.mass` already synced (0.5), so
   the acceleration doesn't depend on the player's mass, as Newton says.
 - No softening: use `GravityComponent.radius` and clamp `r` to at least the
