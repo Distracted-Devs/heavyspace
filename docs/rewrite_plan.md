@@ -48,7 +48,7 @@ Agree each API's contracts here, with the user, before building it.
 - **Done:** smoke passes, and grepping for `print(`, `stop_motion` and `collector`
   finds nothing in `scripts/` or `project.godot`.
 
-## 0.3 Strip back to the player
+## 0.3 Strip back to the player ✅
 - Delete:
   - `scenes/collectables/mass_collectable.tscn`
   - `scripts/bodies/mass_collectable.gd` (+ `.uid`)
