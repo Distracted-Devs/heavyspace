@@ -9,16 +9,19 @@ var _registry: Node
 func before_each() -> void:
 	_was_enabled = Contract.enabled
 	Contract.enabled = true
-	_registry = autofree(REGISTRY_SCRIPT.new())
+	_registry = add_child_autofree(REGISTRY_SCRIPT.new())
 
 
 func after_each() -> void:
 	Contract.enabled = _was_enabled
 
 
-func _source(source_mass: float) -> GravityComponent:
-	var source: GravityComponent = autofree(GravityComponent.new())
+func _source(source_mass: float, at := Vector3.ZERO) -> GravityComponent:
+	var parent: Node3D = add_child_autofree(Node3D.new())
+	parent.position = at
+	var source := GravityComponent.new()
 	source.mass = source_mass
+	parent.add_child(source)
 	return source
 
 
@@ -30,9 +33,8 @@ func _assert_lengths_match_count() -> void:
 
 
 func test_register_stores_source_data_at_its_index() -> void:
-	var source := _source(4.0)
+	var source := _source(4.0, Vector3(1.0, 2.0, 3.0))
 	source.radius = 2.0
-	source.source_position = Vector3(1.0, 2.0, 3.0)
 	_registry.register(source)
 	var index: int = _registry.index_of(source)
 	assert_eq(_registry.count(), 1)
@@ -50,6 +52,24 @@ func test_duplicate_register_is_reported_and_ignored() -> void:
 	)
 	assert_eq(_registry.count(), 1)
 	_assert_lengths_match_count()
+
+
+func test_source_outside_tree_is_reported_and_ignored() -> void:
+	var source: GravityComponent = autofree(GravityComponent.new())
+	_registry.register(source)
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "source parent must be a Node3D in the tree"
+	)
+	assert_eq(_registry.count(), 0)
+
+
+func test_positions_follow_source_parents_each_physics_frame() -> void:
+	var source := _source(4.0)
+	_registry.register(source)
+	source.source_node.position = Vector3(5.0, 0.0, 0.0)
+	await wait_physics_frames(1)
+	assert_eq(_registry.positions[_registry.index_of(source)], Vector3(5, 0, 0))
 
 
 func test_null_register_is_reported_and_ignored() -> void:

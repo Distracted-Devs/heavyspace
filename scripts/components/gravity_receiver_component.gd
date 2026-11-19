@@ -20,12 +20,18 @@ func apply_gravity() -> void:
 		return
 	var positions := GravityRegistry.positions
 	var masses := GravityRegistry.masses
-	for index in GravityRegistry.sources_heavier_than(body.mass):
-		var source_dir := positions[index] - body.global_position
-		var distance_to_source := source_dir.length()
-		source_dir = source_dir.normalized()
-		var gravity_force: Vector3 = (
-			source_dir * body.mass * masses[index] * gravity_constant
-			/ (distance_to_source * distance_to_source)
+	var radii := GravityRegistry.radii
+	var body_mass := body.mass
+	for index in GravityRegistry.sources_heavier_than(body_mass):
+		var offset := positions[index] - body.global_position
+		var distance := maxf(offset.length(), radii[index])
+		var gravity_force := (
+			offset.normalized() * gravity_constant * body_mass * masses[index]
+			/ (distance * distance)
 		)
-		body.apply_force(gravity_force)
+		if not Contract.ensure(
+			gravity_force.is_finite(),
+			"gravity force must be finite",
+		):
+			continue
+		body.apply_central_force(gravity_force)

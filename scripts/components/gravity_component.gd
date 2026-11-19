@@ -13,25 +13,19 @@ extends Node
 			return
 		mass = value
 		_push_to_registry()
-@export var source_position := Vector3.ZERO
 
-var _source: Node3D
+var source_node: Node3D:
+	get:
+		return get_parent() as Node3D
+
 var _registered := false
 
 
 func _enter_tree() -> void:
-	_source = get_parent() as Node3D
-	if not Contract.require(_source != null, "parent must be a Node3D"):
+	if not Contract.require(source_node != null, "parent must be a Node3D"):
 		return
-	source_position = _source.global_position
 	GravityRegistry.register(self)
 	_registered = true
-
-
-# TODO - is there a better way? Fragile
-func _process(_delta: float) -> void:
-	if _source:
-		source_position = _source.global_position
 
 
 func _exit_tree() -> void:

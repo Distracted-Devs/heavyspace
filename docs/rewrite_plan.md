@@ -76,6 +76,12 @@ Agree each API's contracts here, with the user, before building it.
 - Only a source strictly heavier than `body.mass` pulls. A source of equal
   or smaller mass gives no force (as the design doc says).
 - A freed source is dropped from the source list and gives no force.
+- The force is `F = G·m·M / r²` through `apply_central_force`, so the
+  acceleration doesn't depend on the receiver's mass. `r` is clamped to at
+  least the source's radius, and at distance 0 the direction is zero, so no
+  force is applied.
+- Post-condition: every applied force is finite. A non-finite force is
+  reported and not applied.
 
 ### GravityRegistry (`scripts/core/gravity_registry.gd`, autoload)
 - `register(source)` requires a non-null source that isn't already
@@ -88,9 +94,12 @@ Agree each API's contracts here, with the user, before building it.
 - `sources_heavier_than(mass)` returns the indices of every source with a
   mass strictly greater than `mass`, and no others. The indices are only
   valid until the next register or unregister.
-- A source's mass and radius setters push changes to the registry. The
-  registry refreshes positions once per physics frame, before the receivers
-  run (`process_physics_priority = -2`).
+- `register` also requires the source's parent to be a `Node3D` in the
+  tree. If it isn't, that's reported and ignored.
+- A source's mass and radius setters push changes to the registry. Once per
+  physics frame, before the receivers run (`process_physics_priority = -2`),
+  the registry refreshes positions from each source parent's
+  `global_position`.
 
 ## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
@@ -240,28 +249,23 @@ pushed to the registry, and positions are refreshed each physics frame.
   receiver tests show that a freed source no longer pulls, and that a source
   added before the receiver still pulls. The suite passes 58/58.
 
-## 0.9 Gravity correctness
-Fix the gravity maths in `GravityReceiverComponent` / `GravityComponent`,
-then turn gravity back on in the level (`gravity_constant = 10`).
-- `source_position` is copied from the parent in `_process`, which runs one
-  frame behind physics (the `# TODO - fragile`). Make the registry's
-  per-physics-frame refresh read each source parent's `global_position`, and
-  remove the cached field, including the stop-gap in
-  `GravityComponent._enter_tree`.
-- The force uses `F = G·m·M / r²` with `body.mass` already synced (0.5), so
-  the acceleration doesn't depend on the player's mass, as Newton says.
-- No softening: use `GravityComponent.radius` and clamp `r` to at least the
-  radius, so the force can't blow up near a centre or divide by zero.
-- Use `apply_central_force` (clearer about intent than `apply_force` with no
-  offset).
-- **Done (tests):**
-  - The acceleration towards a source is the same at player mass 1 and 100.
-  - A source that isn't heavier than the player (as agreed in 0.7) gives
-    zero force.
-  - The force at distance 0 is finite.
-  - The 0.4 60s drift run still lands the player on the planet surface.
+## 0.9 Gravity correctness ✅
+- The cached `source_position` field is gone (along with the `_process`
+  copy and the 0.4 stop-gap). `GravityComponent.source_node` is the parent
+  `Node3D`, and the registry reads its `global_position` each physics frame.
+- `GravityReceiverComponent` applies `G·m·M / r²` with `apply_central_force`,
+  clamps `r` to the source radius, and reports a non-finite force.
+- Gravity is back on in the level (`gravity_constant = 10` on
+  `Player/GravityReceiverComponent`).
+- **Done:**
+  - Tests: the acceleration is the same at body mass 1 and 100, the force is
+    inverse square outside the radius and constant inside it, the force at
+    distance 0 is finite (zero), equal or lighter sources give no force, and
+    registry positions follow their parents. The suite passes 64/64.
+  - The 60s headless drift run lands the player on the surface by 20s and
+    rests at a distance of 50.48, as in 0.4.
 
-## Phase 0 done when
+## Phase 0 done when ✅
 - The project opens headless with no errors, and the full test suite passes.
 - The test level contains only the player and one test planet.
 - The player flies with correct Newtonian thrust and gravity, and can't
