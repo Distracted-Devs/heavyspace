@@ -63,6 +63,20 @@ Agree each API's contracts here, with the user, before building it.
   [-1, 1], and `turn_torque` and `roll_torque` to be ≥ 0. If either is
   broken, it's reported and no torque is applied.
 
+### GravityComponent (`scripts/components/gravity_component.gd`)
+- Setting `mass` requires `mass > 0`, and setting `radius` requires
+  `radius > 0`. A non-positive value is reported and ignored, so the old
+  value stays.
+- The parent must be a `Node3D` (checked in `_ready`). If it isn't, that's
+  reported and the source doesn't register with any receiver.
+
+### GravityReceiverComponent (`scripts/components/gravity_receiver_component.gd`)
+- Applying gravity requires `gravity_constant >= 0`. If that's broken, it's
+  reported and no force is applied.
+- Only a source strictly heavier than `body.mass` pulls. A source of equal
+  or smaller mass gives no force (as the design doc says).
+- A freed source is dropped from the source list and gives no force.
+
 ## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
   (it should read "initialise over initialize"), and fix the typos
@@ -87,7 +101,7 @@ Agree each API's contracts here, with the user, before building it.
   - `scripts/managers/procedural_generation.gd` (+ `.uid`)
 - Remove the `ProceduralGeneration` node and its ext_resources from
   `scenes/levels/test_level.tscn`.
-- Keep `scripts/components/component_gravity.gd`, since the planet needs it.
+- Keep `scripts/components/component_gravity.gd` (now `gravity_component.gd`), since the planet needs it.
 - Leave textures alone for now. Clear unused assets out in Phase 4 with the
   art pass.
 - **Done:** smoke passes, `test_level.tscn` holds only the Player (plus the
@@ -179,19 +193,21 @@ on the player root, unchanged, until 0.7.
   `PlayerInputComponent`. The suite passes 38/38.
   - Manual (user): check the flight feels the same as at the end of 0.5.
 
-## 0.7 Gravity component
-Agree the `GravityComponent` and `GravityReceiverComponent` contracts with the
-user before building (e.g. bad mass or radius). Also decide whether a source
-of exactly the player's mass pulls (today it does; the design doc says only
-bigger mass pulls).
-- **Naming:** rename `component_gravity.gd` → `gravity_component.gd` so file
-  names match class names (`snake_case` of `class_name`). Move the `.uid`
-  with it so the UID is kept.
-- **`GravityReceiverComponent`:** move the player's gravity code into its own
-  component, carrying over today's maths and today's source list unchanged
-  (the registry replaces the list in 0.8).
-- **Done:** each gravity component has its own test file, and the 0.4 and 0.6
-  tests still pass.
+## 0.7 Gravity component ✅
+Agreed: only a source *strictly* heavier than the player pulls.
+- Renamed `component_gravity.gd` → `gravity_component.gd` (the `.uid` moved
+  with it, so the UID is kept).
+- `GravityComponent` now checks that `mass` and `radius` are positive and
+  that its parent is a `Node3D`.
+- `GravityReceiverComponent` (`body`, `gravity_constant`) holds the player's
+  old gravity code, with today's maths unchanged. `Player` only wires up its
+  components now (`gravity_receiver`). The level's `gravity_constant = 0`
+  override moved onto `Player/GravityReceiverComponent`.
+- `remove_gravity_source` now erases instead of appending (the 0.8 registry
+  still replaces the list). The startup-order bug remains until 0.8.
+- **Done:** `tests/components/test_gravity_component.gd` and
+  `tests/components/test_gravity_receiver_component.gd` pass, along with the
+  0.4 and 0.6 tests. The suite passes 48/48.
 
 ## 0.8 Gravity registry
 Agree the `GravityRegistry` contract with the user before building (e.g.
@@ -204,7 +220,7 @@ length, what `sources_heavier_than` returns).
   (`register`, `unregister`, `sources_heavier_than(mass)`), so Phase 2 can
   scale to thousands of sources without changing the callers.
 - This replaces the `gravity_affected` group and the receiver's own source
-  list, which removes the `append`/`erase` bug and the startup-order bug.
+  list, which removes the startup-order bug.
 - **Done (tests):**
   - A freed source is no longer returned by the registry.
   - A source added *before* the player is ready still pulls on the player.

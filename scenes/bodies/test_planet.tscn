@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c3h82novcpnlo" path="res://scripts/bodies/planet.gd" id="1_planet"]
 [ext_resource type="Texture2D" uid="uid://c2o8k5jykhhk2" path="res://resources/textures/earth.jpg" id="2_earth"]
-[ext_resource type="Script" uid="uid://bk10v02e6yctf" path="res://scripts/components/component_gravity.gd" id="3_gravity"]
+[ext_resource type="Script" uid="uid://bk10v02e6yctf" path="res://scripts/components/gravity_component.gd" id="3_gravity"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_earth"]
 albedo_texture = ExtResource("2_earth")

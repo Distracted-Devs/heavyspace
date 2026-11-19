@@ -5,10 +5,11 @@
 [ext_resource type="Script" uid="uid://d6bxegrhkqxo" path="res://scripts/components/thruster_component.gd" id="3_thrust"]
 [ext_resource type="Script" uid="uid://b0mwjb12j7mv7" path="res://scripts/components/rotation_component.gd" id="4_rotate"]
 [ext_resource type="Script" uid="uid://n0curlft74ix" path="res://scripts/components/mass_component.gd" id="5_mass"]
+[ext_resource type="Script" uid="uid://cjv7325gj85dy" path="res://scripts/components/gravity_receiver_component.gd" id="6_gravity"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "gravity_receiver")]
 gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -17,6 +18,7 @@ flight_input = NodePath("PlayerInputComponent")
 thruster = NodePath("ThrusterComponent")
 rotator = NodePath("RotationComponent")
 mass_component = NodePath("MassComponent")
+gravity_receiver = NodePath("GravityReceiverComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
@@ -54,4 +56,8 @@ flight_input = NodePath("../PlayerInputComponent")
 
 [node name="MassComponent" type="Node" parent="." unique_id=1645358277 node_paths=PackedStringArray("body")]
 script = ExtResource("5_mass")
+body = NodePath("..")
+
+[node name="GravityReceiverComponent" type="Node" parent="." unique_id=1645358278 node_paths=PackedStringArray("body")]
+script = ExtResource("6_gravity")
 body = NodePath("..")
