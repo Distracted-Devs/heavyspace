@@ -7,13 +7,16 @@ extends Node
 
 
 func _ready() -> void:
+	source_position = get_parent().global_position
 	var gravity_group := get_tree().get_nodes_in_group("gravity_affected")
 	for node in gravity_group:
 		node.add_gravity_source(self)
 
+
 # TODO - is there a better way? Fragile
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	self.source_position = get_parent().global_position
+
 
 func _exit_tree() -> void:
 	var gravity_group := get_tree().get_nodes_in_group("gravity_affected")

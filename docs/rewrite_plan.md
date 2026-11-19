@@ -31,6 +31,15 @@ Agree each API's contracts here, with the user, before building it.
 - A passing check has no side effects and returns `true`.
 - With checks disabled, nothing is reported and every check returns `true`.
 
+### Planet (`scripts/bodies/planet.gd`)
+- Setting `radius` requires `radius > 0`. A non-positive radius is reported
+  and ignored, so the planet keeps its old size.
+- The planet owns its collider's `SphereShape3D` (made in `_ready`), so no
+  two planets share a shape.
+- After the radius is applied, the collider still uses the planet's own
+  shape, and the mesh radius, the shape radius and `GravityComponent.radius`
+  all equal `radius`.
+
 ## 0.2 Housekeeping ✅
 - `docs/developer_instructions.md`: the British English example is backwards
   (it should read "initialise over initialize"), and fix the typos
@@ -62,24 +71,27 @@ Agree each API's contracts here, with the user, before building it.
   environment), and no file references the deleted paths
   (`grep -r mass_collectable\|procedural_generation`).
 
-## 0.4 Test planet
-`scenes/bodies/test_planet.tscn` currently points at `scripts/bodies/planet.gd`,
-which doesn't exist. Rebuild it as an entity made from components:
-- Root `StaticBody3D` ("Planet") with:
-  - `CollisionShape3D` (a sphere), so the player can't fly through it. The
-    lose condition on impact is Phase 1.
-  - A mesh (keep `CSGSphere3D` + earth material for now).
-  - `GravityComponent` (`mass`, `radius`).
-- No root script unless one is needed. Size the mesh and collider from one
-  exported `radius` so they can't drift apart (a small `@tool` script, or
-  keep it in the component).
-- Starting values: radius 50, mass well above the player's `starting_mass`,
-  placed ~300 units in front of the player in `test_level.tscn`. Tune by feel.
-- **Done:**
-  - Smoke passes, and the level shows the planet.
-  - Test: the planet's `GravityComponent` mass > the player's starting mass.
-  - Manual: with no input, the player drifts towards the planet and stops on
-    its surface instead of passing through it.
+## 0.4 Test planet ✅
+- Rebuilt `scenes/bodies/test_planet.tscn` as a `StaticBody3D` ("Planet")
+  with a `CSGSphere3D` mesh (earth material), a `CollisionShape3D` and a
+  `GravityComponent`. The planet creates its own `SphereShape3D` in `_ready`,
+  so the shape can't be the wrong type and instances never share one.
+- Added a small `@tool` root script, `scripts/bodies/planet.gd` (`Planet`).
+  Its single exported `radius` sizes the mesh, collider and
+  `GravityComponent.radius` together.
+- Starting values: radius 50, mass 10000, placed at `(0, 0, -300)` in
+  `test_level.tscn`. With the level's `gravity_constant = 10` the player
+  reaches the surface in about 22s.
+- Stop-gap: `GravityComponent._ready` now sets `source_position`. Without
+  this, the first physics tick saw the source at the origin and flung the
+  player away. 0.5 removes the cached field entirely.
+- The planet node comes after the Player in the level because of the
+  startup-order bug (fixed in 0.5/0.7).
+- **Done:** smoke passes; `tests/bodies/test_planet.gd` passes (the radius
+  contract, each planet owning its collider sphere, and the level planet
+  being heavier than the player's starting
+  mass); a 60s headless run with no input drifts the player onto the surface,
+  where it rests at a distance of 50.48 (planet radius + player radius).
 
 ## 0.5 Gravity correctness
 Bugs in `player.gd` / `component_gravity.gd`:
@@ -112,6 +124,9 @@ Bugs in `player.gd` / `component_gravity.gd`:
 - Thrust and rotation use `body.basis` (relative to the parent), but they
   need `body.global_basis`. They only work today because the `Player` root is
   barely rotated.
+- The player's RigidBody uses the project's default linear damping (0.1),
+  so velocity decays with no input. Set `linear_damp_mode` to Replace with
+  `linear_damp = 0`, or the Newton's 1st law test will fail.
 - Thrust changes `linear_velocity` directly. Make it a force
   (`apply_central_force`) so it follows the same Newtonian model as gravity.
   Keep the old `sqrt(thrust_mass / current_mass)` scaling only if tuning
@@ -176,6 +191,13 @@ Phase 1 adds to it.
 
 # Phase 2: Procedural generation
 - Add mass pickups and a procedural generation manager
+- `scenes/bodies/test_planet.tscn` becomes a standard spawnable body (rename
+  it to match). The spawner sets its `radius` and mass. Swap `CSGSphere3D`
+  for a `MeshInstance3D` (CSG is too costly at scale).
+- When procedural generation replaces `test_level.tscn`, delete
+  `test_level_planet_is_heavier_than_player_starting_mass` (and
+  `LEVEL_SCENE`) from `tests/bodies/test_planet.gd`. It tests the level,
+  not the planet.
 - Make sure mass pickups spawn around ("in orbit") of bigger masses
     - There is a hierarchy of orbits for the procedural generation (moons upon moons upon moons)
 - Game must be 60fps
