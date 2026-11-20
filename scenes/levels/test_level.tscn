@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="4_debug"]
 [ext_resource type="Script" path="res://scripts/levels/pause_controller.gd" id="5_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="6_pause_overlay"]
+[ext_resource type="Script" path="res://scripts/levels/lose_controller.gd" id="7_lose"]
+[ext_resource type="PackedScene" path="res://scenes/ui/lose_overlay.tscn" id="8_lose_overlay"]
 
 [node name="TestLevel" type="Node3D" unique_id=1744272397]
 script = ExtResource("1_48ne7")
@@ -27,3 +29,10 @@ script = ExtResource("5_pause")
 
 [node name="PauseOverlay" parent="." node_paths=PackedStringArray("pause_controller") instance=ExtResource("6_pause_overlay")]
 pause_controller = NodePath("../PauseController")
+
+[node name="LoseController" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("7_lose")
+player = NodePath("../Player")
+
+[node name="LoseOverlay" parent="." node_paths=PackedStringArray("lose_controller") instance=ExtResource("8_lose_overlay")]
+lose_controller = NodePath("../LoseController")

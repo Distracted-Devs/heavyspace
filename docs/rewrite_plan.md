@@ -161,6 +161,25 @@ Agree each API's contracts here, with the user, before building it.
 - Later (Phase 3), it may take an optional `Area3D` sensor for the pickup
   radius, which feeds the same signals.
 
+### LoseController (`scripts/levels/lose_controller.gd`)
+- It listens to the player's `contact_component.heavier_contact`.
+- The first heavier contact sets `lost = true`, emits `lost_game(other)`
+  exactly once, calls `player.stop_flight()`, and in debug builds prints
+  `[Debug] Lost: crashed into <name>`. Later contacts do nothing, and
+  `lost` stays true until the level reloads. A lighter contact never
+  loses.
+- `LoseOverlay` shows "Crashed! Press R / Back to restart", only after
+  losing. Restart (via `PauseController`) and pause still work.
+
+### Player.stop_flight (`scripts/player/player.gd`)
+- It freezes the body where it is, and disables the input, thruster,
+  rotation, fuel, gravity receiver and camera components (agreed: the
+  camera stops too). The changes are deferred, because a contact arrives
+  during the physics step.
+- Post-condition, once applied: the body is frozen and every listed
+  component has `PROCESS_MODE_DISABLED`. From then on, the ship's position,
+  fuel and camera don't change.
+
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
   `radius > 0`. A non-positive value is reported and ignored, so the old
@@ -506,10 +525,35 @@ statment only for now.
 
   The suite passes 126/126.
 
-## 1.7 Lose flow
-- `LoseController` latches on the first `heavier_contact`, prints
-  `[Debug] Lost: crashed into <body>` in debug builds, shows a lose
-  message, stops the player, and offers a restart.
+## 1.7 Lose flow ✅
+- `LoseController` (`scripts/levels/lose_controller.gd`, in the test level)
+  latches on the first `heavier_contact`, calls `Player.stop_flight()`,
+  prints `[Debug] Lost: crashed into <name>` and emits `lost_game`.
+- `Player.stop_flight()` freezes the body and disables the input, thruster,
+  rotation, fuel, gravity receiver and camera components (deferred, because
+  the contact arrives mid-physics-step).
+- `LoseOverlay` (`scenes/ui/lose_overlay.tscn`) shows "Crashed! Press R /
+  Back to restart" after losing.
+- **Done:**
+  - `tests/levels/test_lose_controller.gd` covers:
+    - the first heavier contact loses once
+    - a lighter contact never loses
+    - after losing, the ship, its fuel and the camera stay put, even with
+      boost held
+    - flying into a real planet loses
+
+    `tests/ui/test_lose_overlay.gd` checks the message. The suite passes
+    132/132.
+  - In a 30s headless run of the level (`--fixed-fps 60`), the player
+    drifts onto the planet and prints `[Debug] Lost: crashed into Planet`,
+    with no broken contracts.
+
+## Phase 1 done when
+- Every control (boost, pitch, yaw, roll, camera look, pause, warp out)
+  works on the keyboard and mouse and on a controller. ✅ (Manual check by
+  the user is pending.)
+- Gravity and mass work as intended. ✅ (Covered by the Phase 0 tests.)
+- Touching a heavier body loses, stops the ship and offers a restart. ✅
 
 # Phase 2: Procedural generation
 - Add mass pickups and a procedural generation manager
