@@ -78,6 +78,36 @@ Agree each API's contracts here, with the user, before building it.
 - Analogue input passes through as it is (a half-pulled trigger gives half
   thrust). Each action has its dead zone (0.2) in the input map, not in
   code.
+- `look_intent: Vector2` is one `Input.get_vector("look_left",
+  "look_right", "look_up", "look_down")` call on the right stick, and stays
+  within [-1, 1].
+- `mouse_look: Vector2` is this physics frame's mouse movement in radians
+  (pixels × `mouse_sensitivity`, default 0.003). Motion is collected in
+  `_unhandled_input`, moved into `mouse_look` at the start of each physics
+  frame and then cleared, so each movement is used exactly once. It must be
+  finite.
+- It captures the mouse (`capture_mouse := true`). 1.5 releases it on pause.
+- `active_device` (`Device.KEYBOARD_MOUSE` or `Device.CONTROLLER`) starts
+  as `KEYBOARD_MOUSE` and is set from every input event (`_input`):
+  - a key, mouse button or mouse motion sets `KEYBOARD_MOUSE`
+  - a controller button, or stick/trigger motion past
+    `device_switch_deadzone` (0.2), sets `CONTROLLER`, so stick drift can't
+    flip it
+
+  `device_changed(device)` is emitted once for each actual change.
+
+### CameraComponent (`scripts/components/camera_component.gd`)
+- A pivot on the player that holds the `Camera3D` and follows the ship's
+  rotation.
+- The stick turns the view at `look_speed` (2.0 rad/s) × how far it's
+  pushed. The mouse turns it by exactly `mouse_look`.
+- Neither the stick nor the mouse springs back. The camera stays where it
+  was left, starting at yaw 0 and `start_pitch`. (Agreed: the spring back
+  was dropped.)
+- `look_speed` must be ≥ 0, `distance` must be > 0, and `max_pitch` must be within (0°, 90°). A bad value is
+  reported and ignored.
+- Invariants, after every update: the pitch is within ±`max_pitch`, and the
+  camera is `distance` from the ship and looks at it.
 
 ### FuelComponent (`scripts/components/fuel_component.gd`)
 - `tank_size` (default 1.0), `burn_rate` (1.0 per second at full boost,
@@ -96,6 +126,19 @@ Agree each API's contracts here, with the user, before building it.
   resize. A shrinking tank clamps the fuel.
 - The tank starts full. `fuel_changed(fuel)` is emitted once for each actual
   change (not while the tank is full and idle).
+
+### PauseController (`scripts/levels/pause_controller.gd`)
+- It runs while the game is paused (`PROCESS_MODE_ALWAYS`).
+  `set_paused(value)` sets `get_tree().paused`, and the `pause` action
+  (Esc / Start) toggles it.
+- `paused_changed(paused)` is emitted once for each real change. Setting
+  the state it's already in does nothing.
+- While paused, physics and the player's components stop, so the ship's
+  position, velocity, fuel and camera don't change. Restart still works
+  while paused (agreed).
+- `PlayerInputComponent` releases the mouse on `NOTIFICATION_PAUSED` and
+  recaptures it on `NOTIFICATION_UNPAUSED`, only if `capture_mouse` is on.
+- A "Paused" label is visible only while paused.
 
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
@@ -366,9 +409,45 @@ statment only for now.
   own tank. The suite passes 93/93.
   - Manual (user): check how 1s of boost and a 5s refill feel.
 
-## 1.4 Camera
-- A camera component on the player that the right stick orbits around the
-  ship.
+## 1.4 Camera ✅
+- Added the `look_left/right/up/down` actions on the right stick (0.2 dead
+  zone). `PlayerInputComponent` reads them with one `get_vector` call into
+  `look_intent`, collects mouse motion into `mouse_look`
+  (`mouse_sensitivity`), and captures the mouse (`capture_mouse`).
+- `CameraComponent` (`Player/CameraComponent`, a `Node3D` pivot holding the
+  `Camera3D` and its spotlight) has the exports `look_speed`,
+  `max_pitch_degrees` (80), `start_pitch_degrees` (-20) and `distance`
+  (2.7). It has no spring back (agreed: dropped). The camera now looks
+  straight at the ship. The old offset framed it slightly below centre.
+- **Done:** `tests/components/test_camera_component.gd` covers:
+  - the start pose
+  - stick right turns the view right, and stick up raises it
+  - pitch is clamped
+  - the mouse moves the view by exactly `mouse_look`
+  - a released stick leaves the view where it is
+  - the camera follows the ship's rotation
+  - bad settings are reported and ignored
+
+  The input tests cover `look_intent` and check that each mouse movement is
+  used exactly once. The suite passes 106/106, and a 10s headless run of the
+  level reports no broken contracts.
+  - Manual (user): check the camera feel, the mouse sensitivity and the
+    start pitch.
+
+## 1.4a Input device flag ✅
+- `PlayerInputComponent.active_device` and `device_changed` track whether
+  the keyboard and mouse or a controller was used last. The debug overlay
+  shows `Input     Keyboard/Mouse` or `Input     Controller`.
+- **Done:** the tests in `tests/components/test_player_input_component.gd`
+  cover:
+  - it starts as keyboard and mouse
+  - a controller button or a stick past the dead zone switches it
+  - stick drift doesn't switch it
+  - a key or mouse motion switches it back
+  - the signal is emitted once for each change
+
+  `tests/ui/test_debug_overlay.gd` checks the overlay line. The suite passes
+  111/111.
 
 ## 1.5 Pause
 - Esc / Start pauses and unpauses the game. While paused, physics stops.

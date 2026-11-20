@@ -7,4 +7,5 @@ extends RigidBody3D
 @export var rotator: RotationComponent
 @export var mass_component: MassComponent
 @export var fuel_component: FuelComponent
+@export var camera_component: CameraComponent
 @export var gravity_receiver: GravityReceiverComponent

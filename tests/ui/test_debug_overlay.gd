@@ -43,3 +43,13 @@ func test_describe_shows_fuel_remaining_over_tank_size() -> void:
 	_player.fuel_component.tank_size = 3.0
 	_player.fuel_component.draw(0.6)
 	assert_string_contains(_overlay.describe(_player), "Fuel      0.40 / 3.00")
+
+
+func test_describe_shows_the_active_input_device() -> void:
+	var player_input := _player.flight_input as PlayerInputComponent
+	assert_string_contains(
+		_overlay.describe(_player),
+		"Input     Keyboard/Mouse",
+	)
+	player_input.active_device = PlayerInputComponent.Device.CONTROLLER
+	assert_string_contains(_overlay.describe(_player), "Input     Controller")

@@ -39,7 +39,16 @@ func describe(target: Player) -> String:
 			]
 		),
 	]
+	var player_input := target.flight_input as PlayerInputComponent
+	if player_input:
+		lines.append("Input     %s" % _device_name(player_input.active_device))
 	return "\n".join(lines)
+
+
+func _device_name(device: PlayerInputComponent.Device) -> String:
+	if device == PlayerInputComponent.Device.CONTROLLER:
+		return "Controller"
+	return "Keyboard/Mouse"
 
 
 func _vector(value: Vector3) -> String:

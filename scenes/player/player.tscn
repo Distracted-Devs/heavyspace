@@ -7,10 +7,11 @@
 [ext_resource type="Script" uid="uid://n0curlft74ix" path="res://scripts/components/mass_component.gd" id="5_mass"]
 [ext_resource type="Script" uid="uid://cjv7325gj85dy" path="res://scripts/components/gravity_receiver_component.gd" id="6_gravity"]
 [ext_resource type="Script" path="res://scripts/components/fuel_component.gd" id="7_fuel"]
+[ext_resource type="Script" path="res://scripts/components/camera_component.gd" id="8_camera"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "gravity_receiver")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "gravity_receiver")]
 gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -20,6 +21,7 @@ thruster = NodePath("ThrusterComponent")
 rotator = NodePath("RotationComponent")
 mass_component = NodePath("MassComponent")
 fuel_component = NodePath("FuelComponent")
+camera_component = NodePath("CameraComponent")
 gravity_receiver = NodePath("GravityReceiverComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
@@ -36,12 +38,17 @@ transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0.085, -0.11)
 [node name="Collider" type="CollisionShape3D" parent="." unique_id=506654686]
 shape = SubResource("SphereShape3D_7l7pj")
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=44102908]
-transform = Transform3D(1, 0, 0, 0, 0.9297765, 0.36812454, 0, -0.36812454, 0.9297765, 0, 1.4817256, 2.2951407)
+[node name="CameraComponent" type="Node3D" parent="." unique_id=44102909 node_paths=PackedStringArray("player_input", "camera")]
+script = ExtResource("8_camera")
+player_input = NodePath("../PlayerInputComponent")
+camera = NodePath("Camera3D")
+
+[node name="Camera3D" type="Camera3D" parent="CameraComponent" unique_id=44102908]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7)
 doppler_tracking = 2
 current = true
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Camera3D" unique_id=1445095080]
+[node name="SpotLight3D" type="SpotLight3D" parent="CameraComponent/Camera3D" unique_id=1445095080]
 
 [node name="PlayerInputComponent" type="Node" parent="." unique_id=1645358274]
 script = ExtResource("2_input")
