@@ -80,3 +80,10 @@ func test_player_mass_follows_mass_component() -> void:
 	assert_eq(player.mass, player.mass_component.starting_mass)
 	player.mass_component.current_mass = 3.5
 	assert_eq(player.mass, 3.5)
+
+
+func test_back_thrust_draws_from_player_fuel() -> void:
+	var player := _spawn_player()
+	Input.action_press("back_thruster")
+	await wait_physics_frames(THRUST_FRAMES)
+	assert_lt(player.fuel_component.fuel, player.fuel_component.tank_size)

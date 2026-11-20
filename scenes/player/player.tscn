@@ -46,10 +46,11 @@ current = true
 [node name="PlayerInputComponent" type="Node" parent="." unique_id=1645358274]
 script = ExtResource("2_input")
 
-[node name="ThrusterComponent" type="Node" parent="." unique_id=1645358275 node_paths=PackedStringArray("body", "flight_input")]
+[node name="ThrusterComponent" type="Node" parent="." unique_id=1645358275 node_paths=PackedStringArray("body", "flight_input", "fuel")]
 script = ExtResource("3_thrust")
 body = NodePath("..")
 flight_input = NodePath("../PlayerInputComponent")
+fuel = NodePath("../FuelComponent")
 
 [node name="RotationComponent" type="Node" parent="." unique_id=1645358276 node_paths=PackedStringArray("body", "flight_input")]
 script = ExtResource("4_rotate")

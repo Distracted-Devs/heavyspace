@@ -56,7 +56,13 @@ Agree each API's contracts here, with the user, before building it.
 ### ThrusterComponent (`scripts/components/thruster_component.gd`)
 - Applying thrust requires every axis of the thrust intent to be within
   [-1, 1], and `back_thrust_force` to be ≥ 0. If either is broken, it's
-  reported and no force is applied.
+  reported, no force is applied and no fuel is drawn.
+- `fuel` (a `FuelComponent`) is optional. Without it, thrust is unlimited.
+- Each physics frame a thrust intent `z` asks for `burn_rate · |z| · delta`
+  fuel. With no thrust it asks for nothing, so the tank can refill.
+- The force is scaled by drawn / asked for, so a full tank gives full force,
+  an empty tank gives none, and the last frame before empty gives the part
+  it could pay for.
 
 ### RotationComponent (`scripts/components/rotation_component.gd`)
 - Applying rotation requires every axis of the rotation intent to be within
@@ -344,9 +350,21 @@ statment only for now.
 
   The overlay test checks the fuel line. The suite passes 87/87.
 
-## 1.3 Thrust uses fuel
-- `ThrusterComponent` draws fuel while thrusting and gives no force when the
-  tank is empty.
+## 1.3 Thrust uses fuel ✅
+- `ThrusterComponent` has an optional `fuel` export (the player links its
+  `FuelComponent`). `apply_thrust(intent, delta)` asks for
+  `burn_rate · |z| · delta` and scales the force by drawn / asked for.
+- **Done:** tests in `tests/components/test_thruster_component.gd` show:
+  - full boost from a full tank lasts 1s and then gives no more
+    acceleration
+  - releasing the boost refills the tank in 5s
+  - half boost lasts twice as long
+  - a thruster with no fuel link never runs out
+  - a rejected call draws no fuel
+
+  `tests/player/test_player.gd` checks that the player's boost drains its
+  own tank. The suite passes 93/93.
+  - Manual (user): check how 1s of boost and a 5s refill feel.
 
 ## 1.4 Camera
 - A camera component on the player that the right stick orbits around the
