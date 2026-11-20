@@ -9,10 +9,11 @@
 [ext_resource type="Script" path="res://scripts/components/fuel_component.gd" id="7_fuel"]
 [ext_resource type="Script" path="res://scripts/components/camera_component.gd" id="8_camera"]
 [ext_resource type="Script" path="res://scripts/components/contact_component.gd" id="9_contact"]
+[ext_resource type="Script" path="res://scripts/components/size_component.gd" id="10_size"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "size_component", "gravity_receiver")]
 gravity_scale = 0.0
 linear_damp_mode = 1
 angular_damp = 1.0
@@ -24,6 +25,7 @@ mass_component = NodePath("MassComponent")
 fuel_component = NodePath("FuelComponent")
 camera_component = NodePath("CameraComponent")
 contact_component = NodePath("ContactComponent")
+size_component = NodePath("SizeComponent")
 gravity_receiver = NodePath("GravityReceiverComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
@@ -49,6 +51,7 @@ camera = NodePath("Camera3D")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7)
 doppler_tracking = 2
 current = true
+far = 50000.0
 
 [node name="SpotLight3D" type="SpotLight3D" parent="CameraComponent/Camera3D" unique_id=1445095080]
 
@@ -81,3 +84,10 @@ script = ExtResource("7_fuel")
 script = ExtResource("9_contact")
 body = NodePath("..")
 mass_component = NodePath("../MassComponent")
+
+[node name="SizeComponent" type="Node" parent="." unique_id=1645358281 node_paths=PackedStringArray("mass_component", "collider", "mesh", "camera_component")]
+script = ExtResource("10_size")
+mass_component = NodePath("../MassComponent")
+collider = NodePath("../Collider")
+mesh = NodePath("../Mesh")
+camera_component = NodePath("../CameraComponent")

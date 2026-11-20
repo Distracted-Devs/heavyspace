@@ -1,7 +1,7 @@
 extends GutTest
 
 const BODY_SCENE := preload("res://scenes/bodies/mass_body.tscn")
-const LEVEL_SCENE := preload("res://scenes/levels/test_level.tscn")
+const LEVEL_SCENE := preload("res://scenes/levels/sandbox_level.tscn")
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const FRAMES := 30
 

@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dsy4vvl6uilo0"]
+
+[ext_resource type="Script" path="res://scripts/levels/warp_out_debug.gd" id="1_warp"]
+[ext_resource type="PackedScene" uid="uid://binwpba4o8jv3" path="res://scenes/player/player.tscn" id="2_48ne7"]
+[ext_resource type="PackedScene" uid="uid://mbq44dx6vywp" path="res://scenes/bodies/mass_body.tscn" id="3_planet"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="4_debug"]
+[ext_resource type="Script" path="res://scripts/levels/pause_controller.gd" id="5_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="6_pause_overlay"]
+[ext_resource type="Script" path="res://scripts/levels/lose_controller.gd" id="7_lose"]
+[ext_resource type="PackedScene" path="res://scenes/ui/lose_overlay.tscn" id="8_lose_overlay"]
+[ext_resource type="Script" path="res://scripts/ui/mass_tint_debug.gd" id="9_tint"]
+
+[node name="SandboxLevel" type="Node3D" unique_id=1744272397]
+
+[node name="Player" parent="." unique_id=125079120 instance=ExtResource("2_48ne7")]
+transform = Transform3D(0.9998477, -0.017452406, 0, 0.017452406, 0.9998477, 0, 0, 0, 1, 0, -0.040584803, -2.5296087)
+
+[node name="GravityReceiverComponent" parent="Player"]
+gravity_constant = 10.0
+
+[node name="MassBody" parent="." instance=ExtResource("3_planet")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -300)
+
+[node name="DebugOverlay" parent="." node_paths=PackedStringArray("player") instance=ExtResource("4_debug")]
+player = NodePath("../Player")
+
+[node name="PauseController" type="Node" parent="."]
+script = ExtResource("5_pause")
+
+[node name="PauseOverlay" parent="." node_paths=PackedStringArray("pause_controller") instance=ExtResource("6_pause_overlay")]
+pause_controller = NodePath("../PauseController")
+
+[node name="LoseController" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("7_lose")
+player = NodePath("../Player")
+
+[node name="LoseOverlay" parent="." node_paths=PackedStringArray("lose_controller") instance=ExtResource("8_lose_overlay")]
+lose_controller = NodePath("../LoseController")
+
+[node name="MassTintDebug" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("9_tint")
+player = NodePath("../Player")
+
+[node name="WarpOutDebug" type="Node" parent="."]
+script = ExtResource("1_warp")

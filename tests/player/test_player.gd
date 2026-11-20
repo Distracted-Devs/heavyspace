@@ -60,7 +60,7 @@ func test_twice_the_mass_halves_thrust_acceleration() -> void:
 	assert_almost_eq(heavy_speed / light_speed, 0.5, 1e-3)
 
 
-func test_twice_the_mass_halves_rotational_acceleration() -> void:
+func test_rotational_acceleration_falls_with_mass_radius_squared() -> void:
 	for action in ["pitch_down", "turn_left", "roll_left"]:
 		var light := _spawn_player()
 		var heavy := _spawn_player(Vector3.RIGHT * 10.0)
@@ -71,8 +71,14 @@ func test_twice_the_mass_halves_rotational_acceleration() -> void:
 		Input.action_release(action)
 		var light_spin := light.angular_velocity.length()
 		var heavy_spin := heavy.angular_velocity.length()
+		var light_radius := light.size_component.radius
+		var heavy_radius := heavy.size_component.radius
+		var expected := (
+			(1.0 * light_radius * light_radius)
+			/ (2.0 * heavy_radius * heavy_radius)
+		)
 		assert_gt(light_spin, 0.0, action)
-		assert_almost_eq(heavy_spin / light_spin, 0.5, 1e-3, action)
+		assert_almost_eq(heavy_spin / light_spin, expected, 1e-3, action)
 
 
 func test_player_mass_follows_mass_component() -> void:

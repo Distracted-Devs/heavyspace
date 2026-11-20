@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SystemSettings" format=3 uid="uid://cfey13njju005"]
+
+[ext_resource type="Script" uid="uid://ccikrg2myjp2x" path="res://scripts/generation/system_settings.gd" id="1_settings"]
+[ext_resource type="Script" uid="uid://odlgntp2cjv" path="res://scripts/core/mass_law.gd" id="2_law"]
+
+[sub_resource type="Resource" id="Resource_law"]
+script = ExtResource("2_law")
+
+[resource]
+script = ExtResource("1_settings")
+mass_law = SubResource("Resource_law")

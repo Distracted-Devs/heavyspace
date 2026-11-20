@@ -1,5 +1,5 @@
-class_name TestLevel
-extends Node3D
+class_name WarpOutDebug
+extends Node
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -191,6 +191,88 @@ Agree each API's contracts here, with the user, before building it.
   component has `PROCESS_MODE_DISABLED`. From then on, the ship's position,
   fuel and camera don't change.
 
+### MassLaw (`scripts/core/mass_law.gd`, resource)
+- `mass = density × radius^exponent`, and `radius_for_mass` is its exact
+  inverse. `density` and `exponent` must be > 0, and a non-positive input
+  is reported (and returns `NAN`).
+- Defaults: `exponent = 1.5` (agreed). `density = 2^1.5`, so radius 0.5 →
+  mass 1, which matches the player's starting size. Bodies and the player
+  share one law.
+
+### SystemGenerator (`scripts/generation/system_generator.gd`)
+- `SystemGenerator.new(settings)`, then `root()` and `contents_of(spec)`.
+  `contents_of` returns the body's children, then its pickups. This is pure
+  data (`BodySpec`), with no nodes.
+- It's deterministic from `level_seed` and the body's path. Each body has
+  its own RNG (`hash([seed, path])`), so siblings never affect each other.
+  Seed 0 picks a random non-zero seed, which is recorded as
+  `generator.level_seed`.
+- Rules:
+  - depth ≤ `max_depth` (3, agreed: simplified to three nested levels)
+  - a child's radius is within `ratio_min..ratio_max` (0.1–0.25) of its
+    parent's
+  - a non-leaf has `children_min..children_max` (2–4) children
+  - mass comes from the `MassLaw`
+- Each body with `radius × pickup_ratio_max ≥ min_pickup_radius` has a belt
+  of `pickups_per_body` (100, agreed) pickups. A pickup's radius is
+  `pickup_ratio_min..max` (0.005–0.03) of its body's, but never below
+  `min_pickup_radius` (0.05).
+- Rings (changed after the user noticed that orbits weren't in rings):
+  - each body has a `system_normal`. The root's is `UP`, and each child's
+    is its orbit normal tilted by ≤ `system_tilt_degrees` (30)
+  - children orbit within `max_inclination_degrees` (4) of their parent's
+    system plane, and pickups within `belt_inclination_degrees` (2)
+- Spacing (changed after the user noticed the systems were sparse): child
+  orbits are laid out one after another from each child's exact system
+  radius (worked out from its subtree, which is cached), with a gap of
+  `shell_gap` (0.3) × that system radius.
+- Post-conditions on `contents_of`:
+  - child shells don't overlap each other or the parent's surface
+  - every child's system fits inside its parent's shells, and every pickup
+    inside the belt
+  - orbit planes are orthonormal and within their inclination limit
+  - linear orbit speed is within `speed_min..speed_max` (0.2–1.0)
+- Invalid settings are reported, and the generator returns no bodies.
+
+### OrbitSystem (`scripts/generation/orbit_system.gd`)
+- `add(body, spec, parent)` returns a stable slot (from a free list),
+  requires an active parent, and places the body at once.
+  `remove(slot)` requires the slot to have no active children.
+- Each physics frame (priority -3, before the gravity registry) it moves
+  every body to its parent's position plus its orbit offset, depth by
+  depth.
+- Invariants:
+  - every array is parallel, and every active slot is listed once
+  - each body stays `orbit_radius` from its parent
+- `velocity_of(slot)` is the analytic world velocity. The root sits fixed
+  at the origin, and orbit time doesn't advance while paused.
+
+### SystemStreamer (`scripts/generation/system_streamer.gd`)
+- `start()` requires `collapse_factor > expand_factor > 0` and an
+  identity `bodies_root`. It spawns the root and expands it.
+- Every `check_interval` (0.25s), a body expands when the target is within
+  `expand_factor` (1.5) × its system radius, and collapses (freeing exactly
+  its subtree) beyond `collapse_factor` (2.0). The root never collapses.
+- Expanding twice is a no-op, and bodies in `consumed` (Phase 3) are never
+  respawned.
+- Invariant: every live body's parent is live and expanded.
+
+### SizeComponent (`scripts/components/size_component.gd`)
+- On every mass change:
+  - the collider radius (the player's own sphere) is
+    `radius_for_mass(mass)`
+  - the mesh scale is radius ÷ `base_radius` (0.5)
+  - the camera distance scales by the same factor
+- Thrust and torque don't change (agreed: only the shop changes booster
+  strength). Inertia grows with m·r², so turning slows as the ship grows.
+
+### PlayerSpawner (`scripts/levels/player_spawner.gd`)
+- It picks a seeded depth-2 body and places the player along that body's
+  orbit normal, at `spawn_margin` (1.2) × its system radius, moving at the
+  body's velocity.
+- Post-conditions: the player overlaps no live body, and at least one live
+  body is lighter than the player.
+
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
   `radius > 0`. A non-positive value is reported and ignored, so the old
@@ -625,35 +707,99 @@ Agreed:
 
   The suite passes 140/140.
 
-## 2.2 System generator
-- A pure, deterministic function from (seed, body path) to a body spec:
-  radius, mass, orbit radius, speed, phase, orbit plane and child count.
-  Its rules cover the size ratio and jitter, the minimum size, the maximum
-  depth, and orbits that don't overlap.
+## 2.1b Sandbox level ✅
+- `test_level.tscn` became `sandbox_level.tscn` (agreed: kept as a sandbox
+  for testing feel). The warp-out print moved to a `WarpOutDebug` node,
+  which both levels use, so the sandbox root has no script.
 
-## 2.3 Orbit system
-- A data-oriented system (packed arrays) that moves every live body along
-  its orbit each physics frame, parents before children, and writes the
-  transforms.
+## 2.2 System generator ✅
+- `MassLaw`, `SystemSettings` (resource, `resources/levels/default_system.tres`),
+  `BodySpec` and `SystemGenerator` are in `scripts/core/` and
+  `scripts/generation/`.
+- With the defaults, the root's radius is 200 and its system radius is
+  about 2,600 (it was about 11,000 under the first, worst-case spacing). Depth-2 bodies (radius 2–12) carry pickups of 0.05–0.36,
+  which are lighter than a fresh player.
+- **Done:** `tests/core/test_mass_law.gd` and
+  `tests/generation/test_system_generator.gd` cover:
+  - repeatability, and the random seed
+  - sibling independence
+  - depth, counts, ratios, the mass law, belt counts and minimum pickup
+    radii
+  - the fit post-conditions across the whole system (over 1,000 bodies)
+  - float bounds and tight packing (under 5,000)
+  - each ring stays near its plane, and the root ring is horizontal
+  - system tilts stay within the limit
+  - spacing follows the exact system radii
+  - lighter pickups near depth 2
+  - invalid settings
 
-## 2.4 Hierarchy streaming
-- A body's children are expanded when the player comes within a multiple of
-  that body's system radius, and collapsed past a larger multiple
-  (hysteresis). Ancestors and their siblings stay live, so large bodies are
-  always in the background. The camera's far plane covers the system.
+## 2.3 Orbit system ✅
+- **Done:** `tests/generation/test_orbit_system.gd` covers:
+  - the root stays fixed
+  - each body stays at its orbit radius and matches the spec's offset
+  - velocity matches the change in position
+  - slots are reused while parents stay valid
+  - the remove and add guards
+  - time stops while paused
 
-## 2.5 Player grows with mass
-- The player's radius (mesh, collider, camera distance) follows its mass.
-  Thrust and torque are unchanged.
+## 2.4 Hierarchy streaming ✅
+- Back in scope (agreed), because each body carries 100 pickups. About 300
+  bodies are live near a typical spawn.
+- **Done:** `tests/generation/test_system_streamer.gd` covers:
+  - start expands only the root, and the root never collapses
+  - nearby bodies expand and far ones collapse
+  - hysteresis between the two factors
+  - expanding twice is a no-op
+  - collapse frees exactly the subtree
+  - every live body's parent is expanded
+  - consumed bodies don't respawn
+  - spawned bodies match their spec
+  - bad factors are reported
 
-## 2.6 Generated level
-- A generated level replaces `test_level.tscn` as the main scene. The
-  player warps in at a safe spot among the smallest bodies. Delete the
-  level-specific planet test (see above).
+## 2.5 Player grows with mass ✅
+- `SizeComponent` (`Player/SizeComponent`) takes over the player's collider
+  shape. The camera's far plane is 50,000.
+- **Done:** `tests/components/test_size_component.gd` covers:
+  - the base size
+  - the radius follows the law
+  - the mesh and camera scale with it
+  - each player owns its own sphere
+  - thrust and torque are unchanged
 
-## 2.7 Performance
-- A headless benchmark of the physics and orbit frame time with a typical
-  number of live bodies, held to a 60fps budget (16.6ms).
+  The player test on rotation now checks that it scales with 1 / (m·r²).
+
+## 2.6 Generated level ✅
+- `scenes/levels/generated_level.tscn` (`GeneratedLevel`) is the main
+  scene. It holds the player, the bodies root, `OrbitSystem`,
+  `SystemStreamer`, `PlayerSpawner`, a sun (`DirectionalLight3D`), the
+  pause, lose and debug nodes, and `WarpOutDebug`. The player's
+  `gravity_constant` is 1 here (the sandbox stays at 10). In debug builds,
+  the seed is printed.
+- **Done:** `tests/levels/test_generated_level.gd` covers:
+  - the spawn is clear of bodies for four seeds
+  - the spawn is at depth 2, at rest relative to its body
+  - the spawn body's ancestors are expanded
+  - there are lighter bodies live
+  - 10s of play with no broken contracts
+  - the shared mass law
+
+## 2.7 Performance ✅
+- **Done:** `tests/performance/test_frame_budget.gd` measures:
+  - orbits, gravity and streaming each frame: 0.72ms with 309 live bodies
+    (budget 4ms), and 2.8ms in a stress system with 1,209 (budget 16.6ms)
+  - the engine's physics frame under GUT: about 6.5ms, mostly GUT overhead
+    (budget 16.6ms)
+
+  A full headless frame of the level averages 1.45ms.
+  - Manual (user): GPU frame rate in the editor. Rendering can't be
+    measured headless. Each sphere is 64×32 segments, so a lower-poly
+    pickup mesh is the first lever if it's slow.
+
+## Phase 2 done when
+- The level is generated from a seed as a nested system of orbiting
+  `MassBody`s with pickup belts, streamed around the player. ✅
+- The player grows with mass and spawns safely with something to collect. ✅
+- The frame budget holds headless. ✅ (A GPU check by the user is pending.)
 
 # Phase 3: Game Loop
 - Ensure the player can collect mass, once enough has been collected then they can warp out
