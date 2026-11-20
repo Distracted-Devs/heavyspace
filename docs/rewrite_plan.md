@@ -141,6 +141,26 @@ Agree each API's contracts here, with the user, before building it.
   recaptures it on `NOTIFICATION_UNPAUSED`, only if `capture_mouse` is on.
 - A "Paused" label is visible only while paused.
 
+### ContactComponent (`scripts/components/contact_component.gd`)
+- It only notices contacts and sorts them by mass. Others react: the lose
+  flow to heavier contacts, and pickups (Phase 3) to lighter ones.
+- In `_ready` it turns on `body.contact_monitor` and makes sure
+  `body.max_contacts_reported ≥ 1` (a post-condition), and it listens to
+  `body_entered`.
+- The other body's mass comes from a `GravityComponent` directly under it,
+  falling back to `RigidBody3D.mass`. A body with neither has no mass and
+  emits nothing.
+- Each new contact emits exactly one of these, comparing against
+  `mass_component.current_mass`:
+  - `heavier_contact(other, other_mass)` when the other mass is strictly
+    greater
+  - `lighter_contact(other, other_mass)` when it's equal or less (agreed:
+    equal counts as lighter, as with gravity)
+
+  There's no latch: every new contact emits.
+- Later (Phase 3), it may take an optional `Area3D` sensor for the pickup
+  radius, which feeds the same signals.
+
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
   `radius > 0`. A non-positive value is reported and ignored, so the old
@@ -470,14 +490,26 @@ statment only for now.
   - Manual (user): restarting while paused, and the mouse being released
     and recaptured. Neither can be tested headless.
 
-## 1.6 Crash detection
-- `CrashComponent`: contact with a body heavier than the player emits a
-  crash signal once.
-- In debug builds, a crash prints `[Debug] Lost: crashed into <body>`.
+## 1.6 Contact component ✅
+- `ContactComponent` (`Player/ContactComponent`) sorts the player's
+  contacts into `heavier_contact` and `lighter_contact` (renamed from
+  `CrashComponent`, since pickups will use it too). `mass_of(other)` reads a
+  child `GravityComponent`, then `RigidBody3D.mass`, and returns `NAN` for a
+  body with no mass. Nothing listens to it yet (1.7).
+- **Done:** `tests/components/test_contact_component.gd` covers:
+  - the body reports contacts
+  - flying into a heavier planet emits `heavier_contact` once, with its mass
+  - lighter and equal-mass bodies emit `lighter_contact`
+  - a massless body emits nothing, though the bodies did touch
+  - touching again emits again
+  - a `GravityComponent` mass wins over `RigidBody3D.mass`
+
+  The suite passes 126/126.
 
 ## 1.7 Lose flow
-- On a crash the level shows a lose message, stops the player, and offers a
-  restart.
+- `LoseController` latches on the first `heavier_contact`, prints
+  `[Debug] Lost: crashed into <body>` in debug builds, shows a lose
+  message, stops the player, and offers a restart.
 
 # Phase 2: Procedural generation
 - Add mass pickups and a procedural generation manager
