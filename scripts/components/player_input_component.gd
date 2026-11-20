@@ -31,6 +31,17 @@ var _pending_mouse_look := Vector2.ZERO
 
 
 func _ready() -> void:
+	_capture_mouse()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif what == NOTIFICATION_UNPAUSED:
+		_capture_mouse()
+
+
+func _capture_mouse() -> void:
 	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
