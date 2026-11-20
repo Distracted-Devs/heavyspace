@@ -1,7 +1,7 @@
 extends GutTest
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
-const PLANET_SCENE := preload("res://scenes/bodies/test_planet.tscn")
+const BODY_SCENE := preload("res://scenes/bodies/mass_body.tscn")
 const FRAMES := 30
 
 var _was_enabled: bool
@@ -68,7 +68,7 @@ func test_after_losing_the_ship_fuel_and_camera_stay_put() -> void:
 
 
 func test_flying_into_a_heavier_planet_loses() -> void:
-	var planet: Planet = PLANET_SCENE.instantiate()
+	var planet: MassBody = BODY_SCENE.instantiate()
 	planet.radius = 1.0
 	planet.position = Vector3(0.0, 0.0, -3.0)
 	add_child_autofree(planet)

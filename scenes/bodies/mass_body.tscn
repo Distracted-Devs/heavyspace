@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://mbq44dx6vywp"]
+
+[ext_resource type="Script" uid="uid://c3h82novcpnlo" path="res://scripts/bodies/mass_body.gd" id="1_body"]
+[ext_resource type="SphereMesh" path="res://resources/meshes/unit_sphere.tres" id="2_sphere"]
+[ext_resource type="Script" uid="uid://bk10v02e6yctf" path="res://scripts/components/gravity_component.gd" id="3_gravity"]
+
+[node name="MassBody" type="AnimatableBody3D" node_paths=PackedStringArray("mesh", "collider", "gravity")]
+script = ExtResource("1_body")
+mesh = NodePath("Mesh")
+collider = NodePath("Collider")
+gravity = NodePath("GravityComponent")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(50, 0, 0, 0, 50, 0, 0, 0, 50, 0, 0, 0)
+mesh = ExtResource("2_sphere")
+
+[node name="Collider" type="CollisionShape3D" parent="."]
+
+[node name="GravityComponent" type="Node" parent="."]
+script = ExtResource("3_gravity")
+radius = 50.0
+mass = 10000.0

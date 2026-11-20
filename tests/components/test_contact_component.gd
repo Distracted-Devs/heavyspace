@@ -1,6 +1,6 @@
 extends GutTest
 
-const PLANET_SCENE := preload("res://scenes/bodies/test_planet.tscn")
+const BODY_SCENE := preload("res://scenes/bodies/mass_body.tscn")
 const FRAMES := 30
 
 var _was_enabled: bool
@@ -56,7 +56,7 @@ func test_body_reports_contacts() -> void:
 
 
 func test_heavier_planet_emits_heavier_contact_once() -> void:
-	var planet: Planet = PLANET_SCENE.instantiate()
+	var planet: MassBody = BODY_SCENE.instantiate()
 	planet.radius = 1.0
 	planet.position = Vector3(0.0, 0.0, -3.0)
 	add_child_autofree(planet)

@@ -31,14 +31,25 @@ Agree each API's contracts here, with the user, before building it.
 - A passing check has no side effects and returns `true`.
 - With checks disabled, nothing is reported and every check returns `true`.
 
-### Planet (`scripts/bodies/planet.gd`)
-- Setting `radius` requires `radius > 0`. A non-positive radius is reported
-  and ignored, so the planet keeps its old size.
-- The planet owns its collider's `SphereShape3D` (made in `_ready`), so no
-  two planets share a shape.
-- After the radius is applied, the collider still uses the planet's own
-  shape, and the mesh radius, the shape radius and `GravityComponent.radius`
-  all equal `radius`.
+### MassBody (`scripts/bodies/mass_body.gd`, was `Planet`)
+- An `AnimatableBody3D` (kinematic, so orbits can move it in 2.3).
+- Setting `radius` or `mass` requires a value > 0. A non-positive value is
+  reported and ignored, so the old value stays.
+- After the radius or mass is applied:
+  - the `MeshInstance3D` uses the shared unit sphere and is scaled to
+    `radius`
+  - the collider uses the body's own `SphereShape3D` (made in `_ready`, so
+    no two bodies share one), sized to `radius`
+  - `GravityComponent.radius` and `.mass` equal `radius` and `mass`
+- Every body joins the `mass_bodies` group.
+
+### MassTintDebug (`scripts/ui/mass_tint_debug.gd`)
+- When `enabled` (and only in debug builds), every `MassBody` is tinted
+  `heavier_colour` (red) if its mass is strictly greater than the player's
+  `current_mass`, and `lighter_colour` (green) otherwise. The earth texture
+  is kept.
+- There are two shared tinted materials, and a body's override is only
+  reassigned when its class changes. When disabled, the override is cleared.
 
 ### MassComponent (`scripts/components/mass_component.gd`)
 - Setting `current_mass` requires `current_mass > 0`. A non-positive mass is
@@ -567,6 +578,82 @@ statment only for now.
 - Make sure mass pickups spawn around ("in orbit") of bigger masses
     - There is a hierarchy of orbits for the procedural generation (moons upon moons upon moons)
 - Game must be 60fps
+
+Agreed:
+- There's one `MassBody` type at every scale. A body lighter than the
+  player is a pickup, and a heavier one is deadly.
+- Bodies move on scripted (kinematic) circular orbits around their parent.
+  Mass objects still don't feel gravity.
+- The level is a finite fractal: one huge central body with about 20 levels
+  of nesting. Each body has smaller bodies orbiting it, down to a minimum
+  size, with random size and orbit orientation. It should be easy to
+  progress from one level to the next.
+- The hierarchy is generated deterministically from an exported seed (0
+  picks a random one) and each body's path. Children are spawned only when
+  the player gets near and freed when they leave, but large bodies stay
+  visible in the background.
+- Each level's radius is about 0.6–0.7× its parent's (exported), which keeps
+  the system within 32-bit float precision. A floating origin comes only if
+  jitter shows up.
+- The player's radius grows with its mass. Thrust does not scale: only the
+  shop changes booster strength.
+
+## 2.1 MassBody ✅
+- `test_planet.tscn` / `planet.gd` became `mass_body.tscn` / `mass_body.gd`
+  (`MassBody`, an `AnimatableBody3D`). The UIDs are kept. It uses a shared
+  `resources/meshes/unit_sphere.tres` (with `resources/materials/earth.tres`)
+  scaled to the radius, instead of `CSGSphere3D`. `mass` is now exported on
+  the body and passed to its `GravityComponent`.
+- **Done:** `tests/bodies/test_mass_body.gd` covers:
+  - the radius and mass reach the mesh, collider and gravity component
+  - bad values are reported and ignored
+  - bodies share the mesh but not the collider shape
+  - the level body is heavier than the player
+  - a moving body crashes the player
+
+  The headless level run still ends in `[Debug] Lost: crashed into
+  MassBody`.
+
+## 2.1a Debug mass tint ✅
+- `MassTintDebug` (in the test level) tints bodies green (lighter or equal)
+  and red (heavier) relative to the player. Turn it off with `enabled`.
+- **Done:** `tests/ui/test_mass_tint_debug.gd` covers:
+  - red when heavier, green when lighter or equal
+  - the texture is kept
+  - the tint flips when the player outgrows a body
+  - disabling clears the override
+
+  The suite passes 140/140.
+
+## 2.2 System generator
+- A pure, deterministic function from (seed, body path) to a body spec:
+  radius, mass, orbit radius, speed, phase, orbit plane and child count.
+  Its rules cover the size ratio and jitter, the minimum size, the maximum
+  depth, and orbits that don't overlap.
+
+## 2.3 Orbit system
+- A data-oriented system (packed arrays) that moves every live body along
+  its orbit each physics frame, parents before children, and writes the
+  transforms.
+
+## 2.4 Hierarchy streaming
+- A body's children are expanded when the player comes within a multiple of
+  that body's system radius, and collapsed past a larger multiple
+  (hysteresis). Ancestors and their siblings stay live, so large bodies are
+  always in the background. The camera's far plane covers the system.
+
+## 2.5 Player grows with mass
+- The player's radius (mesh, collider, camera distance) follows its mass.
+  Thrust and torque are unchanged.
+
+## 2.6 Generated level
+- A generated level replaces `test_level.tscn` as the main scene. The
+  player warps in at a safe spot among the smallest bodies. Delete the
+  level-specific planet test (see above).
+
+## 2.7 Performance
+- A headless benchmark of the physics and orbit frame time with a typical
+  number of live bodies, held to a 60fps budget (16.6ms).
 
 # Phase 3: Game Loop
 - Ensure the player can collect mass, once enough has been collected then they can warp out
