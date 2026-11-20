@@ -51,6 +51,25 @@ func test_roll_intent_spins_about_global_back() -> void:
 	)
 
 
+func test_pitch_intent_spins_about_global_right() -> void:
+	_body.rotation.y = PI / 2.0
+	_input.rotation_intent = Vector3.RIGHT
+	await wait_physics_frames(1)
+	var body_right := _body.global_basis.x
+	await wait_physics_frames(FRAMES)
+	assert_almost_eq(
+		_body.angular_velocity.normalized(),
+		body_right,
+		Vector3.ONE * 1e-2,
+	)
+
+
+func test_positive_pitch_intent_lifts_the_nose() -> void:
+	_input.rotation_intent = Vector3.RIGHT
+	await wait_physics_frames(FRAMES)
+	assert_gt(-_body.global_basis.z.y, 0.0)
+
+
 func test_twice_the_torque_doubles_rotational_acceleration() -> void:
 	_input.rotation_intent = Vector3.UP
 	await wait_physics_frames(1)
@@ -79,6 +98,17 @@ func test_negative_torque_is_reported_and_not_applied() -> void:
 	_rotator.set_physics_process(false)
 	_rotator.turn_torque = -0.1
 	_rotator.apply_rotation(Vector3.UP)
+	assert_push_error(
+		"[Contract] Pre-condition broken: rotation torques must not be negative"
+	)
+	await wait_physics_frames(1)
+	assert_eq(_body.angular_velocity, Vector3.ZERO)
+
+
+func test_negative_pitch_torque_is_reported_and_not_applied() -> void:
+	_rotator.set_physics_process(false)
+	_rotator.pitch_torque = -0.1
+	_rotator.apply_rotation(Vector3.RIGHT)
 	assert_push_error(
 		"[Contract] Pre-condition broken: rotation torques must not be negative"
 	)

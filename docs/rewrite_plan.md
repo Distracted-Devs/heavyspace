@@ -60,8 +60,18 @@ Agree each API's contracts here, with the user, before building it.
 
 ### RotationComponent (`scripts/components/rotation_component.gd`)
 - Applying rotation requires every axis of the rotation intent to be within
-  [-1, 1], and `turn_torque` and `roll_torque` to be ≥ 0. If either is
-  broken, it's reported and no torque is applied.
+  [-1, 1], and `pitch_torque`, `turn_torque` and `roll_torque` to be ≥ 0.
+  If either is broken, it's reported and no torque is applied.
+- Pitch (intent x) is torque about the ship's local X axis, so a positive
+  intent lifts the nose.
+
+### PlayerInputComponent (`scripts/components/player_input_component.gd`)
+- Held to the `InputComponent` contract. It adds no checks of its own.
+- `rotation_intent.x` is `Input.get_axis("pitch_down", "pitch_up")`, so
+  W / stick forward pitches down. `invert_pitch` flips the sign.
+- Analogue input passes through as it is (a half-pulled trigger gives half
+  thrust). Each action has its dead zone (0.2) in the input map, not in
+  code.
 
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
@@ -273,10 +283,51 @@ pushed to the registry, and positions are refreshed each physics frame.
 - The code is in components, parameters are exposed through exports, and
   there are no Americanisms.
 
-# Phase 1: Core flight 
+# Phase 1: Core flight
 - Add all controls with controller support
-- Ensure gravity and mass works as intended
+- Ensure gravity and mass works as intended (agreed: Phase 0's tests cover
+  it, so there is no separate step)
 - Add the lose condition
+
+Agreed layout: boost is Shift / right trigger, pitch is W/S / left stick Y,
+yaw is A/D / left stick X, roll is Q/E / bumpers, pause is Esc / Start, and
+warp out is Space / A. The right stick moves the camera. The lose condition
+is any contact with a body heavier than the player. The booster has a fuel
+tank that refills over time (about 5s from empty to full to start). Refill
+is a shop stat.
+
+## 1.1 Controls and pitch
+- Add `pitch_up`/`pitch_down`, `pause` and `warp_out` actions, plus
+  controller bindings for every action. Stick actions get a small dead zone.
+- `PlayerInputComponent` fills `rotation_intent.x` (pitch).
+  `RotationComponent` gains `pitch_torque`.
+- `warp_out` is an input action only. Phase 3 gives it behaviour, have debug print
+statment only for now.
+
+## 1.2 Fuel component
+- `FuelComponent`: tank size, burn rate, and the time to refill from empty.
+  It holds the fuel level and signals when it changes. Add the fuel % to the
+  debug UI
+
+## 1.3 Thrust uses fuel
+- `ThrusterComponent` draws fuel while thrusting and gives no force when the
+  tank is empty.
+
+## 1.4 Camera
+- A camera component on the player that the right stick orbits around the
+  ship.
+
+## 1.5 Pause
+- Esc / Start pauses and unpauses the game. While paused, physics stops.
+
+## 1.6 Crash detection
+- `CrashComponent`: contact with a body heavier than the player emits a
+  crash signal once.
+- In debug builds, a crash prints `[Debug] Lost: crashed into <body>`.
+
+## 1.7 Lose flow
+- On a crash the level shows a lose message, stops the player, and offers a
+  restart.
 
 # Phase 2: Procedural generation
 - Add mass pickups and a procedural generation manager

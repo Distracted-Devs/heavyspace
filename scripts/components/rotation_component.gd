@@ -6,6 +6,7 @@ extends Node
 @export var flight_input: InputComponent
 
 @export_group("Rotation")
+@export var pitch_torque := 0.05
 @export var turn_torque := 0.05
 @export var roll_torque := 0.05
 
@@ -21,13 +22,13 @@ func apply_rotation(intent: Vector3) -> void:
 	):
 		return
 	if not Contract.require(
-		turn_torque >= 0.0 and roll_torque >= 0.0,
+		(pitch_torque >= 0.0 and turn_torque >= 0.0 and roll_torque >= 0.0),
 		"rotation torques must not be negative",
 	):
 		return
 
 	var local_torque := Vector3(
-		0.0,
+		intent.x * pitch_torque,
 		intent.y * turn_torque,
 		intent.z * roll_torque,
 	)

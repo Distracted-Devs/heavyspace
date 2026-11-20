@@ -16,6 +16,7 @@
 
 ## Controls
 - Booster
+- Camera look
 - Rotation for each of the 3 degrees of freedom
 - Pause/Unpause
 - Warp out
@@ -23,6 +24,7 @@
 ## Shop Stats
 - Starting size
 - Booster fuel tank size
+- Booster fuel refill rate
 - Booster strength
 - Pickup radius
 

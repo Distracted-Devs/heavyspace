@@ -15,6 +15,7 @@ func after_each() -> void:
 	Input.action_release("back_thruster")
 	Input.action_release("turn_left")
 	Input.action_release("roll_left")
+	Input.action_release("pitch_down")
 	Contract.enabled = _was_enabled
 
 
@@ -60,7 +61,7 @@ func test_twice_the_mass_halves_thrust_acceleration() -> void:
 
 
 func test_twice_the_mass_halves_rotational_acceleration() -> void:
-	for action in ["turn_left", "roll_left"]:
+	for action in ["pitch_down", "turn_left", "roll_left"]:
 		var light := _spawn_player()
 		var heavy := _spawn_player(Vector3.RIGHT * 10.0)
 		light.mass_component.current_mass = 1.0
