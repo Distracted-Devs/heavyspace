@@ -40,13 +40,13 @@ func _input(event: InputEvent) -> void:
 		event is InputEventKey or event is InputEventMouseButton
 		or event is InputEventMouseMotion
 	):
-		active_device = Device.KEYBOARD_MOUSE
+		_set_keyboard_mouse_active()
 	elif event is InputEventJoypadButton:
-		active_device = Device.CONTROLLER
+		_set_controller_active()
 	elif event is InputEventJoypadMotion:
 		var stick := event as InputEventJoypadMotion
 		if absf(stick.axis_value) >= device_switch_deadzone:
-			active_device = Device.CONTROLLER
+			_set_controller_active()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -80,3 +80,11 @@ func _update_intent(_delta: float) -> void:
 		"look intent axes must be within [-1, 1]",
 	)
 	Contract.ensure(mouse_look.is_finite(), "mouse look must be finite")
+
+
+func _set_controller_active():
+	active_device = Device.CONTROLLER
+
+
+func _set_keyboard_mouse_active():
+	active_device = Device.KEYBOARD_MOUSE
