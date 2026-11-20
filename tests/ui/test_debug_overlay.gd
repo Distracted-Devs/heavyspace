@@ -37,3 +37,9 @@ func test_label_follows_the_player_each_frame() -> void:
 	_player.mass_component.current_mass = 7.0
 	await wait_process_frames(1)
 	assert_string_contains(_overlay.label.text, "Mass      7.00")
+
+
+func test_describe_shows_fuel_remaining_over_tank_size() -> void:
+	_player.fuel_component.tank_size = 3.0
+	_player.fuel_component.draw(0.6)
+	assert_string_contains(_overlay.describe(_player), "Fuel      0.40 / 3.00")

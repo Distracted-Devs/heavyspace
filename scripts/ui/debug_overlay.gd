@@ -31,6 +31,13 @@ func describe(target: Player) -> String:
 		),
 		"Spin      %s rad/s" % _vector(target.angular_velocity),
 		"Mass      %s" % _number(target.mass_component.current_mass),
+		(
+			"Fuel      %s / %s"
+			% [
+				_number(target.fuel_component.fuel),
+				_number(target.fuel_component.tank_size),
+			]
+		),
 	]
 	return "\n".join(lines)
 

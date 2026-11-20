@@ -6,4 +6,5 @@ extends RigidBody3D
 @export var thruster: ThrusterComponent
 @export var rotator: RotationComponent
 @export var mass_component: MassComponent
+@export var fuel_component: FuelComponent
 @export var gravity_receiver: GravityReceiverComponent

@@ -73,6 +73,24 @@ Agree each API's contracts here, with the user, before building it.
   thrust). Each action has its dead zone (0.2) in the input map, not in
   code.
 
+### FuelComponent (`scripts/components/fuel_component.gd`)
+- `tank_size` (default 1.0), `burn_rate` (1.0 per second at full boost,
+  so 1s of boost) and `refill_time` (5.0s from empty to full) must be > 0.
+  `refill_delay` (default 0.0) must be ≥ 0. A value that breaks this is
+  reported and ignored, so the old value stays.
+- `draw(amount)` requires `amount ≥ 0`. It removes `min(amount, fuel)` and
+  returns how much it removed, so an empty tank returns 0. A broken call is
+  reported, removes nothing and returns 0.
+- Any `draw` with `amount > 0` counts as boosting, even on an empty tank.
+  The tank only refills on physics frames with no boosting, once
+  `refill_delay` seconds have passed since the last boost. It refills at
+  `tank_size / refill_time` per second. The component runs after the
+  thruster (`process_physics_priority = 1`).
+- Invariant: `0 ≤ fuel ≤ tank_size` after every draw, refill and tank
+  resize. A shrinking tank clamps the fuel.
+- The tank starts full. `fuel_changed(fuel)` is emitted once for each actual
+  change (not while the tank is full and idle).
+
 ### GravityComponent (`scripts/components/gravity_component.gd`)
 - Setting `mass` requires `mass > 0`, and setting `radius` requires
   `radius > 0`. A non-positive value is reported and ignored, so the old
@@ -304,10 +322,27 @@ is a shop stat.
 - `warp_out` is an input action only. Phase 3 gives it behaviour, have debug print
 statment only for now.
 
-## 1.2 Fuel component
-- `FuelComponent`: tank size, burn rate, and the time to refill from empty.
-  It holds the fuel level and signals when it changes. Add the fuel % to the
-  debug UI
+## 1.2 Fuel component ✅
+- `FuelComponent` (`scripts/components/fuel_component.gd`) has `tank_size`
+  1.0, `burn_rate` 1.0, `refill_time` 5.0 and `refill_delay` 0.0 under
+  `@export_group("Fuel")`. It exposes a read-only `fuel`, `draw(amount)` and
+  `fuel_changed`. It sits on the player (`Player.fuel_component`) but nothing
+  draws from it until 1.3.
+- The debug overlay shows `Fuel      <remaining> / <tank_size>`.
+- **Done:** `tests/components/test_fuel_component.gd` covers the contract:
+  - the tank starts full
+  - a draw is clamped to what's left
+  - a negative draw is reported
+  - an empty tank refills in `refill_time`
+  - a boost (even on an empty tank) blocks the refill, but a zero draw
+    doesn't
+  - `refill_delay` is respected
+  - a shrinking tank clamps the fuel
+  - bad settings are reported and ignored
+  - `fuel_changed` is emitted once for each change, and never while the
+    tank is full and idle
+
+  The overlay test checks the fuel line. The suite passes 87/87.
 
 ## 1.3 Thrust uses fuel
 - `ThrusterComponent` draws fuel while thrusting and gives no force when the
