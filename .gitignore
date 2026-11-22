@@ -4,3 +4,6 @@
 
 # alastair ignores
 .NOTES.md
+
+# Claude harness state (current feature and phase)
+.claude/state/

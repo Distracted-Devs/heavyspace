@@ -1,0 +1,108 @@
+#!/bin/bash
+# Moves a feature through the harness phases:
+#   prototype -> rewrite -> perf -> done   (or prototype -> discarded)
+#
+# Usage:
+#   .claude/bin/feature start <name>   begin prototyping (clean git tree needed)
+#   .claude/bin/feature status
+#   .claude/bin/feature accept         user only: prototype -> rewrite
+#   .claude/bin/feature discard        user only: delete the prototype
+#   .claude/bin/feature perf           rewrite -> perf (full checks must pass)
+#   .claude/bin/feature done           user only: finish (full checks must pass)
+#
+# accept, discard and done are blocked for Claude by a hook. Run them yourself
+# with `! .claude/bin/feature <command>` in the Claude Code prompt.
+
+set -euo pipefail
+. "$(dirname "$0")/../hooks/lib.sh"
+cd "$ROOT"
+
+die() { echo "feature: $*" >&2; exit 1; }
+need_phase() { [ "$(phase)" = "$1" ] || die "needs the $1 phase (now: $(phase))."; }
+
+write_state() {
+	jq -n --arg name "$1" --arg phase "$2" --arg base "$3" \
+		'{name: $name, phase: $phase, base: $base}' > "$STATE"
+	rm -f "$STATE_DIR/last-pass" "$STATE_DIR/stop-blocks"
+}
+
+set_phase() {
+	write_state "$(feature)" "$1" "$(base_ref)"
+	echo "feature: '$(feature)' is now in the $1 phase."
+}
+
+record_decision() {
+	local doc="docs/features/$(feature).md"
+	[ -f "$doc" ] || return 0
+	local line
+	line="- $(date +%Y-%m-%d): $1"
+	awk -v line="$line" '{ print } /^## Decision/ { print line }' "$doc" \
+		> "$doc.tmp" && mv "$doc.tmp" "$doc"
+}
+
+full_checks() {
+	echo "feature: running the full checks (tests, warnings, smoke)..."
+	"$HOOKS/checks.sh" --force || die "checks failed, so the phase stays $(phase)."
+}
+
+command="${1:-status}"
+case "$command" in
+	start)
+		name="${2:-}"
+		[[ "$name" =~ ^[a-z][a-z0-9_]*$ ]] ||
+			die "give a snake_case name, e.g. feature start warp_trail"
+		[ "$(phase)" = none ] ||
+			die "'$(feature)' is already in the $(phase) phase."
+		dirty=$(git status --porcelain -- . ':!*.import')
+		[ -z "$dirty" ] ||
+			die "git has outstanding changes. Ask the user about them first:
+$dirty"
+		[ ! -e "prototypes/$name" ] || die "prototypes/$name already exists."
+		mkdir -p "prototypes/$name" docs/features
+		doc="docs/features/$name.md"
+		[ -f "$doc" ] ||
+			sed "s/{{name}}/$name/g; s/{{date}}/$(date +%Y-%m-%d)/g" \
+				"$ROOT/.claude/templates/feature.md" > "$doc"
+		write_state "$name" prototype "$(git rev-parse HEAD)"
+		git status --porcelain -uall | cut -c4- > "$STATE_DIR/baseline"
+		echo "feature: prototyping '$name' in prototypes/$name/ (notes: $doc)."
+		;;
+	status)
+		if [ "$(phase)" = none ]; then
+			echo "No feature in progress."
+		else
+			echo "Feature '$(feature)' is in the $(phase) phase (base $(base_ref | cut -c1-8))."
+		fi
+		;;
+	accept)
+		need_phase prototype
+		record_decision "accepted, moving to the rewrite."
+		set_phase rewrite
+		;;
+	discard)
+		need_phase prototype
+		name=$(feature)
+		rm -rf "prototypes/$name"
+		record_decision "discarded. The prototype was deleted."
+		rm -f "$STATE" "$STATE_DIR/last-pass" "$STATE_DIR/stop-blocks"
+		echo "feature: '$name' discarded. Its notes stay in docs/features/$name.md."
+		;;
+	perf)
+		need_phase rewrite
+		full_checks
+		set_phase perf
+		;;
+	done)
+		need_phase perf
+		full_checks
+		name=$(feature)
+		rm -rf "prototypes/$name"
+		record_decision "done. The prototype was deleted."
+		rm -f "$STATE" "$STATE_DIR/last-pass" "$STATE_DIR/stop-blocks"
+		echo "feature: '$name' is done and its prototype is deleted."
+		;;
+	*)
+		sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+		exit 1
+		;;
+esac

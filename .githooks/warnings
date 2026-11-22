@@ -17,7 +17,7 @@ root = pathlib.Path(
     .strip()
 )
 files = sys.argv[1:] or subprocess.check_output(
-    ["git", "ls-files", "*.gd", ":!addons/"], cwd=root, text=True
+    ["git", "ls-files", "*.gd", ":!addons/", ":!prototypes/"], cwd=root, text=True
 ).split()
 editor = subprocess.Popen(
     ["godot", "--headless", "--editor", "--lsp-port", str(PORT),

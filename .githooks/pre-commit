@@ -4,7 +4,7 @@
 
 . "$(git rev-parse --show-toplevel)/.githooks/gdscript.sh"
 
-files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.gd' ':!addons/')
+files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.gd' ':!addons/' ':!prototypes/')
 [ -z "$files" ] && exit 0
 
 staged=$(mktemp -d)
