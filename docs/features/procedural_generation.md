@@ -24,6 +24,40 @@ Agreed:
   `LEVEL_SCENE`) from `tests/bodies/test_mass_body.gd`. It tests the level,
   not the body.
 
+## Idea
+"I want you to prototype phase 2. At first lets get one non-procedurally
+generated spawn how I want it and then scale it up. First lets get a planet
+about 100x bigger than the player with about 100 planets orbiting it in a
+ring (think saturn)"
+
+## Prototype log
+- v1: hand-built system in `prototypes/procedural_generation/`. A central
+  body of radius 50 (100× the ship's 0.5) at (0, 0, -300), with 100 ring
+  bodies (radius 0.2–3, biased small) orbiting at 1.6–2.6× its radius in a
+  thin ring tilted 20°, on Kepler-style circular orbits. Ring mass scales
+  with volume against the ship, so anything bigger than the ship is red.
+  The user liked it and tuned: ring_count 500, ring_thickness 10,
+  body_radius_min 1, inner_orbit_period 60.
+- v2: scaled up. A giant (radius 5000, mass 1e7) with a ring of 10 Saturn
+  systems at 1.6–2.6× its radius, each orbiting at the real circular-orbit
+  speed (about 100 u/s). The player spawns with its home system's velocity,
+  so they fall around the giant together. Spawning all 5,011 bodies cost
+  about 14.5ms per physics frame, so a ring is spawned only within 2000 of
+  its system and freed past 3000. Orbits are driven by time, so rings
+  respawn in place. Now about 5.7ms per physics frame. Every ring body is
+  heavier than the ship with the tuned values, and from rest the ship falls
+  into its home system in about 10s (true of v1 too).
+- v3: the user tested 500 systems (with giant and central mass 1) and the
+  game struggled. There were 8,001 real bodies (about 32,000 nodes), and
+  physics took 40–90ms per frame. Now drawn bodies are MultiMeshes with
+  low-poly spheres, and a vertex shader (`orbit.gdshader`) works out each
+  orbit from time. Real `MassBody` nodes exist only for ring bodies within
+  60 of the player and systems within 3000. They sit at exactly the shader's
+  position and hide their drawn copy. Systems keep at least 600 between
+  centres. Result: 213 nodes and 42 bodies. A windowed run on an M1 holds
+  60fps (worst frame 17.9ms, 24 draw calls), and also while flying through
+  systems at 300 u/s. Awaiting feedback.
+
 ## Contracts
 None agreed yet. Agree each API's contract with the user at the start of its
 step.

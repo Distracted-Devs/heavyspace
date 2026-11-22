@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://ctu45brmbxom7"]
+
+[ext_resource type="Script" uid="uid://7srr16js8s56" path="res://prototypes/procedural_generation/main.gd" id="1_main"]
+
+[node name="ProceduralGenerationPrototype" type="Node3D" unique_id=1154227012]
+script = ExtResource("1_main")
+central_mass = 1.0
+ring_count = 500
+ring_thickness = 10.0
+body_radius_min = 1.0
+inner_orbit_period = 60.0
+giant_mass = 1.0
+system_count = 500
