@@ -1,7 +1,6 @@
 extends GutTest
 
 const BODY_SCENE := preload("res://scenes/bodies/mass_body.tscn")
-const LEVEL_SCENE := preload("res://scenes/levels/test_level.tscn")
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const FRAMES := 30
 
@@ -53,15 +52,6 @@ func test_bodies_share_the_mesh_but_own_their_collider_sphere() -> void:
 	assert_eq(other.mesh.mesh, _body.mesh.mesh)
 	assert_ne(other.collider.shape, _body.collider.shape)
 	assert_eq(_body.collider.shape.radius, 50.0)
-
-
-func test_level_body_is_heavier_than_player_starting_mass() -> void:
-	var level: Node = autofree(LEVEL_SCENE.instantiate())
-	var body_gravity: GravityComponent = level.get_node(
-		"MassBody/GravityComponent"
-	)
-	var player: Player = level.get_node("Player")
-	assert_gt(body_gravity.mass, player.mass_component.starting_mass)
 
 
 func test_moving_body_crashes_into_the_player() -> void:

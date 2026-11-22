@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Tier" format=3]
+
+[ext_resource type="Script" uid="uid://ms7w88qme74j" path="res://scripts/generation/tier.gd" id="1_tier"]
+
+[resource]
+script = ExtResource("1_tier")
+thickness = 1000.0
+radius_min = 50.0
+radius_max = 50.0
+mass_density = 0.08
+spawn_density = 7.6e-10
+cell_size = 800.0
+min_separation = 600.0
+inner_period_min = 450.0
+inner_period_max = 450.0
+live_distance = 3000.0
+release_distance = 3500.0

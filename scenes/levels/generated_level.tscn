@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://binwpba4o8jv3" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://scripts/core/clock.gd" id="2_clock"]
+[ext_resource type="Script" path="res://scripts/generation/hierarchy_streamer.gd" id="3_streamer"]
+[ext_resource type="Resource" path="res://resources/generation/systems_tier.tres" id="4_systems"]
+[ext_resource type="Resource" path="res://resources/generation/rings_tier.tres" id="5_rings"]
+[ext_resource type="Script" path="res://scripts/generation/live_body_pool.gd" id="6_pool"]
+[ext_resource type="Script" path="res://scripts/levels/player_spawn.gd" id="7_spawn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_debug"]
+[ext_resource type="Script" path="res://scripts/levels/pause_controller.gd" id="9_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause_overlay"]
+[ext_resource type="Script" path="res://scripts/levels/lose_controller.gd" id="11_lose"]
+[ext_resource type="PackedScene" path="res://scenes/ui/lose_overlay.tscn" id="12_lose_overlay"]
+[ext_resource type="Script" path="res://scripts/ui/mass_tint_debug.gd" id="13_tint"]
+
+[node name="GeneratedLevel" type="Node3D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+
+[node name="GravityReceiverComponent" parent="Player"]
+gravity_constant = 10.0
+
+[node name="Clock" type="Node" parent="."]
+script = ExtResource("2_clock")
+
+[node name="HierarchyStreamer" type="Node3D" parent="." node_paths=PackedStringArray("clock", "focus")]
+script = ExtResource("3_streamer")
+tiers = Array[Resource]([ExtResource("4_systems"), ExtResource("5_rings")])
+clock = NodePath("../Clock")
+focus = NodePath("../Player")
+
+[node name="LiveBodyPool" type="Node" parent="." node_paths=PackedStringArray("streamer")]
+script = ExtResource("6_pool")
+streamer = NodePath("../HierarchyStreamer")
+
+[node name="PlayerSpawn" type="Node" parent="." node_paths=PackedStringArray("streamer", "player")]
+script = ExtResource("7_spawn")
+streamer = NodePath("../HierarchyStreamer")
+player = NodePath("../Player")
+
+[node name="DebugOverlay" parent="." node_paths=PackedStringArray("player") instance=ExtResource("8_debug")]
+player = NodePath("../Player")
+
+[node name="PauseController" type="Node" parent="."]
+script = ExtResource("9_pause")
+
+[node name="PauseOverlay" parent="." node_paths=PackedStringArray("pause_controller") instance=ExtResource("10_pause_overlay")]
+pause_controller = NodePath("../PauseController")
+
+[node name="LoseController" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("11_lose")
+player = NodePath("../Player")
+
+[node name="LoseOverlay" parent="." node_paths=PackedStringArray("lose_controller") instance=ExtResource("12_lose_overlay")]
+lose_controller = NodePath("../LoseController")
+
+[node name="MassTintDebug" type="Node" parent="." node_paths=PackedStringArray("player", "streamer")]
+script = ExtResource("13_tint")
+player = NodePath("../Player")
+streamer = NodePath("../HierarchyStreamer")

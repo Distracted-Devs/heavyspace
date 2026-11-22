@@ -26,6 +26,11 @@ pickup, and a heavier one is deadly. It started as the test planet, and
   is kept.
 - There are two shared tinted materials, and a body's override is only
   reassigned when its class changes. When disabled, the override is cleared.
+- With a `streamer` (optional, step 2.8), every drawn instance of every
+  expanded parent is tinted the same way by its layout mass, through
+  `OrbitRenderer.set_tint`. Instances are retinted when the player's mass
+  or `enabled` changes, and a newly expanded parent is tinted at once. When
+  disabled, drawn instances are untinted (white).
 
 ## Steps
 
