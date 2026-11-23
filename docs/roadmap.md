@@ -88,7 +88,7 @@ Features:
 
 Features:
 - [Mass bodies](features/mass_bodies.md) ✅ (2.1, 2.1a)
-- [Procedural generation](features/procedural_generation.md) (2.2–2.4,
+- [Procedural generation](features/procedural_generation.md) ✅ (2.2–2.4,
   2.6–2.9)
 - [Player growth](features/player_growth.md) (2.5)
 

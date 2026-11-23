@@ -19,6 +19,10 @@ var layout: TierLayout:
 
 var _layout := TierLayout.new()
 var _buffer := PackedFloat32Array()
+var _reach := 0.0
+var _positions := PackedVector3Array()
+var _positions_time := NAN
+var _positions_transform := Transform3D()
 
 
 func _init() -> void:
@@ -46,6 +50,8 @@ func show_layout(children: TierLayout) -> void:
 	if children.size() > 0:
 		multimesh.buffer = _buffer
 	multimesh.custom_aabb = _ring_bounds(children)
+	_reach = _furthest_reach(children)
+	_positions_time = NAN
 	Contract.ensure(
 		(
 			multimesh.instance_count == children.size()
@@ -117,6 +123,32 @@ func child_position(index: int, time: float) -> Vector3:
 	return global_transform * local
 
 
+func reach() -> float:
+	return _reach
+
+
+func child_positions(time: float) -> PackedVector3Array:
+	var xform := global_transform
+	if time == _positions_time and xform == _positions_transform:
+		return _positions
+	var orbit := _layout.orbit_radius
+	var height := _layout.height
+	var phase := _layout.phase
+	var speed := _layout.angular_speed
+	var child_count := _layout.size()
+	_positions.resize(child_count)
+	for index in child_count:
+		var angle := phase[index] + speed[index] * time
+		_positions[index] = xform * Vector3(
+			cos(angle) * orbit[index],
+			height[index],
+			sin(angle) * orbit[index],
+		)
+	_positions_time = time
+	_positions_transform = xform
+	return _positions
+
+
 func child_velocity(index: int, time: float) -> Vector3:
 	if not _require_index(index):
 		return Vector3.ZERO
@@ -149,14 +181,25 @@ func _build_buffer(children: TierLayout) -> PackedFloat32Array:
 	return buffer
 
 
+func _furthest_reach(children: TierLayout) -> float:
+	var furthest := 0.0
+	for index in children.size():
+		var offset := Vector2(
+			children.orbit_radius[index],
+			children.height[index],
+		)
+		furthest = maxf(furthest, offset.length() + children.radius[index])
+	return furthest
+
+
 func _ring_bounds(children: TierLayout) -> AABB:
-	var reach := 0.0
+	var outward := 0.0
 	var rise := 0.0
 	for index in children.size():
 		var radius := children.radius[index]
-		reach = maxf(reach, children.orbit_radius[index] + radius)
+		outward = maxf(outward, children.orbit_radius[index] + radius)
 		rise = maxf(rise, absf(children.height[index]) + radius)
-	var extent := Vector3(reach, rise, reach)
+	var extent := Vector3(outward, rise, outward)
 	return AABB(-extent, extent * 2.0)
 
 

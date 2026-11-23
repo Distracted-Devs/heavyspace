@@ -124,18 +124,28 @@ func _expand_children_near(
 	focus_position: Vector3,
 	time: float,
 ) -> void:
-	var renderer := _renderers[slot]
 	var layout := _layouts[slot]
+	var positions := _renderers[slot].child_positions(time)
+	# One path reused for every child; only its last index changes.
+	var path := _paths[slot].duplicate()
+	path.append(0)
+	var last := path.size() - 1
 	for index in layout.size():
-		var path := _paths[slot].duplicate()
-		path.append(index)
+		path[last] = index
 		var tier := _tier_for(child_depth, path, layout.radius[index])
-		var centre := renderer.child_position(index, time)
-		if focus_position.distance_to(centre) >= tier.expand_distance:
+		var centre := positions[index]
+		var reach := tier.expand_distance
+		if focus_position.distance_squared_to(centre) >= reach * reach:
 			continue
 		if is_expanded(path):
 			continue
-		var child_slot := _add_slot(path, slot, index, layout.radius[index])
+		var child_path := path.duplicate()
+		var child_slot := _add_slot(
+			child_path,
+			slot,
+			index,
+			layout.radius[index],
+		)
 		_renderers[child_slot].global_position = centre
 
 

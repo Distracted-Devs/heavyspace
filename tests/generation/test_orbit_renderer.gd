@@ -158,3 +158,32 @@ func test_child_velocity_is_the_rate_of_change_of_child_position() -> void:
 		var estimate := (after - before) / (2.0 * step)
 		var velocity := _renderer.child_velocity(index, 5.0)
 		assert_almost_eq(estimate.distance_to(velocity), 0.0, 1.0e-3)
+
+
+func test_child_positions_match_child_position() -> void:
+	_renderer.global_position = Vector3(3.0, 4.0, 5.0)
+	for time in [0.0, 9.0]:
+		var positions := _renderer.child_positions(time)
+		assert_eq(positions.size(), _layout.size())
+		for index in _layout.size():
+			var expected := _renderer.child_position(index, time)
+			assert_almost_eq(
+				positions[index].distance_to(expected),
+				0.0,
+				1.0e-3,
+			)
+
+
+func test_child_positions_follow_the_renderer_when_it_moves() -> void:
+	var before := _renderer.child_positions(2.0)[0]
+	_renderer.global_position += Vector3(0.0, 7.0, 0.0)
+	var after := _renderer.child_positions(2.0)[0]
+	assert_almost_eq(after.y - before.y, 7.0, 1.0e-4)
+
+
+func test_every_child_stays_within_reach_of_the_centre() -> void:
+	var reach := _renderer.reach()
+	for time in [0.0, 13.0, 250.0]:
+		for position in _renderer.child_positions(time):
+			var gap := position.distance_to(_renderer.global_position)
+			assert_lte(gap, reach)

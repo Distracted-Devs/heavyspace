@@ -79,11 +79,16 @@ func _promote_near(focus_position: Vector3, time: float) -> void:
 	for drawn_slot in _drawn.size():
 		var renderer := _drawn[drawn_slot]
 		var live_distance := _drawn_tiers[drawn_slot].live_distance
-		for index in renderer.count():
-			if renderer.is_hidden(index):
+		var to_centre := focus_position.distance_to(renderer.global_position)
+		if to_centre - renderer.reach() >= live_distance:
+			continue
+		var positions := renderer.child_positions(time)
+		var live_squared := live_distance * live_distance
+		for index in positions.size():
+			var centre := positions[index]
+			if focus_position.distance_squared_to(centre) >= live_squared:
 				continue
-			var centre := renderer.child_position(index, time)
-			if focus_position.distance_to(centre) < live_distance:
+			if not renderer.is_hidden(index):
 				_promote(renderer, index, centre)
 
 

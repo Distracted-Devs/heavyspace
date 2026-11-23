@@ -1,5 +1,5 @@
 # Procedural generation
-**Status:** in rewrite (Phase 2, steps 2.2 to 2.4 and 2.6 to 2.9)
+**Status:** rewritten (Phase 2, steps 2.2 to 2.4 and 2.6 to 2.9)
 
 A procedurally generated level of [mass bodies](mass_bodies.md) in a
 hierarchy of orbits (moons upon moons upon moons), with mass pickups
@@ -211,6 +211,12 @@ Agree each API's contract with the user at the start of its step.
   `0 ≤ index < count()`. Afterwards `is_hidden(index)` and `tint(index)`
   report the new value. Each leaves the other alone.
 - `layout` is the layout it draws (read-only).
+- `reach()` is the furthest any child can be from the centre (orbit,
+  height and radius together). Every child stays within it at every time.
+- `child_positions(time)` returns every child's world position, equal to
+  `child_position` for each index. It is cached for the last time and
+  transform, so the streamer and the pool share one computation per frame.
+  Callers mustn't change the array it returns.
 - `child_velocity(index, time)` is `global_basis × Orbit.velocity(…)`: the
   child's velocity relative to its parent's centre.
 - `child_position(index, time)` is
@@ -226,7 +232,8 @@ Agree each API's contract with the user at the start of its step.
 - `tiers[d]` generates the children of a parent at depth `d`; the root is
   depth 0. Every lookup goes through one method (`_tier_for(depth, path,
   parent_radius)`), so a procedural tier provider can replace the array
-  later. Such a provider must derive its tiers from the seed and the path.
+  later. Such a provider must derive its tiers from the seed and the path,
+  and mustn't keep the path it's given, since the streamer reuses it.
 - When it starts, it requires a non-empty list of tiers with no nulls, and
   each tier must be valid for both the smallest and largest radius its
   parents can have. If not, it reports the problem and stays empty.
@@ -269,6 +276,8 @@ Agree each API's contract with the user at the start of its step.
     body is placed before it enters the tree, so it never sweeps in from
     the origin.
   - a released body is freed and its copy shown again
+- A drawn parent whose `reach()` can't come within `live_distance` of the
+  player is skipped, so only nearby rings are checked child by child.
 - When the streamer emits `collapsing`, that parent's live children are
   freed before its renderer is.
 - Invariant: live bodies and hidden instances match one to one.
@@ -360,7 +369,7 @@ Agree each API's contract with the user at the start of its step.
   `test_moving_body_crashes_into_the_player`, since it moves bodies the
   same way.
 
-### 2.8 Generated level
+### 2.8 Generated level ✅
 - `scenes/levels/generated_level.tscn` replaces `test_level.tscn` as the
   main scene, with the prototype's tuned values.
 - The player spawns with its home system's velocity, and the camera's far
@@ -368,12 +377,22 @@ Agree each API's contract with the user at the start of its step.
 - `MassTintDebug` also tints drawn bodies through the renderer.
 - Delete `test_level_body_is_heavier_than_player_starting_mass` and
   `LEVEL_SCENE` from `tests/bodies/test_mass_body.gd`.
-- **Done:** smoke passes with the generated level as the main scene, the
-  tests pass, and from rest the player falls around the giant with its home
-  system.
+- **Done:** smoke passes with the generated level as the main scene, and
+  the tests pass (`tests/levels/test_player_spawn.gd`,
+  `tests/levels/test_generated_level.gd`, and the drawn tint in
+  `tests/ui/test_mass_tint_debug.gd`). The user will check how well the
+  spawn orbit holds over minutes when tuning at the end of phase 2.
 
-### 2.9 Performance
+### 2.9 Performance ✅
 - `tests/generation/test_benchmark.gd`: a headless benchmark of the physics
   frame with the tuned values (500 systems × 500 ring bodies).
-- **Done:** the benchmark holds a typical frame within the 60fps budget
-  (16.6ms).
+- **Done:** `tests/generation/test_benchmark.gd` drives the generated
+  level's streamer, pool and tint for 120 frames orbiting the home system
+  and 240 frames flying through the systems at 300 u/s. The mean frame
+  must stay under 2ms and the worst under 16.6ms.
+- The first measurement was about 15ms per frame, nearly all in the pool,
+  which checked about 5,000 drawn children every frame. Culling renderers
+  by `reach()` and sharing batched `child_positions` brought it to a mean
+  of 0.35ms orbiting and 0.56ms flying (debug build). The worst frames (6ms
+  and 10ms) are the hitches when a ring is generated on expand: the next
+  candidate for the performance phase.
