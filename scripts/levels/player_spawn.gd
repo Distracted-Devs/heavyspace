@@ -54,9 +54,10 @@ func spawn() -> void:
 	)
 	player.global_position = home_centre + outward * spawn_distance
 	player.global_basis = Basis.looking_at(prograde, plane.y)
-	player.linear_velocity = (
-		systems.child_velocity(home_index, time) + prograde * orbit_speed
-	)
+	var home_velocity := Vector3.ZERO
+	if streamer.clock == null or streamer.clock.running:
+		home_velocity = systems.child_velocity(home_index, time)
+	player.linear_velocity = home_velocity + prograde * orbit_speed
 	player.camera_component.camera.far = camera_far
 	Contract.ensure(
 		(

@@ -8,7 +8,6 @@
 [ext_resource type="Resource" uid="uid://diyfvs58nfoib" path="res://resources/generation/rings_tier.tres" id="5_rings"]
 [ext_resource type="Script" uid="uid://dyjxchkc8iep4" path="res://scripts/generation/live_body_pool.gd" id="6_pool"]
 [ext_resource type="Script" uid="uid://bxpdu3mlmcdsi" path="res://scripts/levels/player_spawn.gd" id="7_spawn"]
-[ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_debug"]
 [ext_resource type="Script" uid="uid://4u2yvwn3qh3l" path="res://scripts/levels/pause_controller.gd" id="9_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause_overlay"]
 [ext_resource type="Script" uid="uid://bg25ujsro620c" path="res://scripts/levels/lose_controller.gd" id="11_lose"]
@@ -24,6 +23,11 @@
 [ext_resource type="Resource" path="res://resources/progression/upgrades/pickup_radius_upgrade.tres" id="21_pickup"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/turn_speed_upgrade.tres" id="22_turn"]
 [ext_resource type="Script" uid="uid://b032a23xjpbpe" path="res://scripts/progression/upgrade.gd" id="23_upgrade"]
+[ext_resource type="Environment" path="res://resources/environments/space.tres" id="24_space"]
+[ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="25_sun"]
+[ext_resource type="Script" path="res://scripts/effects/crash_effect.gd" id="26_crash"]
+[ext_resource type="PackedScene" path="res://scenes/ui/fuel_gauge.tscn" id="27_gauge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/minimap.tscn" id="28_minimap"]
 
 [node name="GeneratedLevel" type="Node3D" unique_id=1472244937]
 
@@ -37,6 +41,7 @@ pool = NodePath("../../LiveBodyPool")
 
 [node name="Clock" type="Node" parent="." unique_id=2030729022]
 script = ExtResource("2_clock")
+running = false
 
 [node name="HierarchyStreamer" type="Node3D" parent="." unique_id=1288168066 node_paths=PackedStringArray("clock", "focus", "focus_mass")]
 script = ExtResource("3_streamer")
@@ -52,9 +57,6 @@ streamer = NodePath("../HierarchyStreamer")
 [node name="PlayerSpawn" type="Node" parent="." unique_id=780093541 node_paths=PackedStringArray("streamer", "player")]
 script = ExtResource("7_spawn")
 streamer = NodePath("../HierarchyStreamer")
-player = NodePath("../Player")
-
-[node name="DebugOverlay" parent="." unique_id=1217810288 node_paths=PackedStringArray("player") instance=ExtResource("8_debug")]
 player = NodePath("../Player")
 
 [node name="PauseController" type="Node" parent="." unique_id=868928998]
@@ -102,3 +104,20 @@ color = Color(1, 1, 1, 0)
 [node name="ShopOverlay" parent="." unique_id=1530000006 node_paths=PackedStringArray("warp_controller", "run_starter") instance=ExtResource("16_shop")]
 warp_controller = NodePath("../WarpController")
 run_starter = NodePath("../RunStarter")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1530000007]
+environment = ExtResource("24_space")
+
+[node name="Sun" parent="." unique_id=1530000008 instance=ExtResource("25_sun")]
+
+[node name="CrashEffect" type="Node3D" parent="." unique_id=1530000009 node_paths=PackedStringArray("lose_controller", "ship")]
+script = ExtResource("26_crash")
+lose_controller = NodePath("../LoseController")
+ship = NodePath("../Player/Mesh")
+
+[node name="FuelGauge" parent="." unique_id=1530000010 node_paths=PackedStringArray("fuel") instance=ExtResource("27_gauge")]
+fuel = NodePath("../Player/FuelComponent")
+
+[node name="Minimap" parent="." unique_id=1530000011 node_paths=PackedStringArray("player", "pool") instance=ExtResource("28_minimap")]
+player = NodePath("../Player")
+pool = NodePath("../LiveBodyPool")

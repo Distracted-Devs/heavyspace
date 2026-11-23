@@ -1,10 +1,8 @@
-[gd_resource type="SphereMesh" format=3]
+[gd_resource type="SphereMesh" format=3 uid="uid://b7eydpows4gcd"]
 
-[ext_resource type="Material" path="res://resources/materials/earth.tres" id="1_earth"]
+[ext_resource type="Material" path="res://resources/materials/planet.tres" id="1_planet"]
 
 [resource]
-material = ExtResource("1_earth")
+material = ExtResource("1_planet")
 radius = 1.0
 height = 2.0
-radial_segments = 64
-rings = 32

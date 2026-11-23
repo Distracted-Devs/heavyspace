@@ -182,3 +182,12 @@ func test_warping_banks_and_opens_the_shop_then_launch_unpauses() -> void:
 	assert_true(get_tree().paused)
 	shop.launch()
 	assert_false(get_tree().paused)
+
+
+func test_minimap_focuses_on_the_home_system_not_the_giant() -> void:
+	await wait_physics_frames(3)
+	var minimap: Minimap = _level.get_node("Minimap")
+	minimap.refresh(0.1)
+	var home := _home_centre()
+	assert_almost_eq(minimap.focus_position().distance_to(home), 0.0, 1.0)
+	assert_ne(minimap.focus_position(), _pool().root_body.global_position)

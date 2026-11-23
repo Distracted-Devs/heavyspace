@@ -1,0 +1,144 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="1_map"]
+[ext_resource type="Shader" path="res://resources/shaders/minimap_grid.gdshader" id="2_grid"]
+[ext_resource type="Shader" path="res://resources/shaders/arcade_scanlines.gdshader" id="3_scanlines"]
+[ext_resource type="FontFile" path="res://resources/fonts/pixelify_sans_bold.ttf" id="4_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+bg_color = Color(0.04, 0.04, 0.08, 0.8)
+shadow_color = Color(0, 0, 0, 0.85)
+shadow_size = 1
+shadow_offset = Vector2(3, 3)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_grid"]
+shader = ExtResource("2_grid")
+shader_parameter/line_colour = Color(0.3019608, 0.9019608, 1, 0.0627451)
+shader_parameter/fill_colour = Color(0, 0.04, 0.07, 0.35)
+shader_parameter/cells = 12.0
+shader_parameter/line_px = 1.0
+shader_parameter/size = Vector2(256, 256)
+
+[sub_resource type="Environment" id="Environment_map"]
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cone"]
+top_radius = 0.0
+bottom_radius = 0.35
+height = 1.0
+radial_segments = 4
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_path"]
+transparency = 1
+no_depth_test = true
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scanlines"]
+shader = ExtResource("3_scanlines")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_border"]
+draw_center = false
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+
+[node name="Minimap" type="CanvasLayer" node_paths=PackedStringArray("frame", "border", "title", "grid", "map_root", "camera", "ship_marker", "path")]
+script = ExtResource("1_map")
+frame = NodePath("Frame")
+border = NodePath("Frame/Border")
+title = NodePath("Frame/Title")
+grid = NodePath("Frame/Grid")
+map_root = NodePath("Frame/View/Viewport/Map")
+camera = NodePath("Frame/View/Viewport/Map/Camera")
+ship_marker = NodePath("Frame/View/Viewport/Map/ShipMarker")
+path = NodePath("Frame/View/Viewport/Map/Path")
+
+[node name="Frame" type="Panel" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+
+[node name="Grid" type="ColorRect" parent="Frame"]
+material = SubResource("ShaderMaterial_grid")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="View" type="SubViewportContainer" parent="Frame"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="Frame/View"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+msaa_3d = 2
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="Map" type="Node3D" parent="Frame/View/Viewport"]
+
+[node name="Camera" type="Camera3D" parent="Frame/View/Viewport/Map"]
+current = true
+fov = 40.0
+
+[node name="Light" type="DirectionalLight3D" parent="Frame/View/Viewport/Map/Camera"]
+
+[node name="Environment" type="WorldEnvironment" parent="Frame/View/Viewport/Map"]
+environment = SubResource("Environment_map")
+
+[node name="ShipMarker" type="Node3D" parent="Frame/View/Viewport/Map"]
+
+[node name="Cone" type="MeshInstance3D" parent="Frame/View/Viewport/Map/ShipMarker"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_cone")
+
+[node name="Path" type="MeshInstance3D" parent="Frame/View/Viewport/Map"]
+material_override = SubResource("StandardMaterial3D_path")
+
+[node name="Scanlines" type="ColorRect" parent="Frame"]
+material = SubResource("ShaderMaterial_scanlines")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Border" type="Panel" parent="Frame"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_border")
+
+[node name="Title" type="Label" parent="Frame"]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_font")
+text = "ORBIT"

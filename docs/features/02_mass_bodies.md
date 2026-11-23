@@ -18,6 +18,10 @@ pickup, and a heavier one is deadly. It started as the test planet, and
     no two bodies share one), sized to `radius`
   - `GravityComponent.radius` and `.mass` equal `radius` and `mass`
 - Every body joins the `mass_bodies` group.
+- `look_seed` ([HUD and art](13_hud_and_art.md) step 4.3) requires a value
+  in [0, 1); a bad value is reported and ignored. Afterwards the mesh's
+  instance shader parameter `seed` equals it, so bodies share one planet
+  material.
 
 ### MassTintDebug (`scripts/ui/mass_tint_debug.gd`) (removed)
 - Removed in the [player growth](11_player_growth.md) performance review

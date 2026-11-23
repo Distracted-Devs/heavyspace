@@ -125,13 +125,16 @@ func test_showing_a_new_layout_replaces_the_old_one() -> void:
 	assert_false(_renderer.is_hidden(0))
 
 
-func test_drawn_mesh_is_a_low_poly_unit_sphere_with_the_orbit_shader() -> void:
+func test_drawn_mesh_is_a_low_poly_sphere_with_the_proxy_material() -> void:
 	var mesh := _renderer.multimesh.mesh as SphereMesh
 	assert_not_null(mesh)
 	assert_eq(mesh.radius, 1.0)
 	assert_eq(mesh.radial_segments, _renderer.proxy_segments)
-	var material := mesh.material as ShaderMaterial
-	assert_eq(material.shader, OrbitRenderer.SHADER)
+	assert_eq(mesh.material, _renderer.proxy_material)
+	assert_eq(
+		_renderer.proxy_material,
+		load("res://resources/materials/planet_proxy.tres"),
+	)
 
 
 func test_missing_layout_is_reported() -> void:

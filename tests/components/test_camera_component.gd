@@ -100,3 +100,11 @@ func test_released_stick_leaves_the_view_where_it_is() -> void:
 	var turned_yaw := _view.yaw
 	_look(Vector2.ZERO, Vector2.ZERO, 2.0)
 	assert_almost_eq(_view.yaw, turned_yaw, 1e-9)
+
+
+func test_framing_holds_far_from_the_origin_with_a_long_distance() -> void:
+	_ship.global_position = Vector3(48213.7, -30117.3, 19455.9)
+	_view.distance = 41.37
+	_look(Vector2(0.7, -0.4), Vector2(0.013, 0.021), 2.0)
+	var to_ship := _ship.global_position - _view.camera.global_position
+	assert_almost_eq(to_ship.length(), 41.37, 0.01)

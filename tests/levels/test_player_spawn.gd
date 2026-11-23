@@ -65,6 +65,16 @@ func test_player_has_home_velocity_plus_circular_orbit_speed() -> void:
 	assert_almost_eq(relative.normalized().dot(offset), 0.0, 1.0e-3)
 
 
+func test_stopped_clock_leaves_out_the_home_velocity() -> void:
+	var clock: Clock = add_child_autofree(Clock.new())
+	clock.running = false
+	_streamer.clock = clock
+	add_child_autofree(_spawn)
+	var home_mass := _systems().layout.mass[_spawn.home_index]
+	var expected := sqrt(GRAVITY * home_mass / _spawn.spawn_distance)
+	assert_almost_eq(_player.linear_velocity.length(), expected, 1.0e-3)
+
+
 func test_player_orbits_the_way_the_ring_turns() -> void:
 	add_child_autofree(_spawn)
 	var home_velocity := _systems().child_velocity(_spawn.home_index, 0.0)

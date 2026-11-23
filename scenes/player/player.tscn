@@ -14,8 +14,12 @@
 [ext_resource type="Script" uid="uid://dewketvryxtqv" path="res://scripts/components/growth_component.gd" id="12_growth"]
 [ext_resource type="Script" uid="uid://dq2iol1hxdka" path="res://scripts/components/arcade_flight_component.gd" id="13_arcade"]
 [ext_resource type="Script" uid="uid://bocvvywfcp3h2" path="res://scripts/components/momentum_component.gd" id="14_momentum"]
+[ext_resource type="PackedScene" uid="uid://c71o8lajyu4a1" path="res://resources/models/low_poly_ship.fbx" id="15_ship"]
+[ext_resource type="PackedScene" path="res://scenes/effects/blue_thrust.tscn" id="16_thrust"]
+[ext_resource type="Script" uid="uid://d1i6ujkw1qm20" path="res://scripts/effects/thrust_effect.gd" id="17_thrust_effect"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
+radius = 0.50158125
 
 [node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight")]
 gravity_scale = 0.0
@@ -36,14 +40,12 @@ arcade_flight = NodePath("ArcadeFlightComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
-[node name="Wings" type="CSGSphere3D" parent="Mesh" unique_id=1955995611]
-transform = Transform3D(0.845, 0, 0, 0, 0.07, 0, 0, 0, 0.23, 0, 0, 0.08)
+[node name="Ship" parent="Mesh" unique_id=1955995611 instance=ExtResource("15_ship")]
+transform = Transform3D(0.2483, 0, 0, 0, 0.2483, 0, 0, 0, 0.2483, 0, 0.0471, 0.8387)
 
-[node name="Body" type="CSGSphere3D" parent="Mesh" unique_id=800424819]
-transform = Transform3D(0.205, 0, 0, 0, 0.265, 0, 0, 0, 0.75, 0, 0, 0)
-
-[node name="Cockpit" type="CSGSphere3D" parent="Mesh" unique_id=1088768577]
-transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0.085, -0.11)
+[node name="BlueThrust" parent="Mesh" unique_id=800424819 instance=ExtResource("16_thrust")]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0.75)
+emitting = false
 
 [node name="Collider" type="CollisionShape3D" parent="." unique_id=506654686]
 shape = SubResource("SphereShape3D_7l7pj")
@@ -52,9 +54,10 @@ shape = SubResource("SphereShape3D_7l7pj")
 script = ExtResource("8_camera")
 player_input = NodePath("../PlayerInputComponent")
 camera = NodePath("Camera3D")
+distance = 9.45
 
 [node name="Camera3D" type="Camera3D" parent="CameraComponent" unique_id=44102908]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.45)
 doppler_tracking = 2
 current = true
 
@@ -87,7 +90,7 @@ body = NodePath("..")
 script = ExtResource("14_momentum")
 body = NodePath("..")
 mass_component = NodePath("../MassComponent")
-momentum_exponent = 0.5
+momentum_exponent = 0.1
 
 [node name="GravityReceiverComponent" type="Node" parent="." unique_id=1645358278 node_paths=PackedStringArray("body")]
 script = ExtResource("6_gravity")
@@ -120,3 +123,9 @@ mesh = NodePath("../Mesh")
 collider = NodePath("../Collider")
 camera = NodePath("../CameraComponent")
 pickup = NodePath("../PickupComponent")
+
+[node name="ThrustEffect" type="Node" parent="." unique_id=1645358286 node_paths=PackedStringArray("flight_input", "fuel", "particles")]
+script = ExtResource("17_thrust_effect")
+flight_input = NodePath("../PlayerInputComponent")
+fuel = NodePath("../FuelComponent")
+particles = NodePath("../Mesh/BlueThrust")

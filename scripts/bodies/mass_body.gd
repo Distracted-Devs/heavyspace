@@ -4,6 +4,7 @@ extends AnimatableBody3D
 
 const UNIT_SPHERE := preload("res://resources/meshes/unit_sphere.tres")
 const GROUP := &"mass_bodies"
+const SEED_PARAMETER := &"seed"
 
 @export_range(0.01, 1000.0, 0.01, "or_greater") var radius := 50.0:
 	set(value):
@@ -19,6 +20,17 @@ const GROUP := &"mass_bodies"
 		mass = value
 		if is_node_ready():
 			_apply_size()
+
+@export_range(0.0, 0.999, 0.001) var look_seed := 0.0:
+	set(value):
+		if not Contract.require(
+			value >= 0.0 and value < 1.0,
+			"look_seed must be within [0, 1)",
+		):
+			return
+		look_seed = value
+		if is_node_ready():
+			_apply_look()
 
 @export_group("Components")
 @export var mesh: MeshInstance3D
@@ -41,6 +53,18 @@ func _ready() -> void:
 	collider.shape = _shape
 	mesh.mesh = UNIT_SPHERE
 	_apply_size()
+	_apply_look()
+
+
+func _apply_look() -> void:
+	mesh.set_instance_shader_parameter(SEED_PARAMETER, look_seed)
+	Contract.ensure(
+		is_equal_approx(
+			mesh.get_instance_shader_parameter(SEED_PARAMETER),
+			look_seed,
+		),
+		"the mesh's seed must match look_seed",
+	)
 
 
 func _apply_size() -> void:

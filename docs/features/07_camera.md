@@ -18,7 +18,11 @@ stick or the mouse. The input side (`look_intent`, `mouse_look`) is in
 - `look_speed` must be ≥ 0, `distance` must be > 0, and `max_pitch` must be within (0°, 90°). A bad value is
   reported and ignored.
 - Invariants, after every update: the pitch is within ±`max_pitch`, and the
-  camera is `distance` from the ship and looks at it.
+  camera is `distance` from the ship and looks at it. The distance is
+  checked to `max(0.001, 1e-5 × (|ship position| + distance))`, since world
+  positions far from the origin only hold about 7 significant figures
+  (changed in [HUD and art](13_hud_and_art.md), 2026-11-23: the fixed
+  0.001 broke after growing, far out).
 
 ## Steps
 
