@@ -3,7 +3,7 @@
 
 A third-person camera that follows the ship's rotation, turned by the right
 stick or the mouse. The input side (`look_intent`, `mouse_look`) is in
-[controls](controls.md).
+[controls](05_controls.md).
 
 ## Contracts
 

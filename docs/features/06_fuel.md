@@ -3,7 +3,7 @@
 
 The booster's fuel tank, which refills over time (about 5s from empty to
 full to start). The refill rate is a shop stat. The thruster's side of the
-contract is under `ThrusterComponent` in [flight](flight.md).
+contract is under `ThrusterComponent` in [flight](03_flight.md).
 
 ## Contracts
 

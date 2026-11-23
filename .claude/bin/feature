@@ -32,7 +32,8 @@ set_phase() {
 }
 
 record_decision() {
-	local doc="docs/features/$(feature).md"
+	local doc
+	doc=$(feature_doc "$(feature)")
 	[ -f "$doc" ] || return 0
 	local line
 	line="- $(date +%Y-%m-%d): $1"
@@ -59,7 +60,7 @@ case "$command" in
 $dirty"
 		[ ! -e "prototypes/$name" ] || die "prototypes/$name already exists."
 		mkdir -p "prototypes/$name" docs/features
-		doc="docs/features/$name.md"
+		doc=$(feature_doc "$name")
 		[ -f "$doc" ] ||
 			sed "s/{{name}}/$name/g; s/{{date}}/$(date +%Y-%m-%d)/g" \
 				"$ROOT/.claude/templates/feature.md" > "$doc"
@@ -85,7 +86,7 @@ $dirty"
 		rm -rf "prototypes/$name"
 		record_decision "discarded. The prototype was deleted."
 		rm -f "$STATE" "$STATE_DIR/last-pass" "$STATE_DIR/stop-blocks"
-		echo "feature: '$name' discarded. Its notes stay in docs/features/$name.md."
+		echo "feature: '$name' discarded. Its notes stay in $(feature_doc "$name")."
 		;;
 	perf)
 		need_phase rewrite

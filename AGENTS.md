@@ -1,7 +1,8 @@
 - Read through `docs/game_design.md` for all game design requirements.
 - `docs/roadmap.md` lists the phases in order and the features in each.
   Each feature has its own file in `docs/features/`, holding its agreed
-  contracts and its steps.
+  contracts and its steps. The files are numbered in roadmap order
+  (`NN_<name>.md`), and a new feature takes the next number.
 - Ignore `README.md`.
 
 # Feature workflow

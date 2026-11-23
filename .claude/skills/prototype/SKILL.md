@@ -16,7 +16,7 @@ if it's accepted, it gets rewritten properly by the `rewrite` skill.
    `.claude/bin/feature start <name>`. It refuses if git has outstanding
    changes. If so, show the user what's outstanding and ask what to do.
 3. Write the user's idea, in their words, under **Idea** in
-   `docs/features/<name>.md`. Ask a question only if you can't build a first
+   `docs/features/NN_<name>.md`. Ask a question only if you can't build a first
    version without the answer. Otherwise build it and let them react.
 
 ## Rules while prototyping
@@ -40,7 +40,7 @@ if it's accepted, it gets rewritten properly by the `rewrite` skill.
    (or open the scene in the editor and press F6). Say what changed and what
    to look for.
 3. Ask for their feedback, then add one line to the **Prototype log** in
-   `docs/features/<name>.md`: what changed and what they said.
+   `docs/features/NN_<name>.md`: what changed and what they said.
 4. Change it based on the feedback and repeat. If an approach isn't working,
    say so and suggest a different one rather than patching it.
 

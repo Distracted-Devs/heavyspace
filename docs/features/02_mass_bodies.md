@@ -3,7 +3,7 @@
 
 One `MassBody` type at every scale. A body lighter than the player is a
 pickup, and a heavier one is deadly. It started as the test planet, and
-[procedural generation](procedural_generation.md) spawns it.
+[procedural generation](10_procedural_generation.md) spawns it.
 
 ## Contracts
 

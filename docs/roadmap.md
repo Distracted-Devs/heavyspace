@@ -1,6 +1,7 @@
 # Roadmap
 The phases in order, and the features in each. Every feature has its own
-file in `docs/features/` with its contracts and its steps. Step numbers
+file in `docs/features/` with its contracts and its steps, numbered in
+roadmap order (`NN_<name>.md`). Step numbers
 (e.g. 2.3) are kept across files, since the commit history uses them.
 
 Each step is a single unit of work: break it down, enact it, check its
@@ -13,10 +14,10 @@ the project opening and running.
 - Ensure current code matches design paradigms.
 
 Features:
-- [Contracts and test harness](features/contracts.md) ✅ (0.1)
-- [Mass bodies](features/mass_bodies.md): the test planet ✅ (0.4)
-- [Flight](features/flight.md) ✅ (0.5, 0.6)
-- [Gravity](features/gravity.md) ✅ (0.7–0.9)
+- [Contracts and test harness](features/01_contracts.md) ✅ (0.1)
+- [Mass bodies](features/02_mass_bodies.md): the test planet ✅ (0.4)
+- [Flight](features/03_flight.md) ✅ (0.5, 0.6)
+- [Gravity](features/04_gravity.md) ✅ (0.7–0.9)
 
 Clean-up steps that don't belong to a feature:
 
@@ -67,11 +68,11 @@ Clean-up steps that don't belong to a feature:
 - Add the lose condition
 
 Features:
-- [Controls](features/controls.md) (1.1, 1.4a ✅)
-- [Fuel](features/fuel.md) ✅ (1.2, 1.3)
-- [Camera](features/camera.md) ✅ (1.4)
-- [Pause](features/pause.md) ✅ (1.5)
-- [Lose flow](features/lose_flow.md) ✅ (1.6, 1.7)
+- [Controls](features/05_controls.md) (1.1, 1.4a ✅)
+- [Fuel](features/06_fuel.md) ✅ (1.2, 1.3)
+- [Camera](features/07_camera.md) ✅ (1.4)
+- [Pause](features/08_pause.md) ✅ (1.5)
+- [Lose flow](features/09_lose_flow.md) ✅ (1.6, 1.7)
 
 ## Phase 1 done when
 - Every control (boost, pitch, yaw, roll, camera look, pause, warp out)
@@ -87,10 +88,10 @@ Features:
 - Game must be 60fps
 
 Features:
-- [Mass bodies](features/mass_bodies.md) ✅ (2.1, 2.1a)
-- [Procedural generation](features/procedural_generation.md) ✅ (2.2–2.4,
+- [Mass bodies](features/02_mass_bodies.md) ✅ (2.1, 2.1a)
+- [Procedural generation](features/10_procedural_generation.md) ✅ (2.2–2.4,
   2.6–2.9)
-- [Player growth](features/player_growth.md) (2.5)
+- [Player growth](features/11_player_growth.md) (2.5)
 
 # Phase 3: Game Loop
 - Ensure the player can collect mass, once enough has been collected then they can warp out

@@ -2,8 +2,8 @@
 **Status:** done ✅ (Phase 0, steps 0.5 and 0.6)
 
 Newtonian thrust and rotation, split into components that any input (the
-player now, an AI later) can drive. Fuel is in [fuel](fuel.md), and the
-player's input is in [controls](controls.md).
+player now, an AI later) can drive. Fuel is in [fuel](06_fuel.md), and the
+player's input is in [controls](05_controls.md).
 
 ## Contracts
 

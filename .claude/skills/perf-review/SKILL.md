@@ -24,7 +24,7 @@ isn't automatically better than a slower, flexible one that's within budget.
 3. Measure with contracts on and off (`Contract.enabled = false`). Release
    builds don't run them, so the "off" figures are what players get.
 4. Record the baseline in the **Performance evaluation** section of
-   `docs/features/<name>.md`.
+   `docs/features/NN_<name>.md`.
 
 ## Weigh
 For each hot spot, list the options in the feature notes' table:
@@ -54,7 +54,7 @@ yourself. Fix whatever they report.
 
 ## Finishing
 Once the user has decided on each option, record the final figures and the
-decisions under **Performance evaluation** in `docs/features/<name>.md`.
+decisions under **Performance evaluation** in `docs/features/NN_<name>.md`.
 Then ask the user to run
 `! .claude/bin/feature done`. It re-runs the full checks and deletes the
 prototype.

@@ -52,16 +52,17 @@ report() {
 }
 
 prototype_checks() {
-	local name folder outside
+	local name folder outside doc
 	name=$(feature)
 	folder="prototypes/$name"
+	doc=$(feature_doc "$name")
 
 	touch "$STATE_DIR/baseline"
 	outside=$(git status --porcelain -uall | cut -c4- |
-		grep -v -e "^$folder/" -e "^docs/features/$name.md$" -e '\.import$' |
+		grep -v -e "^$folder/" -e "^$doc$" -e '\.import$' |
 		grep -vxF -f "$STATE_DIR/baseline")
 	[ -z "$outside" ] || fail "Prototyping only touches $folder/ and \
-docs/features/$name.md. Undo these changes, or ask the user if they made them:
+$doc. Undo these changes, or ask the user if they made them:
 $outside"
 
 	local named

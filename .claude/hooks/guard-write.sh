@@ -25,12 +25,13 @@ case "$rel" in
 esac
 
 name=$(feature)
+doc=$(feature_doc "$name")
 
 case "$(phase)" in
 	prototype)
 		case "$rel" in
-			"prototypes/$name/"* | "docs/features/$name.md") ;;
-			*) deny "Prototyping '$name' only changes prototypes/$name/ and docs/features/$name.md, so it can be thrown away cleanly. Use production scenes and scripts read-only (instance, preload or extend them inside the prototype folder) and add input actions at runtime with InputMap.add_action. No tests while prototyping." ;;
+			"prototypes/$name/"* | "$doc") ;;
+			*) deny "Prototyping '$name' only changes prototypes/$name/ and $doc, so it can be thrown away cleanly. Use production scenes and scripts read-only (instance, preload or extend them inside the prototype folder) and add input actions at runtime with InputMap.add_action. No tests while prototyping." ;;
 		esac
 		if [[ "$rel" == *.gd ]] && echo "$content" | grep -Eq '^[[:space:]]*class_name'; then
 			deny "Prototype scripts can't use class_name: it would clash with the names the rewrite uses. Preload the script instead."

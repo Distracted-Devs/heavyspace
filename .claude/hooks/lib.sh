@@ -38,6 +38,21 @@ added_since_base() {
 	} | sort -u
 }
 
+# A feature's notes, repo-relative: docs/features/NN_<name>.md, numbered in
+# roadmap order. A feature without a file yet gets the next number.
+feature_doc() {
+	local name="$1" file last
+	for file in "$FEATURES"/[0-9][0-9]_"$name".md; do
+		if [ -f "$file" ]; then
+			echo "docs/features/${file##*/}"
+			return
+		fi
+	done
+	last=$(find "$FEATURES" -maxdepth 1 -name '[0-9][0-9]_*.md' -printf '%f\n' 2>/dev/null |
+		cut -c1-2 | sort -n | tail -1)
+	printf 'docs/features/%02d_%s.md\n' "$((10#${last:-0} + 1))" "$name"
+}
+
 # The Contracts sections of every feature file, where agreed contracts live.
 contracts_section() {
 	local file
@@ -56,7 +71,7 @@ contract_home() {
 	local name
 	name=$(feature)
 	if [ -n "$name" ]; then
-		echo "docs/features/$name.md"
+		feature_doc "$name"
 	else
 		echo "the feature's file in docs/features/"
 	fi

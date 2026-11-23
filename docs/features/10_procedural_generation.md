@@ -1,7 +1,7 @@
 # Procedural generation
-**Status:** rewritten (Phase 2, steps 2.2 to 2.4 and 2.6 to 2.9)
+**Status:** done ✅ (Phase 2, steps 2.2 to 2.4 and 2.6 to 2.9)
 
-A procedurally generated level of [mass bodies](mass_bodies.md) in a
+A procedurally generated level of [mass bodies](02_mass_bodies.md) in a
 hierarchy of orbits (moons upon moons upon moons), with mass pickups
 spawning in orbit around bigger masses. The game must run at 60fps.
 
@@ -396,3 +396,105 @@ Agree each API's contract with the user at the start of its step.
   of 0.35ms orbiting and 0.56ms flying (debug build). The worst frames (6ms
   and 10ms) are the hitches when a ring is generated on expand: the next
   candidate for the performance phase.
+
+## Performance evaluation
+
+### Benchmark
+`benchmarks/procedural_generation/` holds the benchmarks. Each runs with
+`godot --headless --fixed-fps 60 -s benchmarks/procedural_generation/<bench>.gd -- [key=value ...]`
+(the fixed step gives one physics tick of 1/60s each frame).
+- `bench.gd`: the generated level with seed 12345, 60 warm-up frames, then
+  600 frames (10s). The player is frozen and moved along a fixed path, so
+  it can't crash. Scenarios: `orbit` circles the home system at the spawn
+  distance (300). `ring` skims through the home ring at mid-radius,
+  overtaking its bodies at twice their speed (the most live bodies). `fly`
+  flies straight through the systems at `speed` (300 by default). Any tier
+  field can be set (`rings.live_distance=120`), and `probe=1` times each
+  step of the streamer and pool.
+- `expand.gd`: one ring expanding, which causes the worst frames:
+  `TierGenerator.generate`, `show_layout` and the first `child_positions`.
+- `sweep.sh` runs the settings below one change at a time, and
+  `summary.py` turns its output into a table. `ab.sh` repeats each
+  scenario for A/B checks. `results.jsonl` is the baseline sweep.
+
+"own" is the streamer, pool and tint together (`Time.get_ticks_usec`).
+"frame" is the whole headless frame, including the physics server's step.
+`Performance.TIME_PROCESS` and `TIME_PHYSICS_PROCESS` can't be used per
+frame: they hold the worst frame of each second. Headless doesn't render,
+so the GPU's share (the orbit shader and about 6,000 drawn instances) isn't
+covered. The figures come from the editor's debug binary, and release
+GDScript is somewhat faster.
+
+### Baseline (contracts off, ms)
+Contracts on and off are within noise of each other, because
+`Contract.require/ensure/invariant` evaluate their conditions even when
+disabled.
+
+| setting             | bodies                | scenario | own mean | own worst | frame worst | live max |
+| ------------------- | --------------------- | -------- | -------- | --------- | ----------- | -------- |
+| tuned               | 495 systems, 501 ring | orbit    | 0.52     | 1.17      | 1.82        | 20       |
+| tuned               |                       | ring     | 1.31     | 3.75      | 4.35        | 134      |
+| tuned               |                       | fly 300  | 0.62     | 4.67      | 5.28        | 127      |
+| systems ×0.25       | 96                    | ring     | 0.97     | 2.19      | 3.14        | 120      |
+| systems ×1.8        | 906                   | orbit    | 0.92     | 3.54      | 3.98        | 42       |
+| systems ×1.8        | 906                   | ring     | 1.73     | 4.49      | 5.25        | 156      |
+| rings ×0.25         | 132 ring              | ring     | 0.68     | 1.66      | 2.33        | 51       |
+| rings ×1.8 (denser) | 908 ring              | ring     | 1.97     | 8.36      | 9.24        | 226      |
+| rings ×3 (wider)    | 1,613 ring            | fly 300  | 0.74     | 9.19      | 9.70        | 226      |
+| rings ×6.5 (wider)  | 3,311 ring            | orbit    | 1.40     | 3.66      | 4.27        | 78       |
+| rings ×6.5 (wider)  | 3,311 ring            | fly 300  | 0.89     | 17.85     | 18.33       | 240      |
+| ring expand 8000    | 501 ring              | orbit    | 0.93     | 3.90      | 4.38        | 20       |
+| ring live 120       |                       | ring     | 2.03     | 4.33      | 5.07        | 266      |
+| ring live 240       |                       | ring     | 3.62     | 6.00      | 7.17        | 519      |
+| system live 6000    |                       | ring     | 1.69     | 4.11      | 4.79        | 189      |
+| fly 3000 u/s        |                       | fly      | 0.35     | 0.80      | 1.29        | 20       |
+
+- The steady cost scales with the live bodies (the pool moves each one,
+  and physics steps it) and with the number of systems (the streamer and
+  pool check every system each frame: about 1ms per 1,000).
+- The worst frames are when a ring expands. Generating a 501-body ring
+  takes 1.42ms, `show_layout` 0.50ms and its first positions 0.06ms.
+  This grows linearly: 3,315 bodies take 8.8 + 3.1ms, which is over budget
+  in the worst frame (18.3ms).
+- Loading the level takes 20ms with the tuned values (210ms with ring
+  expand 8000).
+
+### Hot spots and options
+Notes for later: none of these were applied (see the decision below). Each
+was measured with `ab.sh` (5 runs each, contracts off) or `expand.gd`, then
+reverted. The recommendations are from the review.
+
+| # | option | before → after | flexibility cost | recommendation |
+|---|---|---|---|---|
+| E3 | `LiveBodyPool._move_or_release` reads `renderer.child_positions(time)[index]` (cached, shared with promote) in place of `child_position` | ring mean 1.35 → 1.01, p95 2.59 → 2.10. orbit 0.51 → 0.45 | none: one line, and `child_positions` already equals `child_position` by contract | take |
+| E1 | wrap the costly checks (`_hierarchy_is_consistent`, `_live_bodies_match_hidden_copies`, `TierLayout.append`'s invariant, `_children_in_range`) in `if Contract.enabled:` | generate 1.42 → 0.96 per ring. ring mean 1.35 → 1.23, worst 4.13 → 3.83 | small: one pattern to follow for expensive checks. The cheap ones stay as they are | take |
+| E2b | the streamer calls `_tier_for` once per child when its parent expands, and keeps the tiers | `streamer.expand` 0.29 → 0.19. orbit own 0.51 → 0.38 | about 20 lines, a cache kept in step with `_remove_slots`. Inspector tuning still works, since it keeps `Tier` references | skip for now. Take it if systems go towards 1,000 |
+| E2a | look up the tier once per parent, not per child | `streamer.expand` 0.29 → 0.13 | breaks the contract that every lookup goes through `_tier_for(depth, path, …)` (the hook for a procedural tier provider) | don't take |
+| E4 | `TierGenerator.generate` reads the tier's fields into locals, compares squared radii and appends to the layout's arrays directly | generate 0.96 → 0.69 on top of E1 (1.42 → 0.91 alone) | bypasses `TierLayout.append`, and orbit radii change in the last digits (float64 `sqrt` in place of `Vector2.length`) | skip unless rings go past about 1,500 bodies |
+| — | spread or thread ring generation, and reuse `MassBody` nodes | not measured | changes the streamer's contract (a near parent is expanded after `update`) | only if rings must be much bigger |
+
+### Whole frame (headless, contracts off, ms)
+The whole headless frame includes every script, gravity and the physics
+server's step, but not rendering.
+
+| setting | scenario | frame mean | frame worst | generation's share of the mean |
+|---|---|---|---|---|
+| tuned | orbit | 0.98 | 1.82 | 0.52 |
+| tuned | ring | 1.96 | 4.35 | 1.31 |
+| tuned | fly 300 | 1.08 | 5.28 | 0.62 |
+| systems ×1.8 | ring | 2.41 | 5.25 | 1.73 |
+| ring live 240 | ring | 4.81 | 7.17 | 3.62 |
+| rings ×3 (wider) | fly 300 | 1.22 | 9.70 | 0.74 |
+| rings ×6.5 (wider) | fly 300 | 1.36 | 18.33 | 0.89 |
+
+Generation is about half to three quarters of the headless frame. The
+GPU's share isn't measured. A windowed run of the benchmark would give the
+true whole frame; the v3 prototype's windowed run on an M1 had a worst
+frame of 17.9ms.
+
+### Decision
+- 2026-11-23: the user is happy with the performance as it is, so no
+  optimisation was applied. The options above stay as notes. If the
+  settings grow, take E3 and E1 first (nearly free). Then take E2b if the
+  systems go towards 1,000, or E4 and spread-out generation if rings pass
+  about 1,500 bodies (a 3,300-body ring's expand frame is over budget).

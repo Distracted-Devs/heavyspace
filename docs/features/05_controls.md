@@ -2,7 +2,7 @@
 **Status:** in progress (Phase 1, steps 1.1 and 1.4a; 1.1 isn't ticked)
 
 Every control on the keyboard and mouse and on a controller, read in one
-place: `PlayerInputComponent`. Camera look is used by [camera](camera.md).
+place: `PlayerInputComponent`. Camera look is used by [camera](07_camera.md).
 
 Agreed layout: boost is Shift / right trigger, pitch is W/S / left stick Y,
 yaw is A/D / left stick X, roll is Q/E / bumpers, pause is Esc / Start, and

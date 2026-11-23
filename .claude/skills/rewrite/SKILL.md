@@ -7,16 +7,16 @@ description: Rebuild an accepted Heavy Space prototype as production code, with 
 
 The prototype proved what the feature should do. Now build it properly in
 `scripts/` and `scenes/`. Treat `prototypes/<name>/` and the **Accepted
-behaviour** in `docs/features/<name>.md` as the spec. Don't copy prototype
+behaviour** in `docs/features/NN_<name>.md` as the spec. Don't copy prototype
 code across, and don't edit the prototype: rebuild it to the principles
 below.
 
 ## Plan the steps
-1. Read `docs/features/<name>.md`, the prototype, and the existing code it
+1. Read `docs/features/NN_<name>.md`, the prototype, and the existing code it
    touches (`ls` the file structure first).
 2. Split the feature into components and effects, and propose the split to
    the user. Add the agreed steps under **Steps** in
-   `docs/features/<name>.md`, in the format the other feature files use: a
+   `docs/features/NN_<name>.md`, in the format the other feature files use: a
    `### <phase>.<n> Title` heading, bullets, and a **Done:** line. Ask the
    user which phase the feature belongs to, number the steps to follow on in
    that phase, and list the feature under it in `docs/roadmap.md`.
@@ -29,7 +29,7 @@ below.
 1. **Propose the contract.** Write out the pre-conditions, post-conditions
    and invariants, and ask the user for help defining them. Discuss them and
    get the user's agreement before writing anything.
-2. **Record it** under `## Contracts` in `docs/features/<name>.md` as
+2. **Record it** under `## Contracts` in `docs/features/NN_<name>.md` as
    `### Name (`scripts/<path>.gd`)`, written like the entries in the other
    feature files. If the change alters an
    existing API, update its contract in the feature file that owns it.
