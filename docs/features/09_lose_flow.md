@@ -34,14 +34,19 @@ stops the ship and offers a restart. Contacts are sorted by mass, so pickups
   `[Debug] Lost: crashed into <name>`. Later contacts do nothing, and
   `lost` stays true until the level reloads. A lighter contact never
   loses.
+- `disarm()` (see [game loop](12_game_loop.md)) requires `not lost`. A
+  broken pre-condition is reported and changes nothing. Afterwards
+  `armed` is false, heavier contacts are ignored and `lost` stays false (a
+  crash during a warp doesn't lose).
 - `LoseOverlay` shows "Crashed! Press R / Back to restart", only after
   losing. Restart (via `PauseController`) and pause still work.
 
 ### Player.stop_flight (`scripts/player/player.gd`)
 - It freezes the body where it is, and disables the input, thruster,
   rotation, fuel, gravity receiver and camera components (agreed: the
-  camera stops too), and the pickup component when the player has one (see
-  [player growth](11_player_growth.md)). The changes are deferred, because a contact arrives
+  camera stops too), the pickup component when the player has one (see
+  [player growth](11_player_growth.md)), and the arcade flight component
+  when it has one (see [game loop](12_game_loop.md)). The changes are deferred, because a contact arrives
   during the physics step.
 - Post-condition, once applied: the body is frozen and every listed
   component has `PROCESS_MODE_DISABLED`. From then on, the ship's position,

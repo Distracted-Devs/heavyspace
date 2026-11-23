@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://bswibobnlush4" path="res://scripts/generation/hierarchy_streamer.gd" id="3_streamer"]
 [ext_resource type="Script" uid="uid://ms7w88qme74j" path="res://scripts/generation/tier.gd" id="4_m33ry"]
 [ext_resource type="Resource" uid="uid://yjd7qhvttf3a" path="res://resources/generation/systems_tier.tres" id="4_systems"]
-[ext_resource type="Resource" path="res://resources/generation/rings_tier.tres" id="5_rings"]
+[ext_resource type="Resource" uid="uid://diyfvs58nfoib" path="res://resources/generation/rings_tier.tres" id="5_rings"]
 [ext_resource type="Script" uid="uid://dyjxchkc8iep4" path="res://scripts/generation/live_body_pool.gd" id="6_pool"]
 [ext_resource type="Script" uid="uid://bxpdu3mlmcdsi" path="res://scripts/levels/player_spawn.gd" id="7_spawn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_debug"]
@@ -13,6 +13,17 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="10_pause_overlay"]
 [ext_resource type="Script" uid="uid://bg25ujsro620c" path="res://scripts/levels/lose_controller.gd" id="11_lose"]
 [ext_resource type="PackedScene" path="res://scenes/ui/lose_overlay.tscn" id="12_lose_overlay"]
+[ext_resource type="Script" uid="uid://c5myowtj6uwrd" path="res://scripts/levels/run_starter.gd" id="13_starter"]
+[ext_resource type="Script" uid="uid://c641isj8g288n" path="res://scripts/levels/warp_controller.gd" id="14_warp"]
+[ext_resource type="Script" uid="uid://balfw0sj2q5yt" path="res://scripts/effects/warp_effect.gd" id="15_effect"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop_overlay.tscn" id="16_shop"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/starting_size_upgrade.tres" id="17_size"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/fuel_tank_upgrade.tres" id="18_tank"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/refill_rate_upgrade.tres" id="19_refill"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/booster_upgrade.tres" id="20_booster"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/pickup_radius_upgrade.tres" id="21_pickup"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/turn_speed_upgrade.tres" id="22_turn"]
+[ext_resource type="Script" uid="uid://b032a23xjpbpe" path="res://scripts/progression/upgrade.gd" id="23_upgrade"]
 
 [node name="GeneratedLevel" type="Node3D" unique_id=1472244937]
 
@@ -58,3 +69,36 @@ player = NodePath("../Player")
 
 [node name="LoseOverlay" parent="." unique_id=1531787066 node_paths=PackedStringArray("lose_controller") instance=ExtResource("12_lose_overlay")]
 lose_controller = NodePath("../LoseController")
+
+[node name="RunStarter" type="Node" parent="." unique_id=1530000001 node_paths=PackedStringArray("player")]
+script = ExtResource("13_starter")
+upgrades = Array[ExtResource("23_upgrade")]([ExtResource("17_size"), ExtResource("18_tank"), ExtResource("19_refill"), ExtResource("20_booster"), ExtResource("21_pickup"), ExtResource("22_turn")])
+player = NodePath("../Player")
+
+[node name="WarpController" type="Node" parent="." unique_id=1530000002 node_paths=PackedStringArray("player", "lose_controller", "warp_effect")]
+script = ExtResource("14_warp")
+player = NodePath("../Player")
+lose_controller = NodePath("../LoseController")
+warp_effect = NodePath("../WarpEffect")
+
+[node name="WarpEffect" type="Node" parent="." unique_id=1530000003 node_paths=PackedStringArray("camera", "mesh", "fade")]
+script = ExtResource("15_effect")
+camera = NodePath("../Player/CameraComponent/Camera3D")
+mesh = NodePath("../Player/Mesh")
+fade = NodePath("../WarpFade/Fade")
+
+[node name="WarpFade" type="CanvasLayer" parent="." unique_id=1530000004]
+layer = 25
+
+[node name="Fade" type="ColorRect" parent="WarpFade" unique_id=1530000005]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="ShopOverlay" parent="." unique_id=1530000006 node_paths=PackedStringArray("warp_controller", "run_starter") instance=ExtResource("16_shop")]
+warp_controller = NodePath("../WarpController")
+run_starter = NodePath("../RunStarter")

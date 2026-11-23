@@ -12,10 +12,12 @@
 [ext_resource type="Script" uid="uid://cvu1iqutgpkha" path="res://scripts/components/pickup_component.gd" id="10_pickup"]
 [ext_resource type="Script" uid="uid://4b2mqjykmk6s" path="res://scripts/effects/absorb_effect.gd" id="11_absorb"]
 [ext_resource type="Script" uid="uid://dewketvryxtqv" path="res://scripts/components/growth_component.gd" id="12_growth"]
+[ext_resource type="Script" uid="uid://dq2iol1hxdka" path="res://scripts/components/arcade_flight_component.gd" id="13_arcade"]
+[ext_resource type="Script" uid="uid://bocvvywfcp3h2" path="res://scripts/components/momentum_component.gd" id="14_momentum"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight")]
 gravity_scale = 0.0
 inertia = Vector3(0.1, 0.1, 0.1)
 linear_damp_mode = 1
@@ -30,6 +32,7 @@ camera_component = NodePath("CameraComponent")
 contact_component = NodePath("ContactComponent")
 gravity_receiver = NodePath("GravityReceiverComponent")
 pickup_component = NodePath("PickupComponent")
+arcade_flight = NodePath("ArcadeFlightComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
@@ -72,9 +75,19 @@ script = ExtResource("4_rotate")
 body = NodePath("..")
 flight_input = NodePath("../PlayerInputComponent")
 
+[node name="ArcadeFlightComponent" type="Node" parent="." unique_id=1645358284 node_paths=PackedStringArray("body")]
+script = ExtResource("13_arcade")
+body = NodePath("..")
+
 [node name="MassComponent" type="Node" parent="." unique_id=1645358277 node_paths=PackedStringArray("body")]
 script = ExtResource("5_mass")
 body = NodePath("..")
+
+[node name="MomentumComponent" type="Node" parent="." unique_id=1645358285 node_paths=PackedStringArray("body", "mass_component")]
+script = ExtResource("14_momentum")
+body = NodePath("..")
+mass_component = NodePath("../MassComponent")
+momentum_exponent = 0.5
 
 [node name="GravityReceiverComponent" type="Node" parent="." unique_id=1645358278 node_paths=PackedStringArray("body")]
 script = ExtResource("6_gravity")

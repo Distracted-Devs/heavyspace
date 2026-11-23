@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FuelTankUpgrade" format=3]
+
+[ext_resource type="Script" uid="uid://be15w4c0hiti6" path="res://scripts/progression/upgrades/fuel_tank_upgrade.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"tank_size"
+display_name = "Fuel tank size"
+step = 0.25
+base_cost = 5.0
+cost_growth = 1.6

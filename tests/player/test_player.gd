@@ -39,12 +39,16 @@ func test_back_thrust_follows_visual_forward_when_root_is_rotated() -> void:
 	assert_almost_eq(forward, Vector3.LEFT, Vector3.ONE * 1e-3)
 
 
-func test_velocity_is_constant_with_no_input_or_sources() -> void:
+func test_coasting_keeps_its_speed_along_the_facing() -> void:
 	var player := _spawn_player()
-	var velocity := Vector3(1.0, 2.0, -3.0)
-	player.linear_velocity = velocity
+	player.linear_velocity = Vector3(1.0, 2.0, -3.0)
+	var speed := player.linear_velocity.length()
 	await wait_physics_frames(THRUST_FRAMES)
-	assert_almost_eq(player.linear_velocity, velocity, Vector3.ONE * 1e-4)
+	assert_almost_eq(
+		player.linear_velocity,
+		-player.global_basis.z * speed,
+		Vector3.ONE * 1e-4,
+	)
 
 
 func test_twice_the_mass_halves_thrust_acceleration() -> void:
@@ -108,3 +112,21 @@ func test_stopping_flight_without_a_pickup_still_stops() -> void:
 	player.stop_flight()
 	await wait_physics_frames(1)
 	assert_true(player.freeze)
+
+
+func test_stopping_flight_disables_arcade_flight() -> void:
+	var player := _spawn_player()
+	player.stop_flight()
+	await wait_physics_frames(1)
+	assert_eq(player.arcade_flight.process_mode, Node.PROCESS_MODE_DISABLED)
+
+
+func test_growing_slows_the_ship_by_the_momentum_factor() -> void:
+	var player := _spawn_player()
+	var momentum: MomentumComponent = player.get_node("MomentumComponent")
+	var expected := 4.0 * pow(0.5, momentum.momentum_exponent)
+	player.linear_velocity = -player.global_basis.z * 4.0
+	player.mass_component.current_mass *= 2.0
+	await wait_physics_frames(1)
+	assert_lt(expected, 4.0, "growing must slow the ship")
+	assert_almost_eq(player.linear_velocity.length(), expected, 1e-3)

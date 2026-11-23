@@ -41,6 +41,20 @@ func test_size_is_one_at_the_starting_mass() -> void:
 	assert_almost_eq(_growth(player).size(), 1.0, 1.0e-9)
 
 
+func test_a_bigger_start_looks_bigger() -> void:
+	var base := _grown_player()
+	var player: Player = PLAYER_SCENE.instantiate()
+	player.flight_input.capture_mouse = false
+	_growth(player).size_exponent = EXPONENT
+	player.mass_component.start_multiplier = 8.0
+	add_child_autofree(player)
+	player.freeze = true
+	var mesh: Node3D = player.get_node("Mesh")
+	var base_mesh: Node3D = base.get_node("Mesh")
+	assert_almost_eq(_growth(player).size(), 2.0, 1.0e-4)
+	assert_almost_eq(mesh.scale, base_mesh.scale * 2.0, Vector3.ONE * 1e-4)
+
+
 func test_size_follows_mass_to_the_exponent() -> void:
 	var player := _grown_player()
 	player.mass_component.current_mass = 8.0

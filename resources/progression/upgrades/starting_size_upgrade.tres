@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StartingSizeUpgrade" format=3]
+
+[ext_resource type="Script" uid="uid://de6xdp6es55o1" path="res://scripts/progression/upgrades/starting_size_upgrade.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"starting_size"
+display_name = "Starting size"
+step = 0.5
+base_cost = 5.0
+cost_growth = 1.6

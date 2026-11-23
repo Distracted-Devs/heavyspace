@@ -97,9 +97,15 @@ Features:
 - Ensure the player can collect mass, once enough has been collected then they can warp out
 - Can spend that mass in the shop to upgrade for the next run.
 
+Features:
+- [Game loop](features/12_game_loop.md) ✅ (3.1–3.10)
+
 # Phase 4: HUD and art
 - Add a HUD and minimap
 - Integrate the art in dev-ayla
 
 # Phase 5: Game Feel and Juice
 - Add controller shake, camera shake, camera movement, VFX, etc
+- The warp-out VFX (`scripts/effects/warp_effect.gd`, from
+  [game loop](features/12_game_loop.md) step 3.7) MUST be reworked: it is
+  AI generated, a placeholder stretch, shoot and fade.

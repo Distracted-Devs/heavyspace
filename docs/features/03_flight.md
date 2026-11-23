@@ -11,7 +11,8 @@ player's input is in [controls](05_controls.md).
 - Setting `current_mass` requires `current_mass > 0`. A non-positive mass is
   reported and ignored, so the player keeps its old mass.
 - After `current_mass` is set (and from `_ready`, where it starts at
-  `starting_mass`), `body.mass` equals `current_mass`.
+  `starting_mass × start_multiplier`, see [game loop](12_game_loop.md)),
+  `body.mass` equals `current_mass`.
 - Each accepted set emits `mass_changed` once. A rejected set doesn't emit it.
 
 ### InputComponent (`scripts/components/input_component.gd`)

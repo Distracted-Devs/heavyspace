@@ -17,8 +17,8 @@ func before_each() -> void:
 
 
 func test_describe_shows_position_velocity_and_mass() -> void:
-	_player.linear_velocity = Vector3(0.0, 0.0, -4.0)
 	_player.mass_component.current_mass = 2.5
+	_player.linear_velocity = Vector3(0.0, 0.0, -4.0)
 	var text := _overlay.describe(_player)
 	assert_string_contains(text, "Position  (1.00, 2.00, 3.00)")
 	assert_string_contains(text, "Velocity  (0.00, 0.00, -4.00)  |4.00|")

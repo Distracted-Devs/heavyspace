@@ -11,6 +11,7 @@ extends RigidBody3D
 @export var contact_component: ContactComponent
 @export var gravity_receiver: GravityReceiverComponent
 @export var pickup_component: PickupComponent
+@export var arcade_flight: ArcadeFlightComponent
 
 
 func stop_flight() -> void:
@@ -47,4 +48,6 @@ func _flight_components() -> Array[Node]:
 	]
 	if pickup_component != null:
 		components.append(pickup_component)
+	if arcade_flight != null:
+		components.append(arcade_flight)
 	return components

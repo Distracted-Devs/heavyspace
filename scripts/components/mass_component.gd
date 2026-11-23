@@ -8,6 +8,14 @@ signal mass_changed(new_mass: float)
 
 @export_group("Mass")
 @export var starting_mass := 1.0
+@export var start_multiplier := 1.0:
+	set(value):
+		if not Contract.require(
+			value > 0.0,
+			"start_multiplier must be positive",
+		):
+			return
+		start_multiplier = value
 
 var current_mass := 1.0:
 	set(value):
@@ -24,4 +32,4 @@ var current_mass := 1.0:
 
 
 func _ready() -> void:
-	current_mass = starting_mass
+	current_mass = starting_mass * start_multiplier

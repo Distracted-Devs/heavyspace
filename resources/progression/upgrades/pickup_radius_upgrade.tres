@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PickupRadiusUpgrade" format=3]
+
+[ext_resource type="Script" uid="uid://cobjb1e1j67hy" path="res://scripts/progression/upgrades/pickup_radius_upgrade.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"pickup_radius"
+display_name = "Pickup radius"
+step = 0.2
+base_cost = 5.0
+cost_growth = 1.6

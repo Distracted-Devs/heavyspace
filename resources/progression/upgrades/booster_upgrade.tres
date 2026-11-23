@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BoosterUpgrade" format=3]
+
+[ext_resource type="Script" uid="uid://cc4siai0yji6p" path="res://scripts/progression/upgrades/booster_upgrade.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"booster_strength"
+display_name = "Booster strength"
+step = 0.2
+base_cost = 5.0
+cost_growth = 1.6

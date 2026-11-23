@@ -76,3 +76,19 @@ func test_flying_into_a_heavier_planet_loses() -> void:
 	await wait_physics_frames(FRAMES)
 	assert_true(_lose.lost)
 	assert_signal_emitted_with_parameters(_lose, "lost_game", [planet])
+
+
+func test_a_disarmed_controller_never_loses() -> void:
+	_lose.disarm()
+	_touch_heavier()
+	assert_false(_lose.lost)
+	assert_false(_lose.armed)
+	assert_signal_not_emitted(_lose, "lost_game")
+
+
+func test_disarming_after_losing_is_reported_and_changes_nothing() -> void:
+	_touch_heavier()
+	_lose.disarm()
+	assert_push_error("a lost run can't be disarmed")
+	assert_true(_lose.lost)
+	assert_true(_lose.armed)

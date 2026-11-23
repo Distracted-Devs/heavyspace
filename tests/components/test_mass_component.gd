@@ -53,3 +53,24 @@ func test_rejected_set_does_not_emit_mass_changed() -> void:
 		"[Contract] Pre-condition broken: current_mass must be positive"
 	)
 	assert_signal_not_emitted(_mass, "mass_changed")
+
+
+func test_a_run_starts_at_starting_mass_times_start_multiplier() -> void:
+	var body := RigidBody3D.new()
+	var mass := MassComponent.new()
+	mass.body = body
+	mass.starting_mass = 2.0
+	mass.start_multiplier = 1.5
+	body.add_child(mass)
+	add_child_autofree(body)
+	assert_eq(mass.current_mass, 3.0)
+	assert_eq(body.mass, 3.0)
+	assert_eq(mass.starting_mass, 2.0)
+
+
+func test_non_positive_start_multiplier_is_reported_and_ignored() -> void:
+	_mass.start_multiplier = 0.0
+	assert_push_error(
+		"[Contract] Pre-condition broken: start_multiplier must be positive"
+	)
+	assert_eq(_mass.start_multiplier, 1.0)
