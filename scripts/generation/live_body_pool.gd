@@ -14,6 +14,7 @@ var _drawn_paths: Array[PackedInt32Array] = []
 var _bodies: Array[MassBody] = []
 var _body_renderers: Array[OrbitRenderer] = []
 var _body_indices := PackedInt32Array()
+var _body_depths := PackedInt32Array()
 var _slot_of: Dictionary[String, int] = { }
 
 
@@ -62,6 +63,18 @@ func live_count() -> int:
 func body_for(renderer: OrbitRenderer, index: int) -> MassBody:
 	var slot: int = _slot_of.get(_key(renderer, index), -1)
 	return null if slot < 0 else _bodies[slot]
+
+
+func live_bodies() -> Array[MassBody]:
+	return _bodies
+
+
+func live_depths() -> PackedInt32Array:
+	Contract.invariant(
+		_body_depths.size() == _bodies.size(),
+		"there must be one depth per live body",
+	)
+	return _body_depths
 
 
 func is_live(body: MassBody) -> bool:
@@ -180,11 +193,16 @@ func _promote(renderer: OrbitRenderer, index: int, centre: Vector3) -> void:
 		layout.mass[index],
 		centre,
 	)
+	body.look_seed = PlanetSeed.of(
+		layout.orbit_radius[index],
+		layout.phase[index],
+	)
 	renderer.set_hidden(index, true)
 	_slot_of[_key(renderer, index)] = _bodies.size()
 	_bodies.append(body)
 	_body_renderers.append(renderer)
 	_body_indices.append(index)
+	_body_depths.append(_drawn_paths[_drawn.find(renderer)].size() + 1)
 
 
 func _release(slot: int) -> void:
@@ -199,10 +217,12 @@ func _forget(slot: int) -> void:
 		_bodies[slot] = _bodies[last]
 		_body_renderers[slot] = _body_renderers[last]
 		_body_indices[slot] = _body_indices[last]
+		_body_depths[slot] = _body_depths[last]
 		_slot_of[_key(_body_renderers[slot], _body_indices[slot])] = slot
 	_bodies.resize(last)
 	_body_renderers.resize(last)
 	_body_indices.resize(last)
+	_body_depths.resize(last)
 
 
 func _on_expanded(path: PackedInt32Array, renderer: OrbitRenderer) -> void:

@@ -194,11 +194,15 @@ Agree each API's contract with the user at the start of its step.
 - After each tick, and when it enters the tree, the global shader parameter
   `clock_time` (declared in `project.godot`) equals `time`.
 - Invariant: `time ≥ 0`, and it never goes backwards.
+- `running` (exported, default on; [HUD and art](13_hud_and_art.md) step
+  4.2): while off, `time` holds and nothing orbits. The generated level
+  turns it off for now.
 
 ### OrbitRenderer (`scripts/generation/orbit_renderer.gd`)
 - A `MultiMeshInstance3D` that draws one parent's children as low-poly unit
-  spheres (`proxy_segments`) with `resources/shaders/orbit.gdshader`. The
-  shader works out each orbit from the global `clock_time` (see `Clock`).
+  spheres (`proxy_segments`) with `proxy_material` (exported, required,
+  default `resources/materials/planet_proxy.tres`, step 4.3). Its shader
+  works out each orbit from the global `clock_time` (see `Clock`).
 - `show_layout(layout)` requires a layout. Afterwards:
   - `count()` is `layout.size()`. Each instance is scaled to its child's
     radius, and its custom data is `(orbit_radius, height, phase,
@@ -280,6 +284,13 @@ Agree each API's contract with the user at the start of its step.
     body is placed before it enters the tree, so it never sweeps in from
     the origin.
   - a released body is freed and its copy shown again
+  - a promoted body's `look_seed` is `PlanetSeed.of(orbit_radius, phase)`
+    from its layout (step 4.3)
+- `live_bodies()` and `live_depths()` ([HUD and art](13_hud_and_art.md),
+  2026-11-23) are the live bodies and, at the same index, their depth in
+  the hierarchy (the drawn parent's path length + 1: systems 1, rings 2).
+  The root body is depth 0 and isn't in them. Callers mustn't change the
+  arrays. Invariant: both are the same length as `live_count()`.
 - A drawn parent whose `reach()` can't come within `live_distance` of the
   player is skipped, so only nearby rings are checked child by child.
 - When the streamer emits `collapsing`, that parent's live children are
@@ -302,7 +313,8 @@ Agree each API's contract with the user at the start of its step.
 - Afterwards:
   - the player is in the home ring's plane, `spawn_distance` from the home
     centre, at `spawn_angle_degrees` around it
-  - its velocity is the home system's velocity plus the circular-orbit
+  - its velocity is the home system's velocity (only while the clock is
+    `running`, step 4.2) plus the circular-orbit
     speed `√(G × home mass / spawn_distance)` along the prograde tangent
     (the direction the ring turns). `G` is the player's
     `GravityReceiverComponent.gravity_constant`.

@@ -2,6 +2,7 @@ class_name CameraComponent
 extends Node3D
 
 const TOLERANCE := 1e-3
+const RELATIVE_PRECISION := 1e-5
 
 @export_group("Components")
 @export var player_input: PlayerInputComponent
@@ -67,8 +68,15 @@ func _is_framing_the_ship() -> bool:
 	var to_ship := global_position - camera.global_position
 	var looks_at_ship := (-camera.global_basis.z).dot(to_ship.normalized())
 	return (
-		absf(to_ship.length() - distance) < TOLERANCE
+		absf(to_ship.length() - distance) < _distance_tolerance()
 		and looks_at_ship > 1.0 - TOLERANCE
+	)
+
+
+func _distance_tolerance() -> float:
+	return maxf(
+		TOLERANCE,
+		RELATIVE_PRECISION * (global_position.length() + distance),
 	)
 
 

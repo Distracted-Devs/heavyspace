@@ -65,3 +65,28 @@ func test_moving_body_crashes_into_the_player() -> void:
 		_body.position.z += 0.2
 		await wait_physics_frames(1)
 	assert_signal_emitted(player.contact_component, "heavier_contact")
+
+
+func test_look_seed_reaches_the_mesh_instance_parameter() -> void:
+	_body.look_seed = 0.25
+	assert_almost_eq(
+		float(_body.mesh.get_instance_shader_parameter(&"seed")),
+		0.25,
+		1.0e-6,
+	)
+
+
+func test_look_seed_outside_zero_to_one_is_reported_and_ignored() -> void:
+	_body.look_seed = 0.4
+	_body.look_seed = 1.0
+	assert_push_error(
+		"[Contract] Pre-condition broken: look_seed must be within [0, 1)"
+	)
+	assert_eq(_body.look_seed, 0.4)
+
+
+func test_bodies_share_the_planet_material() -> void:
+	var other: MassBody = add_child_autofree(BODY_SCENE.instantiate())
+	var material := _body.mesh.mesh.surface_get_material(0)
+	assert_eq(material, load("res://resources/materials/planet.tres"))
+	assert_eq(other.mesh.mesh.surface_get_material(0), material)

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4u1e2rcjlw00"
-path.bptc="res://.godot/imported/milkyway.exr-2b44a8af8a7c0fbcd832bd06020138c3.bptc.ctex"
+uid="uid://bjdtdi60hhvs7"
+path.s3tc="res://.godot/imported/smoke.jpg-4cf4f70b433906f3a30f76da70d65991.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://resources/textures/milkyway.exr"
-dest_files=["res://.godot/imported/milkyway.exr-2b44a8af8a7c0fbcd832bd06020138c3.bptc.ctex"]
+source_file="res://resources/vfx/textures/smoke.jpg"
+dest_files=["res://.godot/imported/smoke.jpg-4cf4f70b433906f3a30f76da70d65991.s3tc.ctex"]
 
 [params]
 

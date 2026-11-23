@@ -1,0 +1,40 @@
+[gd_resource type="Environment" format=3 uid="uid://b3iv14golu1xx"]
+
+[ext_resource type="Shader" uid="uid://cwgbkelwvli4x" path="res://resources/shaders/vaporwave_sky.gdshader" id="1_sky"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("1_sky")
+shader_parameter/space_color = Color(0.043916985, 0.022487557, 0.101870514, 1)
+shader_parameter/violet = Color(0.58, 0.12, 0.9, 1)
+shader_parameter/magenta = Color(0.95, 0.22, 0.57, 1)
+shader_parameter/cyan = Color(0.08, 0.75, 0.95, 1)
+shader_parameter/core_color = Color(0.63693285, 0.9504896, 0.8499063, 1)
+shader_parameter/violet_size = 0.7
+shader_parameter/magenta_size = 4.0
+shader_parameter/cyan_size = 2.75
+shader_parameter/band_width = 0.18
+shader_parameter/core_strength = 1.1
+shader_parameter/dust_strength = 0.72
+shader_parameter/cloud_strength = 0.38
+shader_parameter/drift_speed = 0.006
+shader_parameter/line_density = 15.0
+shader_parameter/line_strength = 0.21
+shader_parameter/line_coverage = 0.08
+shader_parameter/star_strength = 0.47
+shader_parameter/twinkle_amount = 1.0
+shader_parameter/twinkle_speed = 2.1
+
+[sub_resource type="Sky" id="Sky_space"]
+sky_material = SubResource("ShaderMaterial_sky")
+
+[resource]
+background_mode = 2
+sky = SubResource("Sky_space")
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.15, 0.2, 1)
+tonemap_mode = 3
+tonemap_white = 6.0
+glow_enabled = true
+glow_intensity = 1.2
+glow_bloom = 0.15
+glow_hdr_threshold = 1.2

@@ -124,6 +124,38 @@ func test_near_child_becomes_a_real_body_on_its_drawn_copy() -> void:
 	assert_eq(body.mass, renderer.layout.mass[0])
 
 
+func test_promoted_body_takes_the_seed_of_its_orbit() -> void:
+	var renderer := _root_renderer()
+	_step(renderer.child_position(0, 0.0), 0.0)
+	var body := _pool.body_for(renderer, 0)
+	var expected := PlanetSeed.of(
+		renderer.layout.orbit_radius[0],
+		renderer.layout.phase[0],
+	)
+	assert_almost_eq(body.look_seed, expected, 1.0e-6)
+
+
+func test_live_depths_follow_the_hierarchy() -> void:
+	var system_spot := _root_renderer().child_position(0, 0.0)
+	_step(system_spot, 0.0)
+	var system := _pool.body_for(_root_renderer(), 0)
+	var ring := _streamer.renderer_for(PackedInt32Array([0]))
+	_step(ring.child_position(0, 0.0), 0.0)
+	var moon := _pool.body_for(ring, 0)
+	assert_not_null(moon)
+	var bodies := _pool.live_bodies()
+	assert_eq(_pool.live_depths()[bodies.find(system)], 1)
+	assert_eq(_pool.live_depths()[bodies.find(moon)], 2)
+
+
+func test_live_depths_match_live_bodies_one_to_one() -> void:
+	var renderer := _root_renderer()
+	_step(renderer.child_position(0, 0.0), 0.0)
+	assert_eq(_pool.live_depths().size(), _pool.live_count())
+	_step(renderer.child_position(0, 0.0) + Vector3(1.0e7, 0.0, 0.0), 0.0)
+	assert_eq(_pool.live_depths().size(), _pool.live_count())
+
+
 func test_far_child_is_released_and_shown_again() -> void:
 	var renderer := _root_renderer()
 	_step(renderer.child_position(0, 0.0), 0.0)

@@ -3,6 +3,8 @@ extends Node
 
 const SHADER_TIME := &"clock_time"
 
+@export var running := true
+
 var time: float:
 	get:
 		return _time
@@ -19,6 +21,8 @@ func _enter_tree() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not running:
+		return
 	var before := _time
 	_time += maxf(delta, 0.0)
 	_publish()

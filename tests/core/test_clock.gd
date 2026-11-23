@@ -27,6 +27,17 @@ func test_time_never_goes_backwards() -> void:
 	assert_eq(_clock.time, 1.0)
 
 
+func test_time_holds_while_not_running() -> void:
+	_clock._physics_process(1.0)
+	_clock.running = false
+	_clock._physics_process(2.0)
+	assert_eq(_clock.time, 1.0)
+
+
+func test_runs_by_default() -> void:
+	assert_true(_clock.running)
+
+
 func test_clock_ticks_before_the_gravity_registry() -> void:
 	assert_lt(
 		_clock.process_physics_priority,

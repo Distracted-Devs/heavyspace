@@ -1,15 +1,14 @@
 class_name OrbitRenderer
 extends MultiMeshInstance3D
 
-const SHADER := preload("res://resources/shaders/orbit.gdshader")
 const UNTINTED := Color.WHITE
 const FLOATS_PER_INSTANCE := 20
 const COLOUR_OFFSET := 12
 const CUSTOM_OFFSET := 16
 
 @export_group("Look")
-@export var albedo_texture: Texture2D = preload(
-	"res://resources/textures/earth.jpg"
+@export var proxy_material: Material = preload(
+	"res://resources/materials/planet_proxy.tres"
 )
 @export_range(4, 64, 1) var proxy_segments := 12
 
@@ -209,10 +208,8 @@ func _proxy_mesh() -> SphereMesh:
 	mesh.height = 2.0
 	mesh.radial_segments = proxy_segments
 	mesh.rings = maxi(floori(proxy_segments * 0.5), 2)
-	var material := ShaderMaterial.new()
-	material.shader = SHADER
-	material.set_shader_parameter("albedo_texture", albedo_texture)
-	mesh.material = material
+	Contract.require(proxy_material != null, "proxy_material must be set")
+	mesh.material = proxy_material
 	return mesh
 
 

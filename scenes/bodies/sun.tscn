@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bodies/sun.gd" id="1_sun"]
+[ext_resource type="Shader" path="res://resources/shaders/sun_surface.gdshader" id="2_surface"]
+[ext_resource type="Shader" path="res://resources/shaders/sun_corona.gdshader" id="3_corona"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_surface"]
+render_priority = 0
+shader = ExtResource("2_surface")
+shader_parameter/sunset_bottom = Color(1, 0.75, 0.08, 1)
+shader_parameter/sunset_middle = Color(1, 0.35, 0.12, 1)
+shader_parameter/sunset_top = Color(1, 0.02, 0.42, 1)
+shader_parameter/sun_energy = 2.5
+shader_parameter/limb_power = 0.6
+shader_parameter/edge_brightness = 0.45
+shader_parameter/half_height = 0.5
+shader_parameter/gradient_center_y = 0.0
+shader_parameter/stripe_count = 24.0
+shader_parameter/stripe_strength = 0.22
+shader_parameter/stripe_width = 0.3
+shader_parameter/wave_amount = 0.06
+shader_parameter/wave_speed = 0.3
+shader_parameter/wave_frequency = 9.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_sun"]
+material = SubResource("ShaderMaterial_surface")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_corona"]
+render_priority = 0
+shader = ExtResource("3_corona")
+shader_parameter/color = Color(1, 0.55, 0.2, 1)
+shader_parameter/intensity = 3.0
+shader_parameter/falloff = 3.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_corona"]
+material = SubResource("ShaderMaterial_corona")
+size = Vector2(2, 2)
+
+[node name="Sun" type="Node3D" node_paths=PackedStringArray("body", "corona", "light", "fill_light")]
+script = ExtResource("1_sun")
+body = NodePath("Body")
+corona = NodePath("Corona")
+light = NodePath("Light")
+fill_light = NodePath("FillLight")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_sun")
+
+[node name="Corona" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("QuadMesh_corona")
+
+[node name="Light" type="DirectionalLight3D" parent="."]
+light_color = Color(1, 0.88, 0.72, 1)
+light_energy = 3.0
+shadow_enabled = true
+shadow_opacity = 0.85
+directional_shadow_max_distance = 3000.0
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+light_color = Color(0.55, 0.65, 1, 1)
+light_energy = 0.6
+light_specular = 0.2

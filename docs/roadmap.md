@@ -104,6 +104,9 @@ Features:
 - Add a HUD and minimap
 - Integrate the art in dev-ayla
 
+Features:
+- [HUD and art](features/13_hud_and_art.md) ✅ (4.1–4.11)
+
 # Phase 5: Game Feel and Juice
 - Add controller shake, camera shake, camera movement, VFX, etc
 - The warp-out VFX (`scripts/effects/warp_effect.gd`, from
