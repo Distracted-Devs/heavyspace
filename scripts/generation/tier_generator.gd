@@ -6,6 +6,7 @@ static func generate(
 	path: PackedInt32Array,
 	parent_radius: float,
 	tier: Tier,
+	focus_mass := NAN,
 ) -> TierLayout:
 	var layout := TierLayout.new()
 	if not Contract.require(
@@ -16,6 +17,12 @@ static func generate(
 	if not Contract.require(tier != null, "tier must not be null"):
 		return layout
 	if not tier.require_valid(parent_radius):
+		return layout
+	var has_focus_mass := is_finite(focus_mass) and focus_mass > 0.0
+	if not Contract.require(
+		not tier.is_mass_capped() or has_focus_mass,
+		"a capped tier needs a positive focus_mass",
+	):
 		return layout
 
 	var rng := RandomNumberGenerator.new()
@@ -45,18 +52,35 @@ static func generate(
 			)
 			layout.append(
 				radius,
-				tier.mass_density * pow(radius, 3.0),
+				_mass_of(radius, tier, focus_mass),
 				orbit,
 				rng.randf_range(-tier.thickness, tier.thickness),
 				_phase_of(x, z),
 				_angular_speed(rng, tier, inner, orbit),
 			)
 
-	Contract.ensure(
-		_children_in_range(layout, tier, inner, outer),
-		"children must be within their tier ranges",
-	)
+	if Contract.enabled:
+		Contract.ensure(
+			_children_in_range(layout, tier, inner, outer, focus_mass),
+			"children must be within their tier ranges",
+		)
 	return layout
+
+
+static func _mass_of(radius: float, tier: Tier, focus_mass: float) -> float:
+	if not tier.is_mass_capped():
+		return tier.mass_density * pow(radius, 3.0)
+	var ceiling := maxf(tier.mass_min, focus_mass * tier.mass_ceiling_fraction)
+	var span := tier.radius_max - tier.radius_min
+	var t := 1.0 if span <= 0.0 else (radius - tier.radius_min) / span
+	if t >= 1.0:
+		return ceiling
+	# Clamped, since lerp can round a hair past the ceiling.
+	return clampf(
+		lerpf(tier.mass_min, ceiling, pow(t, tier.mass_bias)),
+		tier.mass_min,
+		ceiling,
+	)
 
 
 static func _random_plane(
@@ -99,8 +123,18 @@ static func _children_in_range(
 	tier: Tier,
 	inner: float,
 	outer: float,
+	focus_mass: float,
 ) -> bool:
+	var capped := tier.is_mass_capped()
+	var ceiling := (
+		maxf(tier.mass_min, focus_mass * tier.mass_ceiling_fraction)
+		if capped
+		else INF
+	)
 	for index in layout.size():
+		var mass := layout.mass[index]
+		if capped and (mass < tier.mass_min or mass > ceiling):
+			return false
 		var radius := layout.radius[index]
 		var orbit := layout.orbit_radius[index]
 		var phase := layout.phase[index]

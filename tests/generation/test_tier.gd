@@ -99,7 +99,7 @@ func test_shipped_tiers_are_valid_for_the_v3_hierarchy() -> void:
 	assert_true(systems.require_valid(5000.0))
 	assert_true(rings.require_valid(systems.radius_min))
 	assert_true(rings.require_valid(systems.radius_max))
-	assert_almost_eq(systems.expected_count(5000.0), 500.0, 5.0)
+	assert_almost_eq(systems.expected_count(5000.0), 1980.0, 5.0)
 	assert_almost_eq(rings.expected_count(systems.radius_min), 500.0, 5.0)
 
 
@@ -111,3 +111,57 @@ func test_release_inside_live_is_reported() -> void:
 		"[Contract] Pre-condition broken: "
 		+ "release_distance must be greater than live_distance"
 	)
+
+
+func test_default_tier_is_not_mass_capped() -> void:
+	assert_false(Tier.new().is_mass_capped())
+
+
+func test_positive_ceiling_fraction_caps_the_mass() -> void:
+	var tier := Tier.new()
+	tier.mass_ceiling_fraction = 1.0
+	assert_true(tier.is_mass_capped())
+	assert_true(tier.require_valid(PARENT_RADIUS))
+
+
+func test_negative_ceiling_fraction_is_reported() -> void:
+	var tier := Tier.new()
+	tier.mass_ceiling_fraction = -1.0
+	assert_false(tier.require_valid(PARENT_RADIUS))
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "mass_ceiling_fraction must not be negative"
+	)
+
+
+func test_capped_tier_needs_positive_mass_min_and_bias() -> void:
+	var tier := Tier.new()
+	tier.mass_ceiling_fraction = 1.0
+	tier.mass_min = 0.0
+	tier.mass_bias = 0.0
+	assert_false(tier.require_valid(PARENT_RADIUS))
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "a capped tier's mass_min must be positive"
+	)
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "a capped tier's mass_bias must be positive"
+	)
+
+
+func test_uncapped_tier_ignores_mass_min_and_bias() -> void:
+	var tier := Tier.new()
+	tier.mass_min = 0.0
+	tier.mass_bias = 0.0
+	assert_true(tier.require_valid(PARENT_RADIUS))
+
+
+func test_shipped_ring_tier_is_capped_at_the_player_mass() -> void:
+	var systems: Tier = load("res://resources/generation/systems_tier.tres")
+	var rings: Tier = load("res://resources/generation/rings_tier.tres")
+	assert_false(systems.is_mass_capped())
+	assert_true(rings.is_mass_capped())
+	assert_eq(rings.mass_ceiling_fraction, 1.0)
+	assert_eq(rings.mass_min, 0.1)
+	assert_eq(rings.mass_bias, 1.5)

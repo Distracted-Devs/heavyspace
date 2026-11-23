@@ -28,7 +28,7 @@ func _ready() -> void:
 	for repeat in repeats:
 		var path := PackedInt32Array([repeat])
 		var start := Time.get_ticks_usec()
-		var layout := TierGenerator.generate(12345, path, 50.0, tier)
+		var layout := TierGenerator.generate(12345, path, 50.0, tier, 1.0)
 		var generated := Time.get_ticks_usec()
 		var renderer := OrbitRenderer.new()
 		add_child(renderer)

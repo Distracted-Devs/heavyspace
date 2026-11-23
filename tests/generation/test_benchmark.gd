@@ -10,7 +10,6 @@ var _level: Node3D
 var _player: Player
 var _streamer: HierarchyStreamer
 var _pool: LiveBodyPool
-var _tint: MassTintDebug
 
 
 func before_each() -> void:
@@ -21,14 +20,12 @@ func before_each() -> void:
 	add_child_autofree(_level)
 	_streamer = _level.get_node("HierarchyStreamer")
 	_pool = _level.get_node("LiveBodyPool")
-	_tint = _level.get_node("MassTintDebug")
 
 
 func _frame_ms(focus: Vector3, time: float) -> float:
 	var start := Time.get_ticks_usec()
 	_streamer.update(focus, time)
 	_pool.update(focus, time)
-	_tint._process(STEP)
 	return (Time.get_ticks_usec() - start) / 1000.0
 
 

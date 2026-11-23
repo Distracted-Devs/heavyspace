@@ -44,8 +44,8 @@ func test_level_starts_with_the_giant_and_its_systems() -> void:
 	assert_ne(streamer.resolved_seed, 0)
 	assert_almost_eq(
 		float(streamer.renderer_for(PackedInt32Array()).count()),
-		500.0,
-		75.0,
+		1980.0,
+		300.0,
 	)
 	assert_eq(_pool().root_body.radius, streamer.root_radius)
 	assert_eq(_pool().root_body.mass, streamer.root_mass)
@@ -70,3 +70,49 @@ func test_player_stays_near_its_home_system_without_input() -> void:
 	assert_between(distance, 250.0, 350.0)
 	var lose: LoseController = _level.get_node("LoseController")
 	assert_false(lose.lost)
+
+
+func _innermost(renderer: OrbitRenderer) -> int:
+	var orbits := renderer.layout.orbit_radius
+	var best := 0
+	for index in orbits.size():
+		if orbits[index] < orbits[best]:
+			best = index
+	return best
+
+
+func test_home_ring_bodies_start_no_heavier_than_the_player() -> void:
+	var ring := _streamer().renderer_for(PackedInt32Array([0]))
+	var player_mass := _player().mass_component.current_mass
+	for index in ring.count():
+		assert_lte(ring.layout.mass[index], player_mass)
+
+
+func test_flying_into_the_home_ring_grows_the_player_without_losing() -> void:
+	var clock: Clock = _level.get_node("Clock")
+	var systems := _streamer().renderer_for(PackedInt32Array())
+	var ring := _streamer().renderer_for(PackedInt32Array([0]))
+	var index := _innermost(ring)
+	var player := _player()
+	var start_mass := player.mass_component.current_mass
+	var start_radius := (
+		(player.get_node("Collider") as CollisionShape3D).shape as SphereShape3D
+	).radius
+	player.global_position = ring.child_position(index, clock.time)
+	player.linear_velocity = systems.child_velocity(0, clock.time)
+	await wait_physics_frames(FRAMES * 3)
+	var lose: LoseController = _level.get_node("LoseController")
+	assert_false(lose.lost, "eating the ring must not lose")
+	assert_gt(player.mass_component.current_mass, start_mass)
+	var grown_radius := (
+		(player.get_node("Collider") as CollisionShape3D).shape as SphereShape3D
+	).radius
+	assert_gt(grown_radius, start_radius)
+	assert_true(_streamer().is_removed(PackedInt32Array([0, index])))
+
+
+func test_level_wires_the_pickup_to_the_pool_and_sets_gravity() -> void:
+	var pickup: PickupComponent = _player().get_node("PickupComponent")
+	assert_eq(pickup.pool, _pool(), "the pickup must use the level's pool")
+	assert_eq(_player().gravity_receiver.gravity_constant, 10.0)
+	assert_eq(_streamer().focus_mass, _player().mass_component)

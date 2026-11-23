@@ -239,3 +239,212 @@ func test_missing_streamer_is_reported() -> void:
 	assert_push_error("[Contract] Pre-condition broken: streamer must be set")
 	pool.update(Vector3.ZERO, 0.0)
 	assert_eq(pool.live_count(), 0)
+
+
+func _innermost(renderer: OrbitRenderer) -> int:
+	var orbits := renderer.layout.orbit_radius
+	var best := 0
+	for index in orbits.size():
+		if orbits[index] < orbits[best]:
+			best = index
+	return best
+
+
+func _system_and_ring_body_live() -> Array:
+	_step(_root_renderer().child_position(0, 0.0), 0.0)
+	var ring := _streamer.renderer_for(PackedInt32Array([0]))
+	var index := _innermost(ring)
+	_step(ring.child_position(index, 0.0), 0.0)
+	var system := _pool.body_for(_root_renderer(), 0)
+	var ring_body := _pool.body_for(ring, index)
+	assert_not_null(system, "the system must be live")
+	assert_not_null(ring_body, "the innermost ring body must be live")
+	return [system, ring, index, ring_body]
+
+
+func _assert_hidden_are_live_or_removed() -> void:
+	for path in _streamer.expanded_paths():
+		var renderer := _streamer.renderer_for(path)
+		for index in renderer.count():
+			var child := path.duplicate()
+			child.append(index)
+			var live := _pool.body_for(renderer, index) != null
+			var removed := _streamer.is_removed(child)
+			assert_false(live and removed, "%s is live and removed" % child)
+			assert_eq(renderer.is_hidden(index), live or removed, str(child))
+
+
+func test_taken_ring_body_is_handed_over_without_being_freed() -> void:
+	var live := _system_and_ring_body_live()
+	var ring: OrbitRenderer = live[1]
+	var index: int = live[2]
+	var body: MassBody = live[3]
+	var count := _pool.live_count()
+	var taken := _pool.take(body)
+	assert_eq(taken.bodies, [body] as Array[MassBody])
+	assert_eq(taken.drawn_mass, 0.0)
+	assert_eq(_pool.live_count(), count - 1)
+	assert_null(_pool.body_for(ring, index))
+	assert_true(ring.is_hidden(index))
+	assert_true(body.is_inside_tree())
+	assert_false(body.is_queued_for_deletion())
+
+
+func test_taken_body_is_no_longer_moved_or_freed_by_the_pool() -> void:
+	var live := _system_and_ring_body_live()
+	var ring: OrbitRenderer = live[1]
+	var index: int = live[2]
+	var body: MassBody = live[3]
+	_pool.take(body)
+	await _settle()
+	var held := body.global_position
+	_step(ring.child_position(index, 5.0), 5.0)
+	await _settle()
+	assert_almost_eq(body.global_position.distance_to(held), 0.0, 1.0e-4)
+	_step(FAR_AWAY, 5.0)
+	assert_false(body.is_queued_for_deletion())
+
+
+func test_taken_child_is_never_promoted_again() -> void:
+	var live := _system_and_ring_body_live()
+	var ring: OrbitRenderer = live[1]
+	var index: int = live[2]
+	_pool.take(live[3])
+	_step(ring.child_position(index, 0.0), 0.0)
+	assert_null(_pool.body_for(ring, index))
+	assert_true(ring.is_hidden(index))
+	_assert_hidden_are_live_or_removed()
+
+
+func test_taken_child_stays_hidden_after_its_parent_re_expands() -> void:
+	var live := _system_and_ring_body_live()
+	var index: int = live[2]
+	_pool.take(live[3])
+	_step(FAR_AWAY, 0.0)
+	assert_null(_streamer.renderer_for(PackedInt32Array([0])))
+	_step(_root_renderer().child_position(0, 0.0), 0.0)
+	var ring := _streamer.renderer_for(PackedInt32Array([0]))
+	assert_true(ring.is_hidden(index))
+	_step(ring.child_position(index, 0.0), 0.0)
+	assert_null(_pool.body_for(ring, index))
+	_assert_hidden_are_live_or_removed()
+
+
+func test_taking_a_parent_takes_its_live_descendants_too() -> void:
+	var live := _system_and_ring_body_live()
+	var system: MassBody = live[0]
+	var ring: OrbitRenderer = live[1]
+	var live_ring: Array[MassBody] = []
+	var drawn_mass := 0.0
+	for index in ring.count():
+		var body := _pool.body_for(ring, index)
+		if body:
+			live_ring.append(body)
+		else:
+			drawn_mass += ring.layout.mass[index]
+	var count := _pool.live_count()
+	var taken := _pool.take(system)
+	assert_eq(taken.bodies[0], system)
+	assert_eq(taken.bodies.size(), 1 + live_ring.size())
+	for body in live_ring:
+		assert_has(taken.bodies, body)
+	assert_almost_eq(taken.drawn_mass, drawn_mass, 1.0e-6)
+	assert_eq(_pool.live_count(), count - taken.bodies.size())
+	for body in taken.bodies:
+		assert_false(body.is_queued_for_deletion())
+
+
+func test_taking_a_parent_removes_its_path() -> void:
+	var live := _system_and_ring_body_live()
+	_pool.take(live[0])
+	assert_true(_streamer.is_removed(PackedInt32Array([0])))
+	assert_null(_streamer.renderer_for(PackedInt32Array([0])))
+	assert_true(_root_renderer().is_hidden(0))
+	_step(_root_renderer().child_position(0, 0.0), 0.0)
+	assert_null(_streamer.renderer_for(PackedInt32Array([0])))
+	assert_null(_pool.body_for(_root_renderer(), 0))
+	_assert_hidden_are_live_or_removed()
+
+
+func test_previously_taken_children_add_no_drawn_mass() -> void:
+	var live := _system_and_ring_body_live()
+	var system: MassBody = live[0]
+	var ring: OrbitRenderer = live[1]
+	var ring_body: MassBody = live[3]
+	var drawn_mass := 0.0
+	for index in ring.count():
+		if _pool.body_for(ring, index) == null:
+			drawn_mass += ring.layout.mass[index]
+	_pool.take(ring_body)
+	var taken := _pool.take(system)
+	assert_false(taken.bodies.has(ring_body))
+	assert_almost_eq(taken.drawn_mass, drawn_mass, 1.0e-6)
+
+
+func test_taking_the_root_is_rejected() -> void:
+	var taken := _pool.take(_pool.root_body)
+	assert_push_error(
+		"[Contract] Pre-condition broken: body must be a live body"
+	)
+	assert_true(taken.bodies.is_empty())
+	assert_eq(taken.drawn_mass, 0.0)
+
+
+func test_taking_a_body_the_pool_does_not_own_is_rejected() -> void:
+	var stranger: MassBody = add_child_autofree(
+		preload("res://scenes/bodies/mass_body.tscn").instantiate()
+	)
+	var taken := _pool.take(stranger)
+	assert_push_error("body must be a live body")
+	assert_true(taken.bodies.is_empty())
+
+
+func test_bodies_within_finds_live_bodies_by_surface_distance() -> void:
+	var live := _system_and_ring_body_live()
+	var ring_body: MassBody = live[3]
+	await _settle()
+	var outward := Vector3.UP * (ring_body.radius + 2.0)
+	var centre := ring_body.global_position + outward
+	assert_has(_pool.bodies_within(centre, 2.01, INF), ring_body)
+	assert_does_not_have(_pool.bodies_within(centre, 1.99, INF), ring_body)
+
+
+func test_bodies_within_leaves_out_heavier_bodies() -> void:
+	var live := _system_and_ring_body_live()
+	var ring_body: MassBody = live[3]
+	await _settle()
+	var centre := ring_body.global_position
+	assert_has(_pool.bodies_within(centre, 0.0, ring_body.mass), ring_body)
+	assert_does_not_have(
+		_pool.bodies_within(centre, 0.0, ring_body.mass * 0.99),
+		ring_body,
+	)
+
+
+func test_bodies_within_never_returns_the_root() -> void:
+	var found := _pool.bodies_within(_streamer.global_position, 1.0e6, INF)
+	assert_does_not_have(found, _pool.root_body)
+
+
+func test_bodies_within_only_returns_live_bodies() -> void:
+	_system_and_ring_body_live()
+	await _settle()
+	for body in _pool.bodies_within(Vector3.ZERO, 1.0e6, INF):
+		assert_true(_pool.is_live(body))
+
+
+func test_negative_reach_is_rejected() -> void:
+	var found := _pool.bodies_within(Vector3.ZERO, -1.0, INF)
+	assert_push_error(
+		"[Contract] Pre-condition broken: reach must not be negative"
+	)
+	assert_true(found.is_empty())
+
+
+func test_taken_body_is_no_longer_live() -> void:
+	var live := _system_and_ring_body_live()
+	var ring_body: MassBody = live[3]
+	assert_true(_pool.is_live(ring_body))
+	_pool.take(ring_body)
+	assert_false(_pool.is_live(ring_body))
+	assert_false(_pool.is_live(_pool.root_body))

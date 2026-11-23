@@ -17,7 +17,7 @@ extends Node
 #   rings.<field>=value      any Tier field of the ring tier
 # Prints one line, "RESULT {json}". All times are in ms: "frame" is the whole
 # frame's wall time, "physics" the scene's physics step, and "own" the
-# streamer, pool and tint together.
+# streamer and pool together.
 
 const LEVEL := "res://scenes/levels/generated_level.tscn"
 
@@ -27,7 +27,6 @@ class Driver:
 
 	var streamer: HierarchyStreamer
 	var pool: LiveBodyPool
-	var tint: MassTintDebug
 	var player: Player
 	var clock: Clock
 	var path: Callable
@@ -36,7 +35,6 @@ class Driver:
 	var frame := 0
 	var stream_ms := PackedFloat64Array()
 	var pool_ms := PackedFloat64Array()
-	var tint_ms := PackedFloat64Array()
 	var frame_ms := PackedFloat64Array()
 	var physics_ms := PackedFloat64Array()
 	var physics_start := 0
@@ -113,13 +111,10 @@ class Driver:
 		return now
 
 
-	func _process(delta: float) -> void:
+	func _process(_delta: float) -> void:
 		frame += 1
 		var start := Time.get_ticks_usec()
-		tint._process(delta)
-		var end := Time.get_ticks_usec()
 		if recording():
-			tint_ms.append((end - start) / 1000.0)
 			frame_ms.append((start - last_frame) / 1000.0)
 		last_frame = start
 
@@ -187,15 +182,12 @@ func _set_up() -> void:
 	player.collision_mask = 0
 
 	var pool: LiveBodyPool = level.get_node("LiveBodyPool")
-	var tint: MassTintDebug = level.get_node("MassTintDebug")
 	streamer.set_physics_process(false)
 	pool.set_physics_process(false)
-	tint.set_process(false)
 
 	_driver = Driver.new()
 	_driver.streamer = streamer
 	_driver.pool = pool
-	_driver.tint = tint
 	_driver.player = player
 	_driver.clock = level.get_node("Clock")
 	_driver.warmup = int(_arg("warmup", "60"))
@@ -320,10 +312,7 @@ func _part_stats() -> Dictionary:
 func _report() -> void:
 	var own := PackedFloat64Array()
 	for index in _driver.stream_ms.size():
-		own.append(
-			_driver.stream_ms[index] + _driver.pool_ms[index]
-			+ _driver.tint_ms[mini(index, _driver.tint_ms.size() - 1)],
-		)
+		own.append(_driver.stream_ms[index] + _driver.pool_ms[index])
 	var systems := _driver.streamer.renderer_for(PackedInt32Array())
 	var result := {
 		"args": _args,
@@ -333,7 +322,6 @@ func _report() -> void:
 		"own": _stats(own),
 		"streamer": _stats(_driver.stream_ms),
 		"pool": _stats(_driver.pool_ms),
-		"tint": _stats(_driver.tint_ms),
 		"frame": _stats(_driver.frame_ms),
 		"physics": _stats(_driver.physics_ms),
 		"live": _int_stats(_driver.live),

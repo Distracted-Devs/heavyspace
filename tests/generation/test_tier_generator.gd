@@ -261,3 +261,111 @@ func test_non_positive_tuning_is_rejected() -> void:
 	tier = _ring_tier()
 	tier.spawn_density = 0.0
 	_assert_rejected(tier, "spawn_density must be positive")
+
+
+func _capped_tier(fraction := 1.0) -> Tier:
+	var tier := _ring_tier()
+	tier.mass_ceiling_fraction = fraction
+	return tier
+
+
+func _generate_with_focus(tier: Tier, focus_mass: float) -> TierLayout:
+	return TierGenerator.generate(1, _path(), PARENT_RADIUS, tier, focus_mass)
+
+
+func test_capped_masses_lie_between_mass_min_and_the_ceiling() -> void:
+	var tier := _capped_tier(0.5)
+	var layout := _generate_with_focus(tier, 8.0)
+	assert_gt(layout.size(), 0)
+	for index in layout.size():
+		assert_between(layout.mass[index], tier.mass_min, 4.0)
+
+
+func test_capped_mass_follows_the_radius_fraction() -> void:
+	var tier := _capped_tier()
+	var layout := _generate_with_focus(tier, 3.0)
+	var span := tier.radius_max - tier.radius_min
+	for index in layout.size():
+		var t := (layout.radius[index] - tier.radius_min) / span
+		var expected := lerpf(tier.mass_min, 3.0, pow(t, tier.mass_bias))
+		assert_almost_eq(layout.mass[index], expected, 1.0e-9)
+
+
+func test_capped_mass_never_falls_as_radius_grows() -> void:
+	var layout := _generate_with_focus(_capped_tier(), 5.0)
+	var order := range(layout.size())
+	order.sort_custom(
+		func(a: int, b: int) -> bool:
+			return layout.radius[a] < layout.radius[b],
+	)
+	for step in range(1, order.size()):
+		assert_gte(layout.mass[order[step]], layout.mass[order[step - 1]])
+
+
+func test_capped_bodies_are_never_heavier_than_the_focus() -> void:
+	for focus_mass in [0.1, 1.0, 37.5]:
+		var layout := _generate_with_focus(_capped_tier(), focus_mass)
+		for index in layout.size():
+			assert_lte(layout.mass[index], focus_mass)
+
+
+func test_equal_radius_range_gives_the_ceiling() -> void:
+	var tier := _capped_tier(0.5)
+	tier.radius_min = 2.0
+	tier.radius_max = 2.0
+	var layout := _generate_with_focus(tier, 6.0)
+	assert_gt(layout.size(), 0)
+	for index in layout.size():
+		assert_eq(layout.mass[index], 3.0)
+
+
+func test_ceiling_never_drops_below_mass_min() -> void:
+	var tier := _capped_tier()
+	tier.mass_min = 2.0
+	var layout := _generate_with_focus(tier, 0.5)
+	for index in layout.size():
+		assert_eq(layout.mass[index], 2.0)
+
+
+func test_cap_leaves_every_other_field_unchanged() -> void:
+	var uncapped := _generate(_ring_tier())
+	var capped := _generate_with_focus(_capped_tier(), 2.0)
+	assert_eq(capped.radius, uncapped.radius)
+	assert_eq(capped.orbit_radius, uncapped.orbit_radius)
+	assert_eq(capped.height, uncapped.height)
+	assert_eq(capped.phase, uncapped.phase)
+	assert_eq(capped.angular_speed, uncapped.angular_speed)
+	assert_eq(capped.plane, uncapped.plane)
+	assert_ne(capped.mass, uncapped.mass)
+
+
+func test_same_focus_mass_gives_an_identical_capped_layout() -> void:
+	var first := _generate_with_focus(_capped_tier(), 2.0)
+	var second := _generate_with_focus(_capped_tier(), 2.0)
+	assert_eq(first.mass, second.mass)
+
+
+func test_uncapped_tier_ignores_the_focus_mass() -> void:
+	var tier := _ring_tier()
+	var layout := _generate_with_focus(tier, 2.0)
+	for index in layout.size():
+		assert_almost_eq(
+			layout.mass[index],
+			tier.mass_density * pow(layout.radius[index], 3.0),
+			1.0e-9,
+		)
+
+
+func test_capped_tier_without_a_focus_mass_is_rejected() -> void:
+	var layout := _generate(_capped_tier())
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "a capped tier needs a positive focus_mass"
+	)
+	assert_eq(layout.size(), 0)
+
+
+func test_capped_tier_with_a_non_positive_focus_mass_is_rejected() -> void:
+	var layout := _generate_with_focus(_capped_tier(), 0.0)
+	assert_push_error("a capped tier needs a positive focus_mass")
+	assert_eq(layout.size(), 0)

@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="Tier" format=3]
+[gd_resource type="Resource" script_class="Tier" format=3 uid="uid://diyfvs58nfoib"]
 
 [ext_resource type="Script" uid="uid://ms7w88qme74j" path="res://scripts/generation/tier.gd" id="1_tier"]
 
 [resource]
 script = ExtResource("1_tier")
+mass_ceiling_fraction = 1.0
+expand_distance = 1000.0

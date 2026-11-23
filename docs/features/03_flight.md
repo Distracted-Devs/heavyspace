@@ -50,8 +50,11 @@ until 0.9. The planet stays in the level as a solid obstacle.
   `sqrt(thrust_mass / current_mass)` scaling, `thrust_mass` and `thrust_rate`
   are gone. `vertical_thrust_force` and `back_thrust_force` (default 1.0, the
   old tuned feel at mass 1) sit under `@export_group("Thrust")`.
-- Rotation is a torque (`apply_torque`), so mass slows turning through the
-  body's inertia (a radius-0.5 sphere, I = 0.1·m). `angular_damp` stays as
+- Rotation is a torque (`apply_torque`). The player's inertia is fixed at
+  `(0.1, 0.1, 0.1)` (a radius-0.5 sphere at mass 1), so turning is the same
+  at any mass and size. Agreed in [player growth](11_player_growth.md):
+  slower turning as the ship grows was bad gameplay. It replaces the
+  original rule that mass slowed turning. `angular_damp` stays as
   the non-physical rotational drag. `roll_torque` and `turn_torque` (0.05,
   which gives the old 0.5 rad/s² at mass 1) sit under
   `@export_group("Rotation")`.
@@ -62,8 +65,9 @@ until 0.9. The planet stays in the level as a solid obstacle.
     *visual* forward.
   - With no input and no sources, linear velocity stays constant (Newton's 1st law).
   - The same thrust input gives half the acceleration at twice the mass.
-  - The same turn or roll input gives half the angular acceleration at twice
-    the mass.
+  - The same turn or roll input gives the same angular acceleration at any
+    mass and size (changed in player growth; it was half at twice the
+    mass).
   - `body.mass` follows `current_mass`, and a non-positive mass is reported
     and ignored.
 

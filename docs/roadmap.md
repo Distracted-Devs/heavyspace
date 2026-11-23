@@ -91,7 +91,7 @@ Features:
 - [Mass bodies](features/02_mass_bodies.md) ✅ (2.1, 2.1a)
 - [Procedural generation](features/10_procedural_generation.md) ✅ (2.2–2.4,
   2.6–2.9)
-- [Player growth](features/11_player_growth.md) (2.5)
+- [Player growth](features/11_player_growth.md) ✅ (2.5, 2.10–2.14)
 
 # Phase 3: Game Loop
 - Ensure the player can collect mass, once enough has been collected then they can warp out

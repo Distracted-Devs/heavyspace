@@ -1,7 +1,7 @@
 #!/bin/bash
 # Quick A/B check: runs each scenario REPEATS times (default 3) with
 # contracts off and prints the mean of each run's mean, p95 and worst for
-# "own" (streamer, pool and tint) and "frame".
+# "own" (streamer and pool) and "frame".
 # Usage: benchmarks/procedural_generation/ab.sh [key=value ...]
 set -uo pipefail
 cd "$(dirname "$0")/../.."

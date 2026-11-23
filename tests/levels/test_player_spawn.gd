@@ -14,17 +14,18 @@ var _spawn: PlayerSpawn
 func before_each() -> void:
 	_was_enabled = Contract.enabled
 	Contract.enabled = true
-	_streamer = HierarchyStreamer.new()
-	_streamer.level_seed = 11
-	_streamer.root_radius = 5000.0
-	_streamer.root_mass = 1.0e7
-	_streamer.tiers = [SYSTEMS_TIER, RINGS_TIER]
-	add_child_autofree(_streamer)
 	_player = PLAYER_SCENE.instantiate()
 	_player.flight_input.capture_mouse = false
 	_player.gravity_receiver.gravity_constant = GRAVITY
 	add_child_autofree(_player)
 	_player.freeze = true
+	_streamer = HierarchyStreamer.new()
+	_streamer.level_seed = 11
+	_streamer.root_radius = 5000.0
+	_streamer.root_mass = 1.0e7
+	_streamer.tiers = [SYSTEMS_TIER, RINGS_TIER]
+	_streamer.focus_mass = _player.mass_component
+	add_child_autofree(_streamer)
 	_spawn = PlayerSpawn.new()
 	_spawn.streamer = _streamer
 	_spawn.player = _player

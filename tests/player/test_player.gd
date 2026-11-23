@@ -60,19 +60,22 @@ func test_twice_the_mass_halves_thrust_acceleration() -> void:
 	assert_almost_eq(heavy_speed / light_speed, 0.5, 1e-3)
 
 
-func test_twice_the_mass_halves_rotational_acceleration() -> void:
-	for action in ["pitch_down", "turn_left", "roll_left"]:
-		var light := _spawn_player()
-		var heavy := _spawn_player(Vector3.RIGHT * 10.0)
+func test_turning_is_the_same_at_any_mass_and_size() -> void:
+	var actions := ["pitch_down", "turn_left", "roll_left"]
+	for step in actions.size():
+		var action: String = actions[step]
+		var apart := Vector3.BACK * 20.0 * step
+		var light := _spawn_player(apart)
+		var heavy := _spawn_player(apart + Vector3.RIGHT * 10.0)
 		light.mass_component.current_mass = 1.0
-		heavy.mass_component.current_mass = 2.0
+		heavy.mass_component.current_mass = 8.0
 		Input.action_press(action)
 		await wait_physics_frames(THRUST_FRAMES)
 		Input.action_release(action)
 		var light_spin := light.angular_velocity.length()
 		var heavy_spin := heavy.angular_velocity.length()
 		assert_gt(light_spin, 0.0, action)
-		assert_almost_eq(heavy_spin / light_spin, 0.5, 1e-3, action)
+		assert_almost_eq(heavy_spin / light_spin, 1.0, 1e-3, action)
 
 
 func test_player_mass_follows_mass_component() -> void:
@@ -87,3 +90,21 @@ func test_back_thrust_draws_from_player_fuel() -> void:
 	Input.action_press("back_thruster")
 	await wait_physics_frames(THRUST_FRAMES)
 	assert_lt(player.fuel_component.fuel, player.fuel_component.tank_size)
+
+
+func test_stopping_flight_disables_the_pickup() -> void:
+	var player := _spawn_player()
+	var pickup := PickupComponent.new()
+	player.add_child(pickup)
+	player.pickup_component = pickup
+	player.stop_flight()
+	await wait_physics_frames(1)
+	assert_eq(pickup.process_mode, Node.PROCESS_MODE_DISABLED)
+
+
+func test_stopping_flight_without_a_pickup_still_stops() -> void:
+	var player := _spawn_player()
+	player.pickup_component = null
+	player.stop_flight()
+	await wait_physics_frames(1)
+	assert_true(player.freeze)

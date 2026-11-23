@@ -154,7 +154,9 @@ Agree each API's contract with the user at the start of its step.
 - Invariant: every array is `size()` long.
 
 ### TierGenerator.generate (`scripts/generation/tier_generator.gd`)
-- `generate(level_seed, path, parent_radius, tier) -> TierLayout`. `path`
+- `generate(level_seed, path, parent_radius, tier, focus_mass := NAN) ->
+  TierLayout`. `focus_mass` is only used by a mass-capped tier (see
+  [player growth](11_player_growth.md)). `path`
   is the parent's indices from the root (`[]` is the root).
 - Requires `parent_radius > 0`, a tier, and `tier.require_valid`. A broken
   pre-condition is reported and returns an empty layout.
@@ -167,7 +169,7 @@ Agree each API's contract with the user at the start of its step.
   identical layout.
 - Every child:
   - `radius` is in [`radius_min`, `radius_max`]
-  - `mass = mass_density × radius³`
+  - `mass = mass_density × radius³`, unless the tier is mass-capped
   - `orbit_radius` is in [inner, outer] × `parent_radius`
   - `|height| ≤ thickness`
   - `phase` is in [0, TAU)
@@ -248,7 +250,9 @@ Agree each API's contract with the user at the start of its step.
   - collapsing a parent frees its whole subtree and its renderers
   - every expanded parent's renderer sits at that parent's position at
     `time`
-- Re-expanding a parent gives exactly the layout it had before.
+- Re-expanding a parent gives exactly the layout it had before, except
+  that a mass-capped tier's masses follow the focus mass at the time it
+  expands (see [player growth](11_player_growth.md)).
 - `is_expanded(path)`, `renderer_for(path)`, `tier_of(path)` (the tier that
   made that parent's children) and `expanded_paths()` report the state. `expanded(path, renderer)` is emitted after a parent expands, and
   `collapsing(path, renderer)` before its renderer is freed.
@@ -374,7 +378,8 @@ Agree each API's contract with the user at the start of its step.
   main scene, with the prototype's tuned values.
 - The player spawns with its home system's velocity, and the camera's far
   plane covers the system.
-- `MassTintDebug` also tints drawn bodies through the renderer.
+- `MassTintDebug` also tints drawn bodies through the renderer. (It was
+  removed in [player growth](11_player_growth.md)'s performance review.)
 - Delete `test_level_body_is_heavier_than_player_starting_mass` and
   `LEVEL_SCENE` from `tests/bodies/test_mass_body.gd`.
 - **Done:** smoke passes with the generated level as the main scene, and

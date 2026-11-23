@@ -364,3 +364,184 @@ func test_update_before_a_valid_start_does_nothing() -> void:
 	assert_push_error("tiers must not be empty")
 	streamer.update(Vector3.ZERO, 0.0)
 	assert_eq(streamer.expanded_paths().size(), 0)
+
+
+func _focus_mass(starting_mass: float) -> MassComponent:
+	var mass := MassComponent.new()
+	mass.starting_mass = starting_mass
+	return add_child_autofree(mass)
+
+
+func _capped_streamer(
+	focus: MassComponent,
+	fraction := 0.5,
+) -> HierarchyStreamer:
+	var streamer := HierarchyStreamer.new()
+	streamer.level_seed = SEED
+	streamer.root_radius = ROOT_RADIUS
+	streamer.tiers = _tiers(2)
+	streamer.tiers[1].mass_ceiling_fraction = fraction
+	streamer.focus_mass = focus
+	return add_child_autofree(streamer)
+
+
+func test_capped_children_take_the_focus_mass_when_they_expand() -> void:
+	var focus := _focus_mass(4.0)
+	var streamer := _capped_streamer(focus)
+	streamer.update(_centre(streamer, _path([0]), 0.0), 0.0)
+	var layout := streamer.renderer_for(_path([0])).layout
+	assert_gt(layout.size(), 0)
+	for index in layout.size():
+		assert_eq(layout.mass[index], 2.0)
+
+
+func test_re_expanding_after_growing_keeps_the_geometry_but_not_mass() -> void:
+	var focus := _focus_mass(4.0)
+	var streamer := _capped_streamer(focus)
+	var centre := _centre(streamer, _path([0]), 0.0)
+	streamer.update(centre, 0.0)
+	var first := _orbits_of(streamer.renderer_for(_path([0])))
+	streamer.update(FAR_AWAY, 0.0)
+	focus.current_mass = 10.0
+	streamer.update(centre, 0.0)
+	var renderer := streamer.renderer_for(_path([0]))
+	assert_eq(_orbits_of(renderer), first)
+	assert_eq(renderer.layout.mass[0], 5.0)
+
+
+func test_capped_tier_without_a_focus_mass_is_reported() -> void:
+	var streamer := HierarchyStreamer.new()
+	streamer.root_radius = ROOT_RADIUS
+	streamer.tiers = _tiers(2)
+	streamer.tiers[1].mass_ceiling_fraction = 1.0
+	add_child_autofree(streamer)
+	assert_push_error(
+		"[Contract] Pre-condition broken: a capped tier needs focus_mass"
+	)
+	assert_eq(streamer.expanded_paths().size(), 0)
+
+
+func test_mass_cap_warning_is_empty_when_the_lightest_is_edible() -> void:
+	var streamer := _capped_streamer(_focus_mass(1.0), 1.0)
+	assert_eq(streamer.mass_cap_warning(), "")
+
+
+func test_mass_cap_warning_names_mass_min_above_the_ceiling() -> void:
+	var focus := _focus_mass(1.0)
+	var streamer := HierarchyStreamer.new()
+	streamer.root_radius = ROOT_RADIUS
+	streamer.tiers = _tiers(2)
+	streamer.tiers[1].mass_ceiling_fraction = 0.5
+	streamer.tiers[1].mass_min = 0.8
+	streamer.focus_mass = focus
+	add_child_autofree(streamer)
+	assert_string_contains(streamer.mass_cap_warning(), "mass_min")
+	assert_eq(streamer.expanded_paths().size(), 1)
+
+
+func _expanded_three_deep() -> HierarchyStreamer:
+	var streamer := _streamer(3)
+	_expand_down_to(streamer, _path([0, 0]), 0.0)
+	assert_true(streamer.is_expanded(_path([0, 0])))
+	return streamer
+
+
+func test_removing_a_path_collapses_its_subtree() -> void:
+	var streamer := _expanded_three_deep()
+	streamer.remove(_path([0]))
+	assert_false(streamer.is_expanded(_path([0])))
+	assert_false(streamer.is_expanded(_path([0, 0])))
+	assert_true(streamer.is_expanded(PackedInt32Array()))
+
+
+func test_everything_below_a_removed_path_is_removed() -> void:
+	var streamer := _expanded_three_deep()
+	streamer.remove(_path([0]))
+	assert_true(streamer.is_removed(_path([0])))
+	assert_true(streamer.is_removed(_path([0, 0])))
+	assert_true(streamer.is_removed(_path([0, 3, 1])))
+	assert_false(streamer.is_removed(_path([1])))
+	assert_false(streamer.is_removed(PackedInt32Array()))
+
+
+func test_removed_path_never_expands_again() -> void:
+	var streamer := _expanded_three_deep()
+	var centre := _centre(streamer, _path([0]), 0.0)
+	streamer.remove(_path([0]))
+	streamer.update(centre, 0.0)
+	streamer.update(centre, 0.0)
+	assert_false(streamer.is_expanded(_path([0])))
+
+
+func test_removing_one_child_leaves_its_siblings_streaming() -> void:
+	var streamer := _streamer(2)
+	streamer.remove(_path([0]))
+	streamer.update(_centre(streamer, _path([1]), 0.0), 0.0)
+	assert_true(streamer.is_expanded(_path([1])))
+
+
+func test_unexpanded_child_can_be_removed() -> void:
+	var streamer := _streamer(2)
+	var centre := _centre(streamer, _path([0]), 0.0)
+	streamer.remove(_path([0]))
+	assert_true(streamer.is_removed(_path([0])))
+	streamer.update(centre, 0.0)
+	assert_false(streamer.is_expanded(_path([0])))
+
+
+func test_removal_collapses_children_before_their_parent() -> void:
+	var streamer := _expanded_three_deep()
+	var order: Array[PackedInt32Array] = []
+	streamer.collapsing.connect(
+		func(path: PackedInt32Array, _renderer: OrbitRenderer) -> void:
+			order.append(path),
+	)
+	streamer.remove(_path([0]))
+	assert_gt(order.size(), 1)
+	assert_eq(order.back(), _path([0]))
+	assert_true(order.has(_path([0, 0])))
+	for path in order.slice(0, -1):
+		assert_eq(path.slice(0, 1), _path([0]))
+
+
+func test_removed_is_emitted_after_the_subtree_is_gone() -> void:
+	var streamer := _expanded_three_deep()
+	var seen: Array[PackedInt32Array] = []
+	var still_expanded := [false]
+	streamer.removed.connect(
+		func(path: PackedInt32Array) -> void:
+			seen.append(path)
+			still_expanded[0] = streamer.is_expanded(_path([0])),
+	)
+	streamer.remove(_path([0]))
+	assert_eq(seen, [_path([0])])
+	assert_false(still_expanded[0])
+
+
+func test_removing_the_root_is_rejected() -> void:
+	var streamer := _streamer(2)
+	streamer.remove(PackedInt32Array())
+	assert_push_error(
+		"[Contract] Pre-condition broken: path must not be the root"
+	)
+	assert_false(streamer.is_removed(PackedInt32Array()))
+
+
+func test_removing_under_a_collapsed_parent_is_rejected() -> void:
+	var streamer := _streamer(3)
+	streamer.remove(_path([0, 0]))
+	assert_push_error(
+		"[Contract] Pre-condition broken: path's parent must be expanded"
+	)
+	assert_false(streamer.is_removed(_path([0, 0])))
+
+
+func test_removing_an_index_outside_the_layout_is_rejected() -> void:
+	var streamer := _streamer(2)
+	var count := streamer.renderer_for(PackedInt32Array()).count()
+	streamer.remove(_path([count]))
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "path's index must be in its parent's layout"
+	)
+	assert_false(streamer.is_removed(_path([count])))

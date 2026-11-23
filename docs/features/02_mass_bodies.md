@@ -19,7 +19,11 @@ pickup, and a heavier one is deadly. It started as the test planet, and
   - `GravityComponent.radius` and `.mass` equal `radius` and `mass`
 - Every body joins the `mass_bodies` group.
 
-### MassTintDebug (`scripts/ui/mass_tint_debug.gd`)
+### MassTintDebug (`scripts/ui/mass_tint_debug.gd`) (removed)
+- Removed in the [player growth](11_player_growth.md) performance review
+  (2026-11-23): re-tinting every drawn body on each mass change cost about
+  7.5ms a pickup, even with the tint disabled. The user will add a
+  different debug tint later. The contract below is kept for reference.
 - When `enabled` (and only in debug builds), every `MassBody` is tinted
   `heavier_colour` (red) if its mass is strictly greater than the player's
   `current_mass`, and `lighter_colour` (green) otherwise. The earth texture
@@ -72,7 +76,7 @@ pickup, and a heavier one is deadly. It started as the test planet, and
   The headless level run still ends in `[Debug] Lost: crashed into
   MassBody`.
 
-### 2.1a Debug mass tint ✅
+### 2.1a Debug mass tint ✅ (removed in player growth)
 - `MassTintDebug` (in the test level) tints bodies green (lighter or equal)
   and red (heavier) relative to the player. Turn it off with `enabled`.
 - **Done:** `tests/ui/test_mass_tint_debug.gd` covers:

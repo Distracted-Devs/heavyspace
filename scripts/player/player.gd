@@ -10,6 +10,7 @@ extends RigidBody3D
 @export var camera_component: CameraComponent
 @export var contact_component: ContactComponent
 @export var gravity_receiver: GravityReceiverComponent
+@export var pickup_component: PickupComponent
 
 
 func stop_flight() -> void:
@@ -36,7 +37,7 @@ func _apply_stop_flight() -> void:
 
 
 func _flight_components() -> Array[Node]:
-	return [
+	var components: Array[Node] = [
 		flight_input,
 		thruster,
 		rotator,
@@ -44,3 +45,6 @@ func _flight_components() -> Array[Node]:
 		gravity_receiver,
 		camera_component,
 	]
+	if pickup_component != null:
+		components.append(pickup_component)
+	return components

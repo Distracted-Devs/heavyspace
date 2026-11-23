@@ -40,7 +40,8 @@ stops the ship and offers a restart. Contacts are sorted by mass, so pickups
 ### Player.stop_flight (`scripts/player/player.gd`)
 - It freezes the body where it is, and disables the input, thruster,
   rotation, fuel, gravity receiver and camera components (agreed: the
-  camera stops too). The changes are deferred, because a contact arrives
+  camera stops too), and the pickup component when the player has one (see
+  [player growth](11_player_growth.md)). The changes are deferred, because a contact arrives
   during the physics step.
 - Post-condition, once applied: the body is frozen and every listed
   component has `PROCESS_MODE_DISABLED`. From then on, the ship's position,

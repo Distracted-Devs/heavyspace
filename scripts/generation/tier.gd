@@ -15,6 +15,11 @@ const MAX_CELLS := 1000000
 @export_range(0.01, 10.0, 0.01, "or_greater") var size_bias := 2.0
 @export_range(0.0, 100.0, 0.0001, "or_greater") var mass_density := 8.0
 
+@export_group("Mass cap")
+@export_range(0.0, 10.0, 0.01, "or_greater") var mass_ceiling_fraction := 0.0
+@export_range(0.0, 1.0e6, 0.001, "or_greater") var mass_min := 0.1
+@export_range(0.01, 10.0, 0.01, "or_greater") var mass_bias := 1.5
+
 @export_group("Spawning")
 @export_range(0.0, 1.0, 1.0e-12, "or_greater") var spawn_density := 7.6e-4
 @export_range(0.01, 1000.0, 0.01, "or_greater") var cell_size := 8.0
@@ -39,6 +44,10 @@ func expected_count(parent_radius: float) -> float:
 	return spawn_density * ring_area * 2.0 * thickness
 
 
+func is_mass_capped() -> bool:
+	return mass_ceiling_fraction > 0.0
+
+
 func cell_spawn_chance() -> float:
 	return spawn_density * cell_size * cell_size * 2.0 * thickness
 
@@ -61,6 +70,18 @@ func require_valid(parent_radius: float) -> bool:
 		Contract.require(size_bias > 0.0, "size_bias must be positive"),
 		Contract.require(mass_density > 0.0, "mass_density must be positive"),
 		Contract.require(spawn_density > 0.0, "spawn_density must be positive"),
+		Contract.require(
+			mass_ceiling_fraction >= 0.0,
+			"mass_ceiling_fraction must not be negative",
+		),
+		Contract.require(
+			not is_mass_capped() or mass_min > 0.0,
+			"a capped tier's mass_min must be positive",
+		),
+		Contract.require(
+			not is_mass_capped() or mass_bias > 0.0,
+			"a capped tier's mass_bias must be positive",
+		),
 		Contract.require(
 			inner_period_min > 0.0 and inner_period_min <= inner_period_max,
 			"inner periods must be positive and ordered",

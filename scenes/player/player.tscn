@@ -6,14 +6,18 @@
 [ext_resource type="Script" uid="uid://b0mwjb12j7mv7" path="res://scripts/components/rotation_component.gd" id="4_rotate"]
 [ext_resource type="Script" uid="uid://n0curlft74ix" path="res://scripts/components/mass_component.gd" id="5_mass"]
 [ext_resource type="Script" uid="uid://cjv7325gj85dy" path="res://scripts/components/gravity_receiver_component.gd" id="6_gravity"]
-[ext_resource type="Script" path="res://scripts/components/fuel_component.gd" id="7_fuel"]
-[ext_resource type="Script" path="res://scripts/components/camera_component.gd" id="8_camera"]
-[ext_resource type="Script" path="res://scripts/components/contact_component.gd" id="9_contact"]
+[ext_resource type="Script" uid="uid://dunykxwy0y6dt" path="res://scripts/components/fuel_component.gd" id="7_fuel"]
+[ext_resource type="Script" uid="uid://tyfnmgiff5s3" path="res://scripts/components/camera_component.gd" id="8_camera"]
+[ext_resource type="Script" uid="uid://bf7f17onvt3ju" path="res://scripts/components/contact_component.gd" id="9_contact"]
+[ext_resource type="Script" uid="uid://cvu1iqutgpkha" path="res://scripts/components/pickup_component.gd" id="10_pickup"]
+[ext_resource type="Script" uid="uid://4b2mqjykmk6s" path="res://scripts/effects/absorb_effect.gd" id="11_absorb"]
+[ext_resource type="Script" uid="uid://dewketvryxtqv" path="res://scripts/components/growth_component.gd" id="12_growth"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component")]
 gravity_scale = 0.0
+inertia = Vector3(0.1, 0.1, 0.1)
 linear_damp_mode = 1
 angular_damp = 1.0
 script = ExtResource("1_4fnjr")
@@ -25,6 +29,7 @@ fuel_component = NodePath("FuelComponent")
 camera_component = NodePath("CameraComponent")
 contact_component = NodePath("ContactComponent")
 gravity_receiver = NodePath("GravityReceiverComponent")
+pickup_component = NodePath("PickupComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
@@ -60,6 +65,7 @@ script = ExtResource("3_thrust")
 body = NodePath("..")
 flight_input = NodePath("../PlayerInputComponent")
 fuel = NodePath("../FuelComponent")
+back_thrust_force = 100.0
 
 [node name="RotationComponent" type="Node" parent="." unique_id=1645358276 node_paths=PackedStringArray("body", "flight_input")]
 script = ExtResource("4_rotate")
@@ -81,3 +87,23 @@ script = ExtResource("7_fuel")
 script = ExtResource("9_contact")
 body = NodePath("..")
 mass_component = NodePath("../MassComponent")
+
+[node name="AbsorbEffect" type="Node" parent="." unique_id=1645358281 node_paths=PackedStringArray("ship")]
+script = ExtResource("11_absorb")
+ship = NodePath("..")
+
+[node name="PickupComponent" type="Node" parent="." unique_id=1645358282 node_paths=PackedStringArray("body", "mass_component", "collider", "absorb")]
+script = ExtResource("10_pickup")
+body = NodePath("..")
+mass_component = NodePath("../MassComponent")
+collider = NodePath("../Collider")
+absorb = NodePath("../AbsorbEffect")
+pickup_radius = 50.0
+
+[node name="GrowthComponent" type="Node" parent="." unique_id=1645358283 node_paths=PackedStringArray("mass_component", "mesh", "collider", "camera", "pickup")]
+script = ExtResource("12_growth")
+mass_component = NodePath("../MassComponent")
+mesh = NodePath("../Mesh")
+collider = NodePath("../Collider")
+camera = NodePath("../CameraComponent")
+pickup = NodePath("../PickupComponent")

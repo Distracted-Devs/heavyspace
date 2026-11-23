@@ -29,11 +29,12 @@ func append(
 	phase.append(child_phase)
 	angular_speed.append(child_angular_speed)
 	var count := size()
-	Contract.invariant(
-		(
-			mass.size() == count and orbit_radius.size() == count
-			and height.size() == count and phase.size() == count
-			and angular_speed.size() == count
-		),
-		"layout arrays must have the same length",
-	)
+	if Contract.enabled:
+		Contract.invariant(
+			(
+				mass.size() == count and orbit_radius.size() == count
+				and height.size() == count and phase.size() == count
+				and angular_speed.size() == count
+			),
+			"layout arrays must have the same length",
+		)

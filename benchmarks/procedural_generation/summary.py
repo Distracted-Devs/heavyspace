@@ -1,7 +1,7 @@
 """Prints a Markdown table of sweep.sh results.
 
 Usage: python3 summary.py results.jsonl
-Times are in ms. "own" is the streamer, pool and tint together, and "frame"
+Times are in ms. "own" is the streamer and pool together, and "frame"
 the whole headless frame.
 """
 

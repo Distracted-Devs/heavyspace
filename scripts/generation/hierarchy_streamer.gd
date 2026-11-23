@@ -3,6 +3,7 @@ extends Node3D
 
 signal expanded(path: PackedInt32Array, renderer: OrbitRenderer)
 signal collapsing(path: PackedInt32Array, renderer: OrbitRenderer)
+signal removed(path: PackedInt32Array)
 
 const ROOT_SLOT := 0
 const NO_PARENT := -1
@@ -16,6 +17,7 @@ const NO_PARENT := -1
 @export_group("Components")
 @export var clock: Clock
 @export var focus: Node3D
+@export var focus_mass: MassComponent
 
 var resolved_seed := 0
 
@@ -27,6 +29,8 @@ var _layouts: Array[TierLayout] = []
 var _slot_tiers: Array[Tier] = []
 var _renderers: Array[OrbitRenderer] = []
 var _slot_of: Dictionary[String, int] = { }
+var _removed: Dictionary[String, bool] = { }
+var _removed_indices: Dictionary[String, PackedInt32Array] = { }
 
 
 func _init() -> void:
@@ -37,6 +41,9 @@ func _ready() -> void:
 	if not _require_valid_tiers():
 		return
 	resolved_seed = level_seed if level_seed != 0 else _random_seed()
+	var warning := mass_cap_warning()
+	if warning != "" and OS.is_debug_build():
+		print("[Debug] %s" % warning)
 	_add_slot(PackedInt32Array(), NO_PARENT, 0, root_radius)
 
 
@@ -51,14 +58,64 @@ func update(focus_position: Vector3, time: float) -> void:
 	_place_renderers(time)
 	_collapse_far(focus_position)
 	_expand_near(focus_position, time)
-	Contract.invariant(
-		_hierarchy_is_consistent(),
-		"every expanded parent must follow its expanded ancestors",
-	)
+	if Contract.enabled:
+		Contract.invariant(
+			_hierarchy_is_consistent(),
+			"every expanded parent must follow its expanded ancestors",
+		)
 
 
 func is_expanded(path: PackedInt32Array) -> bool:
 	return _slot_of.has(_key(path))
+
+
+func is_removed(path: PackedInt32Array) -> bool:
+	for depth in range(1, path.size() + 1):
+		if _removed.has(_key(path.slice(0, depth))):
+			return true
+	return false
+
+
+func removed_indices(parent_path: PackedInt32Array) -> PackedInt32Array:
+	return _removed_indices.get(_key(parent_path), PackedInt32Array())
+
+
+func remove(path: PackedInt32Array) -> void:
+	if not Contract.require(not path.is_empty(), "path must not be the root"):
+		return
+	var parent: int = _slot_of.get(_key(path.slice(0, -1)), NO_PARENT)
+	if not Contract.require(
+		parent != NO_PARENT,
+		"path's parent must be expanded",
+	):
+		return
+	var index := path[path.size() - 1]
+	if not Contract.require(
+		index >= 0 and index < _layouts[parent].size(),
+		"path's index must be in its parent's layout",
+	):
+		return
+	_removed[_key(path)] = true
+	var parent_key := _key(path.slice(0, -1))
+	var siblings: PackedInt32Array = _removed_indices.get(
+		parent_key,
+		PackedInt32Array(),
+	)
+	siblings.append(index)
+	_removed_indices[parent_key] = siblings
+	if is_expanded(path):
+		var doomed := PackedByteArray()
+		doomed.resize(_renderers.size())
+		var root_of_subtree: int = _slot_of[_key(path)]
+		for slot in range(root_of_subtree, _renderers.size()):
+			if slot == root_of_subtree or doomed[_parent_slots[slot]]:
+				doomed[slot] = 1
+		_remove_slots(doomed)
+	Contract.ensure(
+		is_removed(path) and not is_expanded(path),
+		"a removed path must not be expanded",
+	)
+	removed.emit(path)
 
 
 func renderer_for(path: PackedInt32Array) -> OrbitRenderer:
@@ -73,6 +130,23 @@ func tier_of(path: PackedInt32Array) -> Tier:
 
 func expanded_paths() -> Array[PackedInt32Array]:
 	return _paths.duplicate()
+
+
+func mass_cap_warning() -> String:
+	if focus_mass == null:
+		return ""
+	for depth in tiers.size():
+		var tier := tiers[depth]
+		if tier == null or not tier.is_mass_capped():
+			continue
+		var ceiling := focus_mass.starting_mass * tier.mass_ceiling_fraction
+		if tier.mass_min > ceiling:
+			return (
+				"tier %d's mass_min (%s) is above the starting ceiling (%s), "
+				% [depth, tier.mass_min, ceiling]
+				+ "so its bodies can be heavier than the player"
+			)
+	return ""
 
 
 func _tier_for(
@@ -137,7 +211,7 @@ func _expand_children_near(
 		var reach := tier.expand_distance
 		if focus_position.distance_squared_to(centre) >= reach * reach:
 			continue
-		if is_expanded(path):
+		if is_expanded(path) or _removed.has(_key(path)):
 			continue
 		var child_path := path.duplicate()
 		var child_slot := _add_slot(
@@ -157,7 +231,13 @@ func _add_slot(
 ) -> int:
 	var depth := path.size()
 	var tier := _tier_for(depth, path, radius)
-	var layout := TierGenerator.generate(resolved_seed, path, radius, tier)
+	var layout := TierGenerator.generate(
+		resolved_seed,
+		path,
+		radius,
+		tier,
+		_focus_mass_now(),
+	)
 	var renderer := OrbitRenderer.new()
 	renderer.name = "Children%s" % _key(path)
 	add_child(renderer)
@@ -213,6 +293,10 @@ func _remove_slots(doomed: PackedByteArray) -> void:
 		_slot_of[_key(_paths[slot])] = slot
 
 
+func _focus_mass_now() -> float:
+	return NAN if focus_mass == null else focus_mass.current_mass
+
+
 func _require_valid_tiers() -> bool:
 	if not Contract.require(not tiers.is_empty(), "tiers must not be empty"):
 		return false
@@ -226,6 +310,13 @@ func _require_valid_tiers() -> bool:
 		valid = tier.require_valid(largest_parent) and valid
 		smallest_parent = tier.radius_min
 		largest_parent = tier.radius_max
+		valid = (
+			Contract.require(
+				not tier.is_mass_capped() or focus_mass != null,
+				"a capped tier needs focus_mass",
+			)
+			and valid
+		)
 	return valid
 
 
@@ -237,6 +328,7 @@ func _hierarchy_is_consistent() -> bool:
 		if (
 			parent < 0 or parent >= slot or _depths[slot] != _depths[parent] + 1
 			or not is_instance_valid(_renderers[slot])
+			or _removed.has(_key(_paths[slot]))
 		):
 			return false
 	return _slot_of.size() == _renderers.size()
