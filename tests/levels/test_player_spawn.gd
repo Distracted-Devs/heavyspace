@@ -147,6 +147,49 @@ func test_starting_at_rest_leaves_the_player_still() -> void:
 	assert_eq(_player.gravity_receiver.drift, Vector3.ZERO)
 
 
+func _nearest_root_child() -> Vector3:
+	var positions := _systems().child_positions(0.0)
+	var nearest := positions[0]
+	for centre in positions:
+		if (
+			_player.global_position.distance_to(centre)
+			< _player.global_position.distance_to(nearest)
+		):
+			nearest = centre
+	return nearest
+
+
+func test_facing_the_nearest_planet_points_at_the_closest_root_child() -> void:
+	_spawn.face_nearest_planet = true
+	add_child_autofree(_spawn)
+	var to_planet := (
+		_nearest_root_child() - _player.global_position
+	).normalized()
+	assert_almost_eq(-_player.global_basis.z.dot(to_planet), 1.0, 1.0e-4)
+
+
+func test_facing_the_nearest_planet_keeps_the_ring_normal_as_up() -> void:
+	_spawn.face_nearest_planet = true
+	add_child_autofree(_spawn)
+	var forward := -_player.global_basis.z
+	var normal := _ring().global_basis.y
+	var up := (normal - forward * normal.dot(forward)).normalized()
+	assert_almost_eq(_player.global_basis.y.dot(up), 1.0, 1.0e-4)
+
+
+func test_facing_the_nearest_planet_leaves_position_and_velocity() -> void:
+	_spawn.face_nearest_planet = true
+	add_child_autofree(_spawn)
+	var position := _player.global_position
+	var velocity := _player.linear_velocity
+	var facing := -_player.global_basis.z
+	_spawn.face_nearest_planet = false
+	_spawn.spawn()
+	assert_almost_eq(_player.global_position, position, Vector3.ONE * 1.0e-3)
+	assert_almost_eq(_player.linear_velocity, velocity, Vector3.ONE * 1.0e-3)
+	assert_lt(-_player.global_basis.z.dot(facing), 0.999)
+
+
 func test_starting_at_rest_still_faces_along_the_ring() -> void:
 	_spawn.start_at_rest = true
 	add_child_autofree(_spawn)

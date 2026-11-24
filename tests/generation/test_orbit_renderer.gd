@@ -125,7 +125,7 @@ func test_showing_a_new_layout_replaces_the_old_one() -> void:
 	assert_false(_renderer.is_hidden(0))
 
 
-func test_drawn_mesh_is_a_low_poly_sphere_with_the_proxy_material() -> void:
+func test_drawn_mesh_is_a_unit_sphere_with_the_proxy_material() -> void:
 	var mesh := _renderer.multimesh.mesh as SphereMesh
 	assert_not_null(mesh)
 	assert_eq(mesh.radius, 1.0)
@@ -135,6 +135,54 @@ func test_drawn_mesh_is_a_low_poly_sphere_with_the_proxy_material() -> void:
 		_renderer.proxy_material,
 		load("res://resources/materials/planet_proxy.tres"),
 	)
+
+
+func test_display_scale_draws_every_instance_at_that_share() -> void:
+	_renderer.display_scale = 0.25
+	for index in _renderer.count():
+		var radius := _layout.radius[index]
+		assert_almost_eq(_renderer.drawn_radius(index), radius * 0.25, 1.0e-5)
+		assert_almost_eq(_renderer.instance_radius(index), radius, 1.0e-5)
+
+
+func test_display_scale_leaves_child_positions_alone() -> void:
+	var before := _renderer.child_positions(3.0).duplicate()
+	_renderer.display_scale = 0.5
+	assert_eq(_renderer.child_positions(4.0).size(), before.size())
+	assert_eq(_renderer.child_positions(3.0), before)
+
+
+func test_zero_display_scale_draws_a_speck_not_nothing() -> void:
+	_renderer.display_scale = 0.0
+	assert_almost_eq(
+		_renderer.drawn_radius(0),
+		_layout.radius[0] * OrbitRenderer.MIN_DISPLAY_SCALE,
+		1.0e-7,
+	)
+
+
+func test_full_display_scale_draws_the_true_radius() -> void:
+	_renderer.display_scale = 0.1
+	_renderer.set_hidden(0, true)
+	_renderer.display_scale = 1.0
+	assert_almost_eq(_renderer.drawn_radius(0), _layout.radius[0], 1.0e-5)
+	assert_true(_renderer.is_hidden(0))
+
+
+func test_negative_display_scale_is_reported_and_ignored() -> void:
+	_renderer.display_scale = 0.5
+	_renderer.display_scale = -1.0
+	assert_push_error(
+		"[Contract] Pre-condition broken: "
+		+ "display_scale must be finite and not negative"
+	)
+	assert_eq(_renderer.display_scale, 0.5)
+
+
+func test_proxy_has_the_live_spheres_tessellation_by_default() -> void:
+	var mesh := _renderer.multimesh.mesh as SphereMesh
+	assert_eq(mesh.radial_segments, MassBody.UNIT_SPHERE.radial_segments)
+	assert_eq(mesh.rings, MassBody.UNIT_SPHERE.rings)
 
 
 func test_missing_layout_is_reported() -> void:

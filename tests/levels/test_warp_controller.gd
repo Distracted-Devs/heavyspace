@@ -177,6 +177,25 @@ func test_a_player_without_a_cargo_is_reported() -> void:
 	assert_push_error("player with a cargo and lose_controller must be set")
 
 
+func _effect() -> WarpEffect:
+	var effect := WarpEffect.new()
+	effect.camera = add_child_autofree(Camera3D.new())
+	effect.mesh = add_child_autofree(Node3D.new())
+	effect.set_process(false)
+	return add_child_autofree(effect)
+
+
+func test_no_warp_out_until_the_warp_in_has_finished() -> void:
+	var effect := _effect()
+	_warp.warp_effect = effect
+	_collect(_player.cargo.tank_size)
+	effect.play_in()
+	assert_false(_warp.can_warp())
+	assert_false(_warp.warp_out())
+	effect.advance(effect.warp_duration)
+	assert_true(_warp.can_warp())
+
+
 func test_with_an_effect_the_warp_finishes_when_the_effect_does() -> void:
 	var camera := Camera3D.new()
 	var mesh := Node3D.new()

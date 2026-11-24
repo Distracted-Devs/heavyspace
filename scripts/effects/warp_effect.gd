@@ -52,12 +52,20 @@ const EXPO_FLOOR := 1.0 / 1024.0
 			return
 		fade_start = value
 
+@export var play_in_on_ready := false
+
 var playing := false
+var playing_in := false
 
 var _elapsed := 0.0
 var _start_fov := 0.0
 var _start_scale_z := 1.0
 var _start_position_z := 0.0
+
+
+func _ready() -> void:
+	if play_in_on_ready:
+		play_in()
 
 
 func _process(delta: float) -> void:
@@ -66,34 +74,51 @@ func _process(delta: float) -> void:
 
 
 func play() -> void:
-	if not Contract.require(not playing, "the warp must not already play"):
-		return
-	if not Contract.require(
-		camera != null and mesh != null,
-		"camera and mesh must be set",
-	):
-		return
-	_elapsed = 0.0
-	_start_fov = camera.fov
-	_start_scale_z = mesh.scale.z
-	_start_position_z = mesh.position.z
-	playing = true
+	if _start(false):
+		_show(0.0)
+
+
+func play_in() -> void:
+	if _start(true):
+		_show(1.0)
 
 
 func advance(delta: float) -> void:
 	if not playing:
 		return
 	_elapsed += delta
-	var t := minf(_elapsed / warp_duration, 1.0)
+	var progress := minf(_elapsed / warp_duration, 1.0)
+	_show(1.0 - progress if playing_in else progress)
+	if progress >= 1.0:
+		playing = false
+		playing_in = false
+		finished.emit()
+
+
+func _start(backwards: bool) -> bool:
+	if not Contract.require(not playing, "the warp must not already play"):
+		return false
+	if not Contract.require(
+		camera != null and mesh != null,
+		"camera and mesh must be set",
+	):
+		return false
+	_elapsed = 0.0
+	_start_fov = camera.fov
+	_start_scale_z = mesh.scale.z
+	_start_position_z = mesh.position.z
+	playing = true
+	playing_in = backwards
+	return true
+
+
+func _show(t: float) -> void:
 	var stretched := minf(t / stretch_fraction, 1.0)
 	camera.fov = lerpf(_start_fov, warp_fov, stretched)
 	mesh.scale.z = lerpf(_start_scale_z, _start_scale_z * stretch, stretched)
 	mesh.position.z = _start_position_z - warp_distance * _expo_in(t)
 	if fade:
 		fade.color.a = clampf((t - fade_start) / (1.0 - fade_start), 0.0, 1.0)
-	if t >= 1.0:
-		playing = false
-		finished.emit()
 
 
 func _expo_in(t: float) -> float:

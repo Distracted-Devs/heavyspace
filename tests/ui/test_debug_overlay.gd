@@ -46,10 +46,15 @@ func test_describe_shows_fuel_remaining_over_tank_size() -> void:
 
 
 func test_describe_shows_the_active_input_device() -> void:
-	var player_input := _player.flight_input as PlayerInputComponent
+	var devices: DeviceTracker = autofree(DeviceTracker.new())
+	_overlay.devices = devices
 	assert_string_contains(
 		_overlay.describe(_player),
 		"Input     Keyboard/Mouse",
 	)
-	player_input.active_device = PlayerInputComponent.Device.CONTROLLER
+	devices.device = DeviceTracker.Device.CONTROLLER
 	assert_string_contains(_overlay.describe(_player), "Input     Controller")
+
+
+func test_devices_default_to_the_input_device_autoload() -> void:
+	assert_eq(_overlay.devices, InputDevice)

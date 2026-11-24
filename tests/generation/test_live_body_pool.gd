@@ -135,6 +135,18 @@ func test_promoted_body_takes_the_seed_of_its_orbit() -> void:
 	assert_almost_eq(body.look_seed, expected, 1.0e-6)
 
 
+func test_promoted_body_draws_its_surface_in_its_rings_frame() -> void:
+	var renderer := _root_renderer()
+	renderer.basis = Basis(Vector3(0.3, 1.0, 0.2).normalized(), 0.8)
+	_step(renderer.child_position(0, 0.0), 0.0)
+	var body := _pool.body_for(renderer, 0)
+	assert_true(
+		body
+		.surface_frame
+		.is_equal_approx(renderer.global_basis.orthonormalized())
+	)
+
+
 func test_live_depths_follow_the_hierarchy() -> void:
 	var system_spot := _root_renderer().child_position(0, 0.0)
 	_step(system_spot, 0.0)

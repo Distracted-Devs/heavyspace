@@ -1,13 +1,6 @@
 class_name PlayerInputComponent
 extends InputComponent
 
-signal device_changed(device: Device)
-
-enum Device {
-	KEYBOARD_MOUSE,
-	CONTROLLER,
-}
-
 @export_group("Pitch")
 @export var invert_pitch := false
 
@@ -15,17 +8,8 @@ enum Device {
 @export var mouse_sensitivity := 0.003
 @export var capture_mouse := true
 
-@export_group("Device")
-@export var device_switch_deadzone := 0.2
-
 var look_intent := Vector2.ZERO
 var mouse_look := Vector2.ZERO
-var active_device := Device.KEYBOARD_MOUSE:
-	set(value):
-		if value == active_device:
-			return
-		active_device = value
-		device_changed.emit(value)
 
 var _pending_mouse_look := Vector2.ZERO
 
@@ -44,20 +28,6 @@ func _notification(what: int) -> void:
 func _capture_mouse() -> void:
 	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
-
-func _input(event: InputEvent) -> void:
-	if (
-		event is InputEventKey or event is InputEventMouseButton
-		or event is InputEventMouseMotion
-	):
-		_set_keyboard_mouse_active()
-	elif event is InputEventJoypadButton:
-		_set_controller_active()
-	elif event is InputEventJoypadMotion:
-		var stick := event as InputEventJoypadMotion
-		if absf(stick.axis_value) >= device_switch_deadzone:
-			_set_controller_active()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -91,11 +61,3 @@ func _update_intent(_delta: float) -> void:
 		"look intent axes must be within [-1, 1]",
 	)
 	Contract.ensure(mouse_look.is_finite(), "mouse look must be finite")
-
-
-func _set_controller_active():
-	active_device = Device.CONTROLLER
-
-
-func _set_keyboard_mouse_active():
-	active_device = Device.KEYBOARD_MOUSE

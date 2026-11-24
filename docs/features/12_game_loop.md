@@ -344,6 +344,11 @@ AI generated placeholder: it MUST be reworked in Phase 5 (see the
 - `WarpController.warp_effect` (optional): `warp_out()` plays it, and
   `warp_finished` is emitted on its `finished`. Without one it is emitted
   at once.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  `play_in()` plays it backwards as the warp in, and `play_in_on_ready`
+  (off; on in the level) does so at the start of every run.
+  `WarpController.can_warp()` is false while its warp effect is playing,
+  so a run can't warp out before it has finished warping in.
 - Pickups still in flight arrive after banking, so they don't count, and
   the effect's per-frame scale overrides `GrowthComponent`.
 

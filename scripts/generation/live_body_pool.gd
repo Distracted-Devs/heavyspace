@@ -197,6 +197,7 @@ func _promote(renderer: OrbitRenderer, index: int, centre: Vector3) -> void:
 		layout.orbit_radius[index],
 		layout.phase[index],
 	)
+	body.surface_frame = renderer.global_basis.orthonormalized()
 	renderer.set_hidden(index, true)
 	_slot_of[_key(renderer, index)] = _bodies.size()
 	_bodies.append(body)

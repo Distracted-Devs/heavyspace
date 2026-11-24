@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GravityRegistry="*res://scripts/core/gravity_registry.gd"
 RunProgress="*res://scripts/progression/run_progress.gd"
+InputDevice="*res://scripts/input/device_tracker.gd"
 
 [display]
 

@@ -34,6 +34,11 @@ warp out is Space / A. The right stick moves the camera.
     flip it
 
   `device_changed(device)` is emitted once for each actual change.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  the device tracking moved to the `InputDevice` autoload
+  (`DeviceTracker`), which keeps running while paused. The component no
+  longer has `active_device`, `device_changed`, `device_switch_deadzone`
+  or the `Device` enum, and the debug overlay reads the autoload.
 
 ## Steps
 

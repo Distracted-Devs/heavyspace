@@ -23,7 +23,8 @@ const MAX_CELLS := 1000000
 @export_group("Spawning")
 @export_range(0.0, 1.0, 1.0e-12, "or_greater") var spawn_density := 7.6e-4
 @export_range(0.01, 1000.0, 0.01, "or_greater") var cell_size := 8.0
-@export_range(0.0, 1000.0, 0.01, "or_greater") var min_separation := 6.0
+@export_range(0.0, 1000.0, 0.01, "or_greater") var min_separation := 0.0
+@export_range(0.0, 1.0, 0.01) var jitter := 1.0
 
 @export_group("Speed")
 @export_range(0.1, 1000.0, 0.1, "or_greater") var inner_period_min := 60.0
@@ -99,12 +100,16 @@ func require_valid(parent_radius: float) -> bool:
 			"children must not touch the parent",
 		),
 		Contract.require(
-			min_separation >= 2.0 * radius_max,
-			"min_separation must be at least twice radius_max",
+			2.0 * radius_max <= cell_size,
+			"twice radius_max must be at most cell_size",
 		),
 		Contract.require(
-			min_separation <= cell_size,
-			"min_separation must be at most cell_size",
+			min_separation >= 0.0 and min_separation <= cell_size,
+			"min_separation must be within [0, cell_size]",
+		),
+		Contract.require(
+			jitter >= 0.0 and jitter <= 1.0,
+			"jitter must be within [0, 1]",
 		),
 		Contract.require(
 			cell_spawn_chance() <= 1.0,

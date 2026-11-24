@@ -55,6 +55,7 @@ func tanks_required() -> int:
 func can_warp() -> bool:
 	return (
 		not warping and not lose_controller.lost
+		and (warp_effect == null or not warp_effect.playing)
 		and player.cargo.full_tanks() >= tanks_required()
 	)
 

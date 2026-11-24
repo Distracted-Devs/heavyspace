@@ -181,6 +181,9 @@ func test_warping_banks_and_opens_the_shop_then_launch_unpauses() -> void:
 	var shop: ShopOverlay = _level.get_node("ShopOverlay")
 	var cargo := _player().cargo
 	cargo.add(cargo.capacity())
+	assert_true(effect.playing_in, "every run starts by warping in")
+	assert_false(warp.can_warp())
+	effect.advance(effect.warp_duration)
 	assert_true(warp.warp_out())
 	assert_almost_eq(_progression.bank, cargo.capacity(), 1e-4)
 	assert_false(shop.is_open)

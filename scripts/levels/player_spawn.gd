@@ -11,6 +11,7 @@ extends Node
 @export_range(-180.0, 180.0, 0.1) var spawn_angle_degrees := 0.0
 @export_range(1.0, 1.0e6, 1.0, "or_greater") var camera_far := 60000.0
 @export var start_at_rest := false
+@export var face_nearest_planet := false
 
 
 func _ready() -> void:
@@ -61,6 +62,8 @@ func spawn() -> void:
 	player.linear_velocity = home_velocity + prograde * orbit_speed
 	if start_at_rest:
 		_stop(player)
+	if face_nearest_planet:
+		_face(_nearest_centre(systems, time), plane.y, prograde)
 	player.camera_component.camera.far = camera_far
 	Contract.ensure(
 		(
@@ -84,6 +87,27 @@ func _stop(ship: Player) -> void:
 		ship.linear_velocity == Vector3.ZERO
 		and ship.angular_velocity == Vector3.ZERO,
 		"a player started at rest must not move",
+	)
+
+
+func _nearest_centre(systems: OrbitRenderer, time: float) -> Vector3:
+	var positions := systems.child_positions(time)
+	var from := player.global_position
+	var nearest := positions[0]
+	for centre in positions:
+		if from.distance_squared_to(centre) < from.distance_squared_to(nearest):
+			nearest = centre
+	return nearest
+
+
+func _face(target: Vector3, up: Vector3, fallback_up: Vector3) -> void:
+	var forward := (target - player.global_position).normalized()
+	if absf(forward.dot(up)) > 0.999:
+		up = fallback_up
+	player.global_basis = Basis.looking_at(forward, up)
+	Contract.ensure(
+		(-player.global_basis.z).dot(forward) > 0.9999,
+		"the player must face the nearest planet",
 	)
 
 

@@ -32,6 +32,18 @@ const SEED_PARAMETER := &"seed"
 		if is_node_ready():
 			_apply_look()
 
+@export var surface_frame := Basis.IDENTITY:
+	set(value):
+		if not Contract.require(
+			value.is_equal_approx(value.orthonormalized())
+			and value.determinant() > 0.0,
+			"surface_frame must be a rotation",
+		):
+			return
+		surface_frame = value
+		if is_node_ready():
+			_apply_size()
+
 @export_group("Components")
 @export var mesh: MeshInstance3D
 @export var collider: CollisionShape3D
@@ -68,18 +80,18 @@ func _apply_look() -> void:
 
 
 func _apply_size() -> void:
-	mesh.scale = Vector3.ONE * radius
+	var drawn := surface_frame * Basis.from_scale(Vector3.ONE * radius)
+	mesh.basis = drawn
 	_shape.radius = radius
 	gravity.radius = radius
 	gravity.mass = mass
 	Contract.ensure(
 		(
-			mesh.mesh == UNIT_SPHERE
-			and mesh.scale.is_equal_approx(Vector3.ONE * radius)
+			mesh.mesh == UNIT_SPHERE and mesh.basis.is_equal_approx(drawn)
 			and collider.shape == _shape
 			and is_equal_approx(_shape.radius, radius)
 			and is_equal_approx(gravity.radius, radius)
 			and is_equal_approx(gravity.mass, mass)
 		),
-		"mesh, own collider sphere and gravity must match radius and mass",
+		"mesh, own collider and gravity must match radius, mass and frame",
 	)

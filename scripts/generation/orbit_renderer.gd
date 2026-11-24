@@ -5,19 +5,31 @@ const UNTINTED := Color.WHITE
 const FLOATS_PER_INSTANCE := 20
 const COLOUR_OFFSET := 12
 const CUSTOM_OFFSET := 16
+const MIN_DISPLAY_SCALE := 0.001
 
 @export_group("Look")
 @export var proxy_material: Material = preload(
 	"res://resources/materials/planet_proxy.tres"
 )
-@export_range(4, 64, 1) var proxy_segments := 12
+@export_range(4, 128, 1) var proxy_segments := 64
 
 var layout: TierLayout:
 	get:
 		return _layout
 
+var display_scale := 1.0:
+	set(value):
+		if not Contract.require(
+			is_finite(value) and value >= 0.0,
+			"display_scale must be finite and not negative",
+		):
+			return
+		display_scale = value
+		_upload_transforms()
+
 var _layout := TierLayout.new()
 var _buffer := PackedFloat32Array()
+var _drawn := PackedFloat32Array()
 var _reach := 0.0
 var _positions := PackedVector3Array()
 var _positions_time := NAN
@@ -46,8 +58,7 @@ func show_layout(children: TierLayout) -> void:
 	basis = children.plane
 	_buffer = _build_buffer(children)
 	multimesh.instance_count = children.size()
-	if children.size() > 0:
-		multimesh.buffer = _buffer
+	_upload_transforms()
 	multimesh.custom_aabb = _ring_bounds(children)
 	_reach = _furthest_reach(children)
 	_positions_time = NAN
@@ -95,6 +106,30 @@ func instance_radius(index: int) -> float:
 	if not _require_index(index):
 		return 0.0
 	return _buffer[index * FLOATS_PER_INSTANCE]
+
+
+func drawn_radius(index: int) -> float:
+	if not _require_index(index):
+		return 0.0
+	if display_scale == 1.0:
+		return _buffer[index * FLOATS_PER_INSTANCE]
+	return _drawn[index * FLOATS_PER_INSTANCE]
+
+
+func _upload_transforms() -> void:
+	if count() == 0:
+		return
+	if display_scale == 1.0:
+		multimesh.buffer = _buffer
+		return
+	var share := maxf(display_scale, MIN_DISPLAY_SCALE)
+	_drawn = _buffer.duplicate()
+	for index in count():
+		var slot := index * FLOATS_PER_INSTANCE
+		_drawn[slot] *= share
+		_drawn[slot + 5] *= share
+		_drawn[slot + 10] *= share
+	multimesh.buffer = _drawn
 
 
 func instance_orbit(index: int) -> Vector4:

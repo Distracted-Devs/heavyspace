@@ -132,6 +132,78 @@ func test_bad_values_are_reported_and_ignored() -> void:
 	assert_eq(_effect.stretch, 6.0)
 
 
+func _reset_pose() -> void:
+	_camera.fov = 75.0
+	_mesh.scale = Vector3(1.0, 1.0, 2.0)
+	_mesh.position = Vector3(0.0, 0.0, 1.0)
+	_fade.color.a = 0.0
+
+
+func test_warp_in_starts_at_the_warp_outs_end_pose() -> void:
+	_effect.play_in()
+	assert_almost_eq(_camera.fov, 130.0, 1e-4)
+	assert_almost_eq(_mesh.scale.z, 12.0, 1e-4)
+	assert_almost_eq(_mesh.position.z, 1.0 - 400.0, 1e-3)
+	assert_almost_eq(_fade.color.a, 1.0, 1e-6)
+	assert_true(_effect.playing)
+	assert_true(_effect.playing_in)
+
+
+func test_warp_in_ends_back_at_the_start_pose() -> void:
+	_effect.play_in()
+	_effect.advance(_effect.warp_duration)
+	assert_almost_eq(_camera.fov, 75.0, 1e-4)
+	assert_almost_eq(_mesh.scale.z, 2.0, 1e-4)
+	assert_almost_eq(_mesh.position.z, 1.0, 1e-4)
+	assert_almost_eq(_fade.color.a, 0.0, 1e-6)
+	assert_false(_effect.playing)
+	assert_false(_effect.playing_in)
+	assert_signal_emit_count(_effect, "finished", 1)
+
+
+func test_warp_in_mirrors_the_warp_out() -> void:
+	_effect.play()
+	_effect.advance(_effect.warp_duration * 0.3)
+	var out := _values()
+	_effect.advance(_effect.warp_duration)
+	_reset_pose()
+	_effect.play_in()
+	_effect.advance(_effect.warp_duration * 0.7)
+	var back := _values()
+	for index in out.size():
+		assert_almost_eq(back[index], out[index], 1e-3)
+
+
+func test_warp_in_only_moves_towards_the_start_pose() -> void:
+	_effect.play_in()
+	var previous := _values()
+	for step in STEPS:
+		_effect.advance(_effect.warp_duration / STEPS)
+		var now := _values()
+		for index in now.size():
+			assert_lte(now[index], previous[index] + 1e-4)
+		previous = now
+
+
+func test_warp_in_while_playing_is_reported() -> void:
+	_effect.play()
+	_effect.play_in()
+	assert_push_error("the warp must not already play")
+	assert_false(_effect.playing_in)
+
+
+func test_play_in_on_ready_starts_the_warp_in() -> void:
+	var effect := WarpEffect.new()
+	effect.camera = _camera
+	effect.mesh = _mesh
+	effect.fade = _fade
+	effect.play_in_on_ready = true
+	effect.set_process(false)
+	add_child_autofree(effect)
+	assert_true(effect.playing_in)
+	assert_almost_eq(_fade.color.a, 1.0, 1e-6)
+
+
 func test_runs_by_itself_each_frame() -> void:
 	_effect.set_process(true)
 	_effect.warp_duration = 0.05

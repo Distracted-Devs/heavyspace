@@ -119,7 +119,8 @@ Agree each API's contract with the user at the start of its step.
 - Size: `radius_min` and `radius_max` (absolute), `size_bias` (higher means
   more small bodies), and `mass_density` (mass = `mass_density × r³`).
 - Spawning: `spawn_density` (children per unit volume of the ring),
-  `cell_size` and `min_separation`.
+  `cell_size`, `min_separation` (0 for rings) and `jitter` (0–1, default
+  1; changed 2026-11-24, see [pre-juice polish](16_pre_juice_polish.md)).
 - Speed: `inner_period_min` and `inner_period_max` (seconds for one lap at
   the inner edge), and `retrograde_chance`.
 - Streaming (absolute): every field describes this tier's children. They
@@ -141,8 +142,10 @@ Agree each API's contract with the user at the start of its step.
     [0, 180]
   - children can't touch the parent:
     `orbit_inner × parent_radius ≥ parent_radius + radius_max`
-  - siblings can't touch: `min_separation ≥ 2 × radius_max`, and
-    `min_separation ≤ cell_size`
+  - every child fits in a cell: `2 × radius_max ≤ cell_size`, and
+    `0 ≤ min_separation ≤ cell_size` (changed 2026-11-24: was
+    `min_separation ≥ 2 × radius_max`)
+  - `jitter` is in [0, 1]
   - `collapse_distance > expand_distance`, and
     `release_distance > live_distance`
   - `cell_spawn_chance() ≤ 1`, and the grid has at most 1,000,000 cells
@@ -161,9 +164,13 @@ Agree each API's contract with the user at the start of its step.
 - Requires `parent_radius > 0`, a tier, and `tier.require_valid`. A broken
   pre-condition is reported and returns an empty layout.
 - The ring is a jittered 2D grid of `cell_size` squares in its plane. Each
-  cell holds at most one child, placed in the cell's central square of side
-  `cell_size − min_separation`, with probability `cell_spawn_chance()`. It is
-  kept only if it falls within the ring. Its height is random within
+  cell holds at most one child, with probability `cell_spawn_chance()`.
+  Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)): its
+  radius is drawn first, and its space `s = max(radius, min_separation ÷
+  2)` stays inside the cell. On each axis it sits a random
+  `(u − 0.5) × jitter` of the room `cell_size − 2s` from the cell's
+  centre, so jitter 0 centres it and 1 lets it reach the cell's edge. It
+  is kept only if it falls within the ring. Its height is random within
   ±`thickness`.
 - Deterministic: the same seed, path, parent radius and tier always give an
   identical layout.
@@ -176,8 +183,10 @@ Agree each API's contract with the user at the start of its step.
   - `|angular_speed| = TAU / period × (inner / orbit_radius)^1.5`, for a
     random period in [`inner_period_min`, `inner_period_max`]. It is
     negative (retrograde) with probability `retrograde_chance`
-- At time 0, siblings are at least `min_separation` apart. The grid
-  guarantees this and the tests check it. Siblings drift as they orbit.
+- At time 0, siblings are at least `min_separation` apart and never
+  overlap (their centres are at least the sum of their radii apart). The
+  grid guarantees this and the tests check it. Siblings drift as they
+  orbit.
 - `plane` is a rotation, tilted at most `plane_tilt_max_degrees` from the
   XZ plane. All of a parent's children share it, so a ring stays a flat
   disc.
@@ -199,10 +208,13 @@ Agree each API's contract with the user at the start of its step.
   turns it off for now.
 
 ### OrbitRenderer (`scripts/generation/orbit_renderer.gd`)
-- A `MultiMeshInstance3D` that draws one parent's children as low-poly unit
+- A `MultiMeshInstance3D` that draws one parent's children as unit
   spheres (`proxy_segments`) with `proxy_material` (exported, required,
   default `resources/materials/planet_proxy.tres`, step 4.3). Its shader
   works out each orbit from the global `clock_time` (see `Clock`).
+  Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)): by
+  default the proxy has the live unit sphere's tessellation, so a body
+  keeps its shape when it goes live.
 - `show_layout(layout)` requires a layout. Afterwards:
   - `count()` is `layout.size()`. Each instance is scaled to its child's
     radius, and its custom data is `(orbit_radius, height, phase,
@@ -217,6 +229,9 @@ Agree each API's contract with the user at the start of its step.
   `0 ≤ index < count()`. Afterwards `is_hidden(index)` and `tint(index)`
   report the new value. Each leaves the other alone.
 - `layout` is the layout it draws (read-only).
+- `display_scale` (changed 2026-11-24, see
+  [pre-juice polish](16_pre_juice_polish.md)) draws every instance at that
+  share of its radius, without moving anything.
 - `reach()` is the furthest any child can be from the centre (orbit,
   height and radius together). Every child stays within it at every time.
 - `child_positions(time)` returns every child's world position, equal to
@@ -286,6 +301,9 @@ Agree each API's contract with the user at the start of its step.
   - a released body is freed and its copy shown again
   - a promoted body's `look_seed` is `PlanetSeed.of(orbit_radius, phase)`
     from its layout (step 4.3)
+  - a promoted body's `surface_frame` is its renderer's global rotation
+    (changed 2026-11-24, see [pre-juice polish](16_pre_juice_polish.md)),
+    the frame the proxy draws its surface in
 - `live_bodies()` and `live_depths()` ([HUD and art](13_hud_and_art.md),
   2026-11-23) are the live bodies and, at the same index, their depth in
   the hierarchy (the drawn parent's path length + 1: systems 1, rings 2).
@@ -324,6 +342,9 @@ Agree each API's contract with the user at the start of its step.
 - Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): `start_at_rest` (off; on in the
   level) zeroes the velocity, spin and drift after placing and facing
   the player.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  `face_nearest_planet` (off; on in the level) turns the player to face
+  the nearest root child instead of along its orbit.
 - The systems tier's speeds match real orbits around the giant (inner
   period 450s gives `GM ≈ 1e8`), so the ship falls around the giant with its
   home system. At 300 the ship is about half the home system's Hill radius

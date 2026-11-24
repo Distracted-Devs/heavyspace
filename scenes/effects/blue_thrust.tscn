@@ -40,6 +40,7 @@ angle_min = -180.0
 angle_max = 180.0
 direction = Vector3(0, 1, 0)
 spread = 0.0
+inherit_velocity_ratio = 1.0
 initial_velocity_min = 4.0
 initial_velocity_max = 6.0
 angular_velocity_min = 100.0
@@ -59,7 +60,8 @@ alpha_curve = SubResource("CurveTexture_o50lb")
 [node name="BlueThrust" type="GPUParticles3D" unique_id=608462013]
 transform = Transform3D(1, 0, 0, 0, -0.055691868, 0.99844795, 0, -0.99844795, -0.055691868, 0, 0, 0)
 material_override = SubResource("ShaderMaterial_cn5cj")
-amount = 30
+amount = 90
+lifetime = 0.8
 fixed_fps = 60
 process_material = SubResource("ParticleProcessMaterial_sk7fv")
 draw_pass_1 = SubResource("QuadMesh_8t4a1")

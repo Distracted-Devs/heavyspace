@@ -22,6 +22,10 @@ pickup, and a heavier one is deadly. It started as the test planet, and
   in [0, 1); a bad value is reported and ignored. Afterwards the mesh's
   instance shader parameter `seed` equals it, so bodies share one planet
   material.
+- `surface_frame` (changed 2026-11-24, see
+  [pre-juice polish](16_pre_juice_polish.md)) requires a rotation; a bad
+  value is reported and ignored. Afterwards the mesh's basis is
+  `surface_frame` scaled to `radius`, and a radius change keeps it.
 
 ### MassTintDebug (`scripts/ui/mass_tint_debug.gd`) (removed)
 - Removed in the [player growth](11_player_growth.md) performance review

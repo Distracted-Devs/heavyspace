@@ -8,6 +8,13 @@ extends CanvasLayer
 @export_group("Display")
 @export var decimals := 2
 
+var devices: DeviceTracker
+
+
+func _enter_tree() -> void:
+	if devices == null:
+		devices = InputDevice
+
 
 func _ready() -> void:
 	visible = OS.is_debug_build()
@@ -39,16 +46,12 @@ func describe(target: Player) -> String:
 			]
 		),
 	]
-	var player_input := target.flight_input as PlayerInputComponent
-	if player_input:
-		lines.append("Input     %s" % _device_name(player_input.active_device))
+	if devices:
+		var controller := devices.is_controller()
+		lines.append(
+			"Input     %s" % ("Controller" if controller else "Keyboard/Mouse")
+		)
 	return "\n".join(lines)
-
-
-func _device_name(device: PlayerInputComponent.Device) -> String:
-	if device == PlayerInputComponent.Device.CONTROLLER:
-		return "Controller"
-	return "Keyboard/Mouse"
 
 
 func _vector(value: Vector3) -> String:

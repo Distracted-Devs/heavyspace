@@ -85,6 +85,42 @@ func test_look_seed_outside_zero_to_one_is_reported_and_ignored() -> void:
 	assert_eq(_body.look_seed, 0.4)
 
 
+func _tilted() -> Basis:
+	return Basis(Vector3(1.0, 0.5, -0.3).normalized(), 1.1)
+
+
+func test_surface_frame_turns_the_mesh_at_its_radius() -> void:
+	_body.surface_frame = _tilted()
+	var expected := _tilted() * Basis.from_scale(Vector3.ONE * _body.radius)
+	assert_true(_body.mesh.basis.is_equal_approx(expected))
+
+
+func test_radius_change_keeps_the_surface_frame() -> void:
+	_body.surface_frame = _tilted()
+	_body.radius = 7.0
+	var expected := _tilted() * Basis.from_scale(Vector3.ONE * 7.0)
+	assert_true(_body.mesh.basis.is_equal_approx(expected))
+	assert_eq(_body.collider.shape.radius, 7.0)
+
+
+func test_surface_frame_set_before_ready_is_applied() -> void:
+	var other: MassBody = BODY_SCENE.instantiate()
+	other.surface_frame = _tilted()
+	add_child_autofree(other)
+	var expected := _tilted() * Basis.from_scale(Vector3.ONE * other.radius)
+	assert_true(other.mesh.basis.is_equal_approx(expected))
+
+
+func test_surface_frame_not_a_rotation_is_reported_and_ignored() -> void:
+	_body.surface_frame = Basis.from_scale(Vector3(1.0, 2.0, 1.0))
+	_body.surface_frame = Basis.FLIP_X
+	for bad_value in 2:
+		assert_push_error(
+			"[Contract] Pre-condition broken: surface_frame must be a rotation",
+		)
+	assert_eq(_body.surface_frame, Basis.IDENTITY)
+
+
 func test_bodies_share_the_planet_material() -> void:
 	var other: MassBody = add_child_autofree(BODY_SCENE.instantiate())
 	var material := _body.mesh.mesh.surface_get_material(0)

@@ -2,6 +2,10 @@ extends GutTest
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const THRUST_FRAMES := 30
+const SHIP_SCALE := 1.3
+const BASE_COLLIDER_RADIUS := 0.50158125
+const THRUST_AMOUNT := 90
+const THRUST_LIFETIME := 0.8
 
 var _was_enabled: bool
 
@@ -140,3 +144,24 @@ func test_growing_slows_the_ship_by_the_momentum_factor() -> void:
 	await wait_physics_frames(1)
 	assert_lt(expected, 4.0, "growing must slow the ship")
 	assert_almost_eq(player.linear_velocity.length(), expected, 1e-3)
+
+
+func test_ship_mesh_and_collider_are_scaled_up_together() -> void:
+	var player: Player = autofree(PLAYER_SCENE.instantiate())
+	var mesh: Node3D = player.get_node("Mesh")
+	var collider: CollisionShape3D = player.get_node("Collider")
+	assert_almost_eq(mesh.scale, Vector3.ONE * SHIP_SCALE, Vector3.ONE * 1e-6)
+	assert_almost_eq(
+		(collider.shape as SphereShape3D).radius,
+		BASE_COLLIDER_RADIUS * SHIP_SCALE,
+		1e-6,
+	)
+
+
+func test_thrust_plume_is_dense_and_travels_with_the_ship() -> void:
+	var player: Player = autofree(PLAYER_SCENE.instantiate())
+	var thrust: GPUParticles3D = player.get_node("Mesh/BlueThrust")
+	var process := thrust.process_material as ParticleProcessMaterial
+	assert_eq(thrust.amount, THRUST_AMOUNT)
+	assert_almost_eq(thrust.lifetime, THRUST_LIFETIME, 1e-6)
+	assert_eq(process.inherit_velocity_ratio, 1.0)

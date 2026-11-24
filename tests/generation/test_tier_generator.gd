@@ -103,8 +103,75 @@ func test_mass_is_density_times_radius_cubed() -> void:
 		assert_almost_eq(layout.mass[index], expected, expected * 1.0e-9)
 
 
+func _cell_offsets(layout: TierLayout, tier: Tier, index: int) -> Vector2:
+	var at := _child_position(layout, index)
+	var outer := tier.orbit_outer * PARENT_RADIUS
+	var half := tier.cell_size * 0.5
+	return Vector2(
+		fposmod(at.x + outer, tier.cell_size) - half,
+		fposmod(at.z + outer, tier.cell_size) - half,
+	)
+
+
+func _room(layout: TierLayout, tier: Tier, index: int) -> float:
+	var space := maxf(layout.radius[index], tier.min_separation * 0.5)
+	return tier.cell_size * 0.5 - space
+
+
+func test_siblings_never_overlap() -> void:
+	var tier := _ring_tier()
+	var layout := _generate(tier)
+	assert_gt(layout.size(), 0)
+	for first in layout.size():
+		var at := _child_position(layout, first)
+		for second in range(first + 1, layout.size()):
+			var gap := (
+				at.distance_to(_child_position(layout, second))
+				- layout.radius[first] - layout.radius[second]
+			)
+			if gap < 0.0:
+				fail_test("siblings %d and %d overlap" % [first, second])
+				return
+	pass_test("no siblings overlap")
+
+
+func test_each_child_stays_inside_its_cell() -> void:
+	var tier := _ring_tier()
+	var layout := _generate(tier)
+	for index in layout.size():
+		var offset := _cell_offsets(layout, tier, index)
+		var room := _room(layout, tier, index)
+		assert_lte(absf(offset.x), room + 1.0e-4)
+		assert_lte(absf(offset.y), room + 1.0e-4)
+
+
+func test_no_jitter_centres_each_child_in_its_cell() -> void:
+	var tier := _ring_tier()
+	tier.jitter = 0.0
+	var layout := _generate(tier)
+	assert_gt(layout.size(), 0)
+	for index in layout.size():
+		assert_almost_eq(
+			_cell_offsets(layout, tier, index),
+			Vector2.ZERO,
+			Vector2.ONE * 1.0e-4,
+		)
+
+
+func test_full_jitter_reaches_across_the_whole_room() -> void:
+	var tier := _ring_tier()
+	var layout := _generate(tier)
+	var furthest := 0.0
+	for index in layout.size():
+		var offset := _cell_offsets(layout, tier, index)
+		var room := _room(layout, tier, index)
+		furthest = maxf(furthest, maxf(absf(offset.x), absf(offset.y)) / room)
+	assert_gt(furthest, 0.95)
+
+
 func test_siblings_start_at_least_min_separation_apart() -> void:
 	var tier := _ring_tier()
+	tier.min_separation = 6.0
 	var layout := _generate(tier)
 	var closest := INF
 	for first in layout.size():
@@ -205,16 +272,28 @@ func test_children_touching_the_parent_are_rejected() -> void:
 	_assert_rejected(tier, "children must not touch the parent")
 
 
-func test_overlapping_siblings_are_rejected() -> void:
+func test_children_wider_than_a_cell_are_rejected() -> void:
 	var tier := _ring_tier()
-	tier.min_separation = 5.0
-	_assert_rejected(tier, "min_separation must be at least twice radius_max")
+	tier.radius_max = 4.5
+	_assert_rejected(tier, "twice radius_max must be at most cell_size")
+
+
+func test_negative_separation_is_rejected() -> void:
+	var tier := _ring_tier()
+	tier.min_separation = -1.0
+	_assert_rejected(tier, "min_separation must be within [0, cell_size]")
+
+
+func test_jitter_outside_zero_to_one_is_rejected() -> void:
+	var tier := _ring_tier()
+	tier.jitter = 1.5
+	_assert_rejected(tier, "jitter must be within [0, 1]")
 
 
 func test_separation_wider_than_a_cell_is_rejected() -> void:
 	var tier := _ring_tier()
 	tier.min_separation = 9.0
-	_assert_rejected(tier, "min_separation must be at most cell_size")
+	_assert_rejected(tier, "min_separation must be within [0, cell_size]")
 
 
 func test_cell_spawn_chance_over_one_is_rejected() -> void:

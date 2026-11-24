@@ -32,24 +32,26 @@ static func generate(
 	var inner := tier.orbit_inner * parent_radius
 	var outer := tier.orbit_outer * parent_radius
 	var cell := tier.cell_size
-	var margin := tier.min_separation * 0.5
-	var jitter := cell - tier.min_separation
 	var spawn_chance := tier.cell_spawn_chance()
 	var across := tier.cells_across(parent_radius)
 	for row in across:
 		for column in across:
 			if rng.randf() >= spawn_chance:
 				continue
-			var x := -outer + column * cell + margin + rng.randf() * jitter
-			var z := -outer + row * cell + margin + rng.randf() * jitter
-			var orbit := Vector2(x, z).length()
-			if orbit < inner or orbit > outer:
-				continue
 			var radius := lerpf(
 				tier.radius_min,
 				tier.radius_max,
 				pow(rng.randf(), tier.size_bias),
 			)
+			var space := maxf(radius, tier.min_separation * 0.5)
+			var spread := (cell - 2.0 * space) * tier.jitter
+			var x := (
+				-outer + (column + 0.5) * cell + (rng.randf() - 0.5) * spread
+			)
+			var z := -outer + (row + 0.5) * cell + (rng.randf() - 0.5) * spread
+			var orbit := Vector2(x, z).length()
+			if orbit < inner or orbit > outer:
+				continue
 			layout.append(
 				radius,
 				_mass_of(radius, tier, focus_mass),

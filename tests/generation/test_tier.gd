@@ -18,6 +18,12 @@ func test_default_ring_tier_is_valid_for_its_parent() -> void:
 	assert_true(Tier.new().require_valid(PARENT_RADIUS))
 
 
+func test_default_ring_tier_lets_children_wander_their_whole_cell() -> void:
+	var tier := Tier.new()
+	assert_eq(tier.min_separation, 0.0)
+	assert_eq(tier.jitter, 1.0)
+
+
 func test_expected_count_is_spawn_density_times_ring_volume() -> void:
 	var tier := Tier.new()
 	var inner := tier.orbit_inner * PARENT_RADIUS
