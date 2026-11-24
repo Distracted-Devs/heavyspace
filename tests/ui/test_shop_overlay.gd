@@ -1,7 +1,8 @@
 extends GutTest
 
 const SHOP_SCENE := preload("res://scenes/ui/shop_overlay.tscn")
-const UPGRADES := "res://resources/progression/upgrades/"
+const TREE := preload("res://resources/progression/skill_tree.tres")
+const TAB_HEIGHT := 26.0
 
 
 class ActionSpy:
@@ -15,7 +16,7 @@ class ActionSpy:
 
 
 	func _unhandled_input(event: InputEvent) -> void:
-		for action: StringName in [&"pause", &"restart"]:
+		for action: StringName in [&"pause", &"restart", &"warp_out"]:
 			if event.is_action_pressed(action):
 				seen.append(action)
 
@@ -25,19 +26,15 @@ var _progression: Progression
 var _warp: WarpController
 var _starter: RunStarter
 var _shop: ShopOverlay
-var _booster: Upgrade
-var _tank: Upgrade
 
 
 func before_each() -> void:
 	_was_enabled = Contract.enabled
 	Contract.enabled = true
 	_progression = Progression.new()
-	_booster = load(UPGRADES + "booster_upgrade.tres")
-	_tank = load(UPGRADES + "fuel_tank_upgrade.tres")
 	_warp = autofree(WarpController.new())
 	_starter = autofree(RunStarter.new())
-	_starter.upgrades = [_booster, _tank]
+	_starter.tree = TREE
 	_shop = SHOP_SCENE.instantiate()
 	_shop.warp_controller = _warp
 	_shop.run_starter = _starter
@@ -51,8 +48,8 @@ func after_each() -> void:
 	Contract.enabled = _was_enabled
 
 
-func _button(upgrade: Upgrade) -> Button:
-	return _shop.buttons[_starter.upgrades.find(upgrade)]
+func _view(id: StringName) -> SkillNodeView:
+	return _shop.views[TREE.nodes.find(TREE.find(id))]
 
 
 func _press(action: StringName) -> void:
@@ -62,10 +59,27 @@ func _press(action: StringName) -> void:
 	get_viewport().push_input(event)
 
 
-func test_starts_hidden_with_one_button_per_upgrade() -> void:
+func _centre(view: Control) -> Vector2:
+	return view.position + view.size * 0.5
+
+
+func test_starts_hidden_with_one_view_per_node_in_order() -> void:
 	assert_false(_shop.visible)
-	assert_eq(_shop.buttons.size(), 2)
-	assert_eq(_shop.upgrade_list.get_child_count(), 2)
+	assert_eq(_shop.views.size(), TREE.nodes.size())
+	for index in TREE.nodes.size():
+		assert_eq(_shop.views[index].node, TREE.nodes[index])
+		assert_eq(_shop.views[index].get_parent(), _shop.tree_area)
+
+
+func test_views_sit_on_the_grid_inside_the_tree_area() -> void:
+	var area := Rect2(Vector2.ZERO, _shop.tree_area.size)
+	for view in _shop.views:
+		var rect := Rect2(view.position, view.size)
+		assert_true(area.encloses(rect.grow_side(SIDE_TOP, TAB_HEIGHT)))
+	var step := _view(&"refill_rate").position - _view(&"tank_1").position
+	assert_eq(step, Vector2(_shop.column, 0.0))
+	var below := _view(&"booster").position - _view(&"refill_rate").position
+	assert_eq(below, Vector2(0.0, _shop.row))
 
 
 func test_opens_when_the_warp_finishes() -> void:
@@ -74,72 +88,87 @@ func test_opens_when_the_warp_finishes() -> void:
 	assert_true(_shop.visible)
 	assert_true(get_tree().paused)
 	assert_eq(Input.mouse_mode, Input.MOUSE_MODE_VISIBLE)
-	assert_true(_shop.launch_button.has_focus())
 
 
-func test_buttons_show_each_upgrades_values() -> void:
-	_progression.bank_mass(5.0)
-	_progression.buy(_booster)
+func test_opening_focuses_the_first_buyable_node_and_centres_on_it() -> void:
+	_progression.bank_mass(20.0)
+	var first := TREE.find(&"tank_1")
+	_progression.buy(first)
 	_shop.open()
-	var text := _button(_booster).text
-	assert_string_contains(text, _booster.display_name)
-	assert_string_contains(text, "1")
-	assert_string_contains(text, "%.2f" % _booster.multiplier(1))
-	assert_string_contains(text, "%.2f" % _booster.multiplier(2))
-	assert_string_contains(text, "%.0f" % _booster.cost(1))
+	var fuel := _view(&"fuel_tank")
+	assert_true(fuel.has_focus())
+	assert_eq(_shop.camera.position, _centre(fuel))
+	assert_eq(_shop.camera.zoom, _shop.camera.default_zoom)
 
 
-func test_a_maxed_upgrade_shows_max_and_is_disabled() -> void:
-	var capped: Upgrade = _booster.duplicate()
-	capped.id = &"capped"
-	capped.max_level = 1
-	var starter: RunStarter = autofree(RunStarter.new())
-	starter.upgrades = [capped]
-	var shop: ShopOverlay = SHOP_SCENE.instantiate()
-	shop.warp_controller = _warp
-	shop.run_starter = starter
-	shop.progression = _progression
-	shop.reload_on_launch = false
-	add_child_autofree(shop)
-	_progression.bank_mass(1000.0)
-	_progression.buy(capped)
-	shop.open()
-	assert_string_contains(shop.buttons[0].text, "MAX")
-	assert_true(shop.buttons[0].disabled)
-	shop.launch()
-
-
-func test_the_bank_label_shows_the_bank() -> void:
-	_progression.bank_mass(12.5)
+func test_with_nothing_buyable_the_first_node_has_focus() -> void:
 	_shop.open()
-	assert_string_contains(_shop.bank_label.text, "12.5")
+	assert_true(_view(&"tank_1").has_focus())
 
 
-func test_a_button_is_disabled_exactly_when_unaffordable() -> void:
-	_progression.bank_mass(_booster.cost(0))
+func test_the_labels_show_the_level_and_bank() -> void:
+	_progression.bank_mass(12.0)
 	_shop.open()
-	assert_false(_button(_booster).disabled)
-	assert_false(_button(_tank).disabled)
-	_button(_booster).pressed.emit()
-	assert_true(_button(_booster).disabled)
-	assert_true(_button(_tank).disabled)
+	assert_eq(_shop.level_label.text, "PILOT LV 0")
+	assert_eq(_shop.bank_label.text, "BANK 12Mkg")
 
 
-func test_pressing_a_button_buys_and_refreshes() -> void:
+func test_pressing_a_view_buys_its_node_and_refreshes() -> void:
+	_progression.bank_mass(20.0)
+	_shop.open()
+	_view(&"tank_1").pressed.emit()
+	assert_eq(_progression.buys(TREE.find(&"tank_1")), 1)
+	assert_eq(_shop.bank_label.text, "BANK 15Mkg")
+	assert_eq(_shop.level_label.text, "PILOT LV 1")
+	assert_eq(_view(&"tank_1").state, SkillNodeView.State.MAXED)
+	assert_eq(_view(&"booster").state, SkillNodeView.State.BUYABLE)
+
+
+func test_pressing_a_locked_view_buys_nothing() -> void:
 	_progression.bank_mass(100.0)
 	_shop.open()
-	_button(_booster).pressed.emit()
-	assert_eq(_progression.level_of(_booster), 1)
-	assert_string_contains(_shop.bank_label.text, "%.1f" % _progression.bank)
-	assert_string_contains(_button(_booster).text, "%.0f" % _booster.cost(1))
+	_view(&"tank_3").pressed.emit()
+	assert_eq(_progression.bank, 100.0)
+	assert_eq(_progression.player_level(), 0)
 
 
-func test_focus_returns_to_launch_when_the_focused_upgrade_runs_out() -> void:
-	_progression.bank_mass(_booster.cost(0))
+func test_the_camera_follows_the_focused_view() -> void:
 	_shop.open()
-	_button(_booster).grab_focus()
-	_button(_booster).pressed.emit()
-	assert_true(_shop.launch_button.has_focus())
+	var far := _view(&"tank_3")
+	far.grab_focus()
+	var before := _shop.camera.position.distance_to(_centre(far))
+	await wait_process_frames(10)
+	assert_lt(_shop.camera.position.distance_to(_centre(far)), before)
+
+
+func test_the_tree_is_placed_by_the_camera() -> void:
+	_shop.open()
+	await wait_process_frames(2)
+	assert_almost_eq(
+		_shop.tree_area.position,
+		_shop.camera.offset(_shop.view.size).round(),
+		Vector2.ONE,
+	)
+	assert_eq(_shop.tree_area.scale, Vector2.ONE * _shop.camera.zoom)
+
+
+func test_warp_out_launches_the_next_run() -> void:
+	var spy: ActionSpy = add_child_autofree(ActionSpy.new())
+	watch_signals(_shop)
+	_shop.open()
+	_press(&"warp_out")
+	assert_false(_shop.is_open)
+	assert_signal_emit_count(_shop, "launched", 1)
+	assert_eq(spy.seen, [] as Array[StringName])
+
+
+func test_the_warp_hint_launches_the_next_run() -> void:
+	watch_signals(_shop)
+	_shop.open()
+	_shop.warp_button.pressed.emit()
+	assert_false(get_tree().paused)
+	assert_false(_shop.is_open)
+	assert_signal_emit_count(_shop, "launched", 1)
 
 
 func test_pause_and_restart_are_swallowed_while_open() -> void:
@@ -157,15 +186,6 @@ func test_pause_and_restart_pass_through_when_closed() -> void:
 	assert_eq(spy.seen, [&"pause"] as Array[StringName])
 
 
-func test_launch_unpauses_and_emits_launched() -> void:
-	watch_signals(_shop)
-	_shop.open()
-	_shop.launch_button.pressed.emit()
-	assert_false(get_tree().paused)
-	assert_false(_shop.is_open)
-	assert_signal_emit_count(_shop, "launched", 1)
-
-
 func test_launching_a_closed_shop_is_reported() -> void:
 	_shop.launch()
 	assert_push_error("the shop must be open")
@@ -175,3 +195,22 @@ func test_opening_twice_is_reported() -> void:
 	_shop.open()
 	_shop.open()
 	assert_push_error("the shop must not already be open")
+
+
+func test_a_run_starter_without_a_valid_tree_is_reported() -> void:
+	var shop: ShopOverlay = SHOP_SCENE.instantiate()
+	shop.warp_controller = _warp
+	shop.run_starter = autofree(RunStarter.new())
+	shop.progression = _progression
+	add_child_autofree(shop)
+	assert_push_error(
+		"warp_controller and run_starter with a valid tree must be set"
+	)
+	assert_eq(shop.views.size(), 0)
+
+
+func test_views_are_styled_only_when_the_shop_opens() -> void:
+	var view := _view(&"tank_1")
+	assert_eq(view.footer.text, "")
+	_shop.open()
+	assert_eq(view.footer.text, "5Mkg")

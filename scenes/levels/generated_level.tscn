@@ -16,20 +16,13 @@
 [ext_resource type="Script" uid="uid://c641isj8g288n" path="res://scripts/levels/warp_controller.gd" id="14_warp"]
 [ext_resource type="Script" uid="uid://balfw0sj2q5yt" path="res://scripts/effects/warp_effect.gd" id="15_effect"]
 [ext_resource type="PackedScene" path="res://scenes/ui/shop_overlay.tscn" id="16_shop"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/starting_size_upgrade.tres" id="17_size"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/fuel_tank_upgrade.tres" id="18_tank"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/refill_rate_upgrade.tres" id="19_refill"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/booster_upgrade.tres" id="20_booster"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/pickup_radius_upgrade.tres" id="21_pickup"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/turn_speed_upgrade.tres" id="22_turn"]
-[ext_resource type="Script" uid="uid://b032a23xjpbpe" path="res://scripts/progression/upgrade.gd" id="23_upgrade"]
 [ext_resource type="Environment" path="res://resources/environments/space.tres" id="24_space"]
 [ext_resource type="PackedScene" path="res://scenes/bodies/sun.tscn" id="25_sun"]
 [ext_resource type="Script" path="res://scripts/effects/crash_effect.gd" id="26_crash"]
 [ext_resource type="PackedScene" path="res://scenes/ui/fuel_gauge.tscn" id="27_gauge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/minimap.tscn" id="28_minimap"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/cargo_tanks_upgrade.tres" id="29_cargo_tanks"]
 [ext_resource type="PackedScene" path="res://scenes/ui/cargo_gauge.tscn" id="30_cargo_gauge"]
+[ext_resource type="Resource" path="res://resources/progression/skill_tree.tres" id="31_skill_tree"]
 
 [node name="GeneratedLevel" type="Node3D" unique_id=1472244937]
 
@@ -77,7 +70,7 @@ lose_controller = NodePath("../LoseController")
 
 [node name="RunStarter" type="Node" parent="." unique_id=1530000001 node_paths=PackedStringArray("player")]
 script = ExtResource("13_starter")
-upgrades = Array[ExtResource("23_upgrade")]([ExtResource("17_size"), ExtResource("18_tank"), ExtResource("19_refill"), ExtResource("20_booster"), ExtResource("21_pickup"), ExtResource("22_turn"), ExtResource("29_cargo_tanks")])
+tree = ExtResource("31_skill_tree")
 player = NodePath("../Player")
 
 [node name="WarpController" type="Node" parent="." unique_id=1530000002 node_paths=PackedStringArray("player", "lose_controller", "warp_effect")]

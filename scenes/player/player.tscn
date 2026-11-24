@@ -17,18 +17,19 @@
 [ext_resource type="PackedScene" uid="uid://c71o8lajyu4a1" path="res://resources/models/low_poly_ship.fbx" id="15_ship"]
 [ext_resource type="PackedScene" path="res://scenes/effects/blue_thrust.tscn" id="16_thrust"]
 [ext_resource type="Script" uid="uid://d1i6ujkw1qm20" path="res://scripts/effects/thrust_effect.gd" id="17_thrust_effect"]
-[ext_resource type="Script" path="res://scripts/components/cargo_component.gd" id="18_cargo"]
-[ext_resource type="Script" path="res://scripts/components/cargo_weight_component.gd" id="19_cargo_weight"]
-[ext_resource type="Script" path="res://scripts/components/pass_through_component.gd" id="20_pass_through"]
+[ext_resource type="Script" uid="uid://d1m15smwrv2k1" path="res://scripts/components/cargo_component.gd" id="18_cargo"]
+[ext_resource type="Script" uid="uid://gjwy56ruy6qb" path="res://scripts/components/cargo_weight_component.gd" id="19_cargo_weight"]
+[ext_resource type="Script" uid="uid://qfutnymjyv2b" path="res://scripts/components/pass_through_component.gd" id="20_pass_through"]
+[ext_resource type="Script" uid="uid://b26jlpmjsptsf" path="res://scripts/components/missing_fuel_boost_component.gd" id="21_missing_fuel_boost"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 radius = 0.50158125
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight", "cargo")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight", "cargo", "cargo_weight", "missing_fuel_boost")]
 gravity_scale = 0.0
 inertia = Vector3(0.1, 0.1, 0.1)
 linear_damp_mode = 1
-linear_damp = 0.25
+linear_damp = 0.15
 angular_damp = 1.0
 script = ExtResource("1_4fnjr")
 flight_input = NodePath("PlayerInputComponent")
@@ -42,6 +43,8 @@ gravity_receiver = NodePath("GravityReceiverComponent")
 pickup_component = NodePath("PickupComponent")
 arcade_flight = NodePath("ArcadeFlightComponent")
 cargo = NodePath("CargoComponent")
+cargo_weight = NodePath("CargoWeightComponent")
+missing_fuel_boost = NodePath("MissingFuelBoostComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
@@ -157,3 +160,8 @@ script = ExtResource("17_thrust_effect")
 flight_input = NodePath("../PlayerInputComponent")
 fuel = NodePath("../FuelComponent")
 particles = NodePath("../Mesh/BlueThrust")
+
+[node name="MissingFuelBoostComponent" type="Node" parent="." unique_id=949296949 node_paths=PackedStringArray("thruster", "fuel")]
+script = ExtResource("21_missing_fuel_boost")
+thruster = NodePath("../ThrusterComponent")
+fuel = NodePath("../FuelComponent")

@@ -4,7 +4,7 @@ const LEVEL_PATH := "res://scenes/levels/generated_level.tscn"
 const FRAMES := 30
 const LEVEL_SEED := 11
 
-const UPGRADES := "res://resources/progression/upgrades/"
+const TREE_PATH := "res://resources/progression/skill_tree.tres"
 
 var _level: Node3D
 var _progression: Progression
@@ -143,50 +143,36 @@ func test_level_wires_the_game_loop() -> void:
 	assert_eq(shop.run_starter, starter)
 
 
-func test_the_run_starter_holds_all_seven_upgrades() -> void:
+func test_the_shop_is_the_skill_tree() -> void:
+	var shop: ShopOverlay = _level.get_node("ShopOverlay")
+	var tree: SkillTree = load(TREE_PATH)
+	assert_eq(shop.views.size(), tree.nodes.size())
+	_level.get_node("WarpController").warp_finished.emit()
+	assert_true(shop.is_open)
+	shop.reload_on_launch = false
+	shop.launch()
+
+
+func test_the_run_starter_holds_the_tuned_skill_tree() -> void:
 	var starter: RunStarter = _level.get_node("RunStarter")
-	var ids := { }
-	for upgrade in starter.upgrades:
-		ids[upgrade.id] = true
-	assert_eq(starter.upgrades.size(), 7)
-	assert_eq(ids.size(), 7)
-	assert_true(ids.has(&"cargo_tanks"))
-	assert_true(starter.started)
-	assert_eq(_progression.runs, 1)
+	assert_eq(starter.tree, load(TREE_PATH))
 
 
-func test_the_run_starts_upgraded_and_the_home_ring_follows() -> void:
-	var booster: Upgrade = load(UPGRADES + "booster_upgrade.tres")
-	var size: Upgrade = load(UPGRADES + "starting_size_upgrade.tres")
+func test_the_run_starts_from_the_bought_tree() -> void:
+	var tree: SkillTree = load(TREE_PATH)
 	var base: Player = load("res://scenes/player/player.tscn").instantiate()
 	var base_thrust := base.thruster.back_thrust_force
-	var base_mass := base.mass_component.starting_mass
 	base.free()
 	var progression := Progression.new()
 	progression.bank_mass(1000.0)
-	progression.buy(booster)
-	progression.buy(size)
-	progression.buy(size)
+	progression.buy(tree.find(&"tank_1"))
+	progression.buy(tree.find(&"booster"))
 	_rebuild_with(progression)
 	var player := _player()
-	assert_almost_eq(
-		player.thruster.back_thrust_force,
-		base_thrust * booster.multiplier(1),
-		1e-4,
-	)
-	var start_mass := base_mass * size.multiplier(2)
-	assert_almost_eq(player.mass_component.current_mass, start_mass, 1e-6)
-	var ring := _streamer().renderer_for(PackedInt32Array([0]))
-	var heaviest := 0.0
-	for index in ring.count():
-		assert_lte(ring.layout.mass[index], start_mass)
-		heaviest = maxf(heaviest, ring.layout.mass[index])
-	var ceiling := (_streamer().tiers[1] as Tier).mass_ceiling_fraction
-	assert_gt(
-		heaviest,
-		base_mass * ceiling,
-		"the ring must follow the upgraded mass",
-	)
+	assert_eq(player.cargo.tanks, 2)
+	assert_almost_eq(player.thruster.back_thrust_force, base_thrust * 1.2, 1e-4)
+	assert_true((_level.get_node("RunStarter") as RunStarter).started)
+	assert_eq(progression.runs, 1)
 
 
 func test_warping_banks_and_opens_the_shop_then_launch_unpauses() -> void:
@@ -224,7 +210,7 @@ func test_the_cargo_gauge_follows_the_cargo_under_the_fuel_gauge() -> void:
 func test_the_player_carries_the_tuned_values() -> void:
 	var player := _player()
 	assert_eq(player.thruster.back_thrust_force, 150.0)
-	assert_eq(player.linear_damp, 0.25)
+	assert_almost_eq(player.linear_damp, 0.15, 1e-6)
 	assert_eq(player.fuel_component.refill_time, 7.5)
 	assert_eq(player.cargo.tank_size, 5.0)
 	assert_eq(player.cargo.tanks, 1)

@@ -161,7 +161,7 @@ rest.
 | `gravity_constant` | 10000 (was 10 in the level) |
 | `gravity_falloff_exponent` | 3.5 |
 | `gravity_drift` | on |
-| `drag` (linear damp) | 0.25 (was 0) |
+| `drag` (linear damp) | 0.25 (was 0); retuned to 0.15 on 2026-11-24 |
 | `thrust` (back thrust force) | 150 (was 100) |
 | fuel `refill_time` | 7.5 (was 5) |
 | fuel `tank_size` | 1 |
@@ -311,6 +311,8 @@ to hit a random small planet when you don't expect it)."
   `body.mass`, which includes cargo) for what is heavier.
 
 ### Upgrade (changed, see [game loop](12_game_loop.md))
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `SkillEffect` and the skill tree.
 - New export `max_level ≥ −1` (−1, no cap). With a cap, `cost(level)` for
   `level ≥ max_level` is `INF`, so it can never be bought.
   `is_maxed(level)` is true exactly then.
@@ -318,6 +320,8 @@ to hit a random small planet when you don't expect it)."
   maxed stat (its button is already disabled, as it's unaffordable).
 
 ### CargoTanksUpgrade (`scripts/progression/upgrades/cargo_tanks_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `CargoTanksEffect` and the tree's Mass Tank nodes.
 An `Upgrade`. Resource `cargo_tanks_upgrade.tres`: id `cargo_tanks`,
 display name "Mass tanks", step 1, base cost 5, cost growth 2, max level 2
 (so 1 to 3 tanks).

@@ -115,3 +115,4 @@ Features:
 
 Features:
 - [Mass tanks](features/14_mass_tanks.md) ✅ (5.1–5.12)
+- [Skill tree](features/15_skill_tree.md) ✅ (5.13–5.22)

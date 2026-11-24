@@ -9,6 +9,13 @@ extends Node
 @export_group("Thrust")
 @export var back_thrust_force := 1.0
 
+var thrust_multiplier := 1.0:
+	set(value):
+		var message := "thrust_multiplier must not be negative"
+		if not Contract.require(value >= 0.0, message):
+			return
+		thrust_multiplier = value
+
 
 func _physics_process(delta: float) -> void:
 	apply_thrust(flight_input.thrust_intent, delta)
@@ -29,7 +36,10 @@ func apply_thrust(intent: Vector3, delta: float) -> void:
 	var local_force := Vector3(
 		0.0,
 		0.0,
-		intent.z * back_thrust_force * _fuel_fraction(intent, delta),
+		(
+			intent.z * back_thrust_force * thrust_multiplier
+			* _fuel_fraction(intent, delta)
+		),
 	)
 	body.apply_central_force(body.global_basis * local_force)
 

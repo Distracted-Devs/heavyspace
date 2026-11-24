@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="PickupRadiusEffect" format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/effects/pickup_radius_effect.gd" id="1_effect"]
+
+[resource]
+script = ExtResource("1_effect")

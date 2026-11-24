@@ -31,6 +31,8 @@ player's input is in [controls](05_controls.md).
 - The force is scaled by drawn / asked for, so a full tank gives full force,
   an empty tank gives none, and the last frame before empty gives the part
   it could pay for.
+- Changed 2026-11-24 (see [skill tree](15_skill_tree.md)): the force is
+  also scaled by the runtime `thrust_multiplier` (1, never negative).
 
 ### RotationComponent (`scripts/components/rotation_component.gd`)
 - Applying rotation requires every axis of the rotation intent to be within

@@ -174,6 +174,8 @@ entry per API, before that API is written.
   for the next change.
 
 ### Upgrade (`scripts/progression/upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `SkillEffect`, `SkillNode` and `SkillTree`.
 - A Resource. Exports: `id: StringName` (non-empty, the key progression
   stores levels under), `display_name: String`, `step ≥ 0`, `base_cost > 0`
   and `cost_growth ≥ 1`.
@@ -198,28 +200,38 @@ entry per API, before that API is written.
   `cost` INF at the cap; `is_maxed(level)`.
 
 ### StartingSizeUpgrade (`scripts/progression/upgrades/starting_size_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  nothing: starting size is no longer sold.
 An `Upgrade` (see above). Resource `starting_size_upgrade.tres`: id
 `starting_size`, step 0.5.
 - `_apply(player, m)`: `mass_component.start_multiplier × m`, so the run
   starts bigger and looks bigger.
 
 ### FuelTankUpgrade (`scripts/progression/upgrades/fuel_tank_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `FuelTankEffect`.
 An `Upgrade` (see above). Resource `fuel_tank_upgrade.tres`: id `tank_size`,
 step 0.25.
 - `_apply(player, m)`: `fuel_component.tank_size × m`.
 
 ### RefillRateUpgrade (`scripts/progression/upgrades/refill_rate_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `RefillRateEffect`.
 An `Upgrade` (see above). Resource `refill_rate_upgrade.tres`: id
 `refill_rate`, step 0.25.
 - `_apply(player, m)`: `fuel_component.refill_time ÷ m`, so the tank refills
   `m` times as fast.
 
 ### BoosterUpgrade (`scripts/progression/upgrades/booster_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `BoosterEffect`.
 An `Upgrade` (see above). Resource `booster_upgrade.tres`: id
 `booster_strength`, step 0.2.
 - `_apply(player, m)`: `thruster.back_thrust_force × m`.
 
 ### PickupRadiusUpgrade (`scripts/progression/upgrades/pickup_radius_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `PickupRadiusEffect`.
 An `Upgrade` (see above). Resource `pickup_radius_upgrade.tres`: id
 `pickup_radius`, step 0.2.
 - `_apply(player, m)`: `pickup_component.pickup_radius × m`. Requires the
@@ -227,12 +239,17 @@ An `Upgrade` (see above). Resource `pickup_radius_upgrade.tres`: id
   changes nothing.
 
 ### TurnSpeedUpgrade (`scripts/progression/upgrades/turn_speed_upgrade.gd`)
+- Removed 2026-11-24 (see [skill tree](15_skill_tree.md)): replaced by
+  `ManoeuvringEffect`.
 An `Upgrade` (see above). Resource `turn_speed_upgrade.tres`: id
 `turn_speed`, step 0.2.
 - `_apply(player, m)`: `rotator.pitch_torque`, `turn_torque` and
   `roll_torque` each × m.
 
 ### Progression (`scripts/progression/progression.gd`)
+- Changed 2026-11-24 (see [skill tree](15_skill_tree.md)): `level_of`,
+  `can_afford` and `buy(upgrade)` are replaced by skill node buys
+  (`buys`, `player_level`, `can_buy`, `buy(node)`).
 - A `RefCounted`, so tests make a fresh one. Read-only state: `bank`
   (banked mass), `runs` (runs started) and `level_of(upgrade)` (keyed by
   `upgrade.id`, 0 if never bought; requires an upgrade).
@@ -257,6 +274,8 @@ An `Upgrade` (see above). Resource `turn_speed_upgrade.tres`: id
   take `RunProgress.progression`. Tests set their own.
 
 ### RunStarter (`scripts/levels/run_starter.gd`)
+- Changed 2026-11-24 (see [skill tree](15_skill_tree.md)): `upgrades` is
+  replaced by `tree: SkillTree`.
 - Exports: `player: Player` (Components) and `upgrades: Array[Upgrade]`
   (Upgrades: the six resources; the shop reads the same list from here).
   `progression: Progression` defaults to `RunProgress.progression` when it
@@ -335,8 +354,12 @@ AI generated placeholder: it MUST be reworked in Phase 5 (see the
   which include the d-pad and the left stick. The test asserts those
   events too.
 - Checked by `tests/test_project_input.gd`.
+- Changed 2026-11-24 (see [skill tree](15_skill_tree.md)): `warp_out` is
+  Space and joypad X (not A), WASD join the `ui_` directions, and
+  `shop_zoom_in` / `shop_zoom_out` are added.
 
 ### ShopOverlay (`scripts/ui/shop_overlay.gd`, `scenes/ui/shop_overlay.tscn`)
+- Rebuilt 2026-11-24 as the skill tree: see [skill tree](15_skill_tree.md).
 - A CanvasLayer with `process_mode = ALWAYS`. Exports: `warp_controller`
   and `run_starter` (Components; the upgrades are `run_starter.upgrades`)
   and `reload_on_launch` (Shop, default on; tests turn it off).

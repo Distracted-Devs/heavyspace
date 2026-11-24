@@ -52,3 +52,39 @@ func test_the_dpad_and_left_stick_move_focus() -> void:
 		var expected: Array = directions[action]
 		assert_true(_has_button(action, expected[0]), action)
 		assert_true(_has_axis(action, expected[1], expected[2]), action)
+
+
+func _has_wheel(action: StringName, button: MouseButton) -> bool:
+	return InputMap.action_get_events(action).any(
+		func(event: InputEvent) -> bool:
+			var wheel := event as InputEventMouseButton
+			return wheel != null and wheel.button_index == button,
+	)
+
+
+func test_warp_out_is_only_space_and_joypad_x() -> void:
+	assert_eq(InputMap.action_get_events(&"warp_out").size(), 2)
+	assert_true(_has_key(&"warp_out", KEY_SPACE))
+	assert_true(_has_button(&"warp_out", JOY_BUTTON_X))
+	assert_false(_has_button(&"warp_out", JOY_BUTTON_A))
+
+
+func test_the_arrows_and_wasd_move_focus() -> void:
+	var keys := {
+		&"ui_up": [KEY_UP, KEY_W],
+		&"ui_down": [KEY_DOWN, KEY_S],
+		&"ui_left": [KEY_LEFT, KEY_A],
+		&"ui_right": [KEY_RIGHT, KEY_D],
+	}
+	for action: StringName in keys:
+		for key: Key in keys[action]:
+			assert_true(_has_key(action, key), "%s %d" % [action, key])
+
+
+func test_triggers_q_e_and_the_wheel_zoom_the_shop() -> void:
+	assert_true(_has_axis(&"shop_zoom_in", JOY_AXIS_TRIGGER_RIGHT, 1.0))
+	assert_true(_has_key(&"shop_zoom_in", KEY_E))
+	assert_true(_has_wheel(&"shop_zoom_in", MOUSE_BUTTON_WHEEL_UP))
+	assert_true(_has_axis(&"shop_zoom_out", JOY_AXIS_TRIGGER_LEFT, 1.0))
+	assert_true(_has_key(&"shop_zoom_out", KEY_Q))
+	assert_true(_has_wheel(&"shop_zoom_out", MOUSE_BUTTON_WHEEL_DOWN))

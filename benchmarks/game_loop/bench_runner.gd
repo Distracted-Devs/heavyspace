@@ -9,8 +9,9 @@ extends Node
 # Phase 1 flies for real (arcade flight, physics, boost held, turning on a
 # fixed pattern) from the home ring's mid-radius, with collisions off so it
 # can't crash. Phase 2 warps out and runs the warp effect. Phase 3 opens the
-# shop with a bank of 1000 and buys `buys` upgrades, one a frame, rotating
-# through the six. Then `starts` run starts are timed on fresh players.
+# shop with a bank of 1000 and presses `buys` skill tree nodes, one a frame,
+# rotating through the tree (locked or maxed ones buy nothing). Then
+# `starts` run starts are timed on fresh players.
 # Prints one line, "RESULT {json}". Times are in ms.
 
 const LEVEL := "res://scenes/levels/generated_level.tscn"
@@ -239,7 +240,7 @@ func _release_all() -> void:
 
 func _shop_frame() -> void:
 	if _buys < int(_arg("buys", "50")):
-		var button := _shop.buttons[_buys % _shop.buttons.size()]
+		var button := _shop.views[_buys % _shop.views.size()]
 		var start := Time.get_ticks_usec()
 		button.pressed.emit()
 		_buy_ms.append((Time.get_ticks_usec() - start) / 1000.0)
@@ -258,7 +259,7 @@ func _time_run_starts() -> void:
 		var player: Player = scene.instantiate()
 		var starter := RunStarter.new()
 		starter.player = player
-		starter.upgrades = _starter.upgrades
+		starter.tree = _starter.tree
 		starter.progression = _progression
 		var start := Time.get_ticks_usec()
 		starter.start_run()

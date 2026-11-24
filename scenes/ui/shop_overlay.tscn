@@ -1,55 +1,161 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/shop_overlay.gd" id="1_shop"]
+[ext_resource type="Script" path="res://scripts/ui/shop_camera.gd" id="2_camera"]
+[ext_resource type="Environment" path="res://resources/environments/space.tres" id="3_space"]
+[ext_resource type="Shader" path="res://resources/shaders/holo_scanlines.gdshader" id="4_scanlines"]
 
-[sub_resource type="Theme" id="Theme_upgrades"]
-Button/font_sizes/font_size = 26
+[sub_resource type="SystemFont" id="SystemFont_mono"]
+font_names = PackedStringArray("Menlo", "Consolas", "DejaVu Sans Mono", "monospace")
 
-[node name="ShopOverlay" type="CanvasLayer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+bg_color = Color(0, 0.04, 0.07, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.9, 1, 0.6)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scanlines"]
+shader = ExtResource("4_scanlines")
+
+[node name="ShopOverlay" type="CanvasLayer" node_paths=PackedStringArray("camera", "view", "tree_area", "level_label", "bank_label", "warp_button", "sky_camera")]
 process_mode = 3
 layer = 30
 script = ExtResource("1_shop")
+camera = NodePath("ShopCamera")
+view = NodePath("View")
+tree_area = NodePath("View/Tree")
+level_label = NodePath("Header/Rows/LevelLabel")
+bank_label = NodePath("Header/Rows/BankLabel")
+warp_button = NodePath("Hints/Row/WarpButton")
+sky_camera = NodePath("Sky/SkyViewport/SkyCamera")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="ShopCamera" type="Node" parent="."]
+script = ExtResource("2_camera")
+
+[node name="Sky" type="SubViewportContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.05, 0.1, 1)
+mouse_filter = 2
+stretch = true
 
-[node name="Centre" type="CenterContainer" parent="."]
+[node name="SkyViewport" type="SubViewport" parent="Sky"]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Sky/SkyViewport"]
+environment = ExtResource("3_space")
+
+[node name="SkyCamera" type="Camera3D" parent="Sky/SkyViewport"]
+fov = 70.0
+
+[node name="View" type="Control" parent="."]
+clip_contents = true
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="Box" type="VBoxContainer" parent="Centre"]
-custom_minimum_size = Vector2(700, 0)
-layout_mode = 2
-theme_override_constants/separation = 14
+[node name="Tree" type="Control" parent="View"]
+layout_mode = 0
+mouse_filter = 2
 
-[node name="Title" type="Label" parent="Centre/Box"]
+[node name="Header" type="PanelContainer" parent="."]
+offset_left = 28.0
+offset_top = 24.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Rows" type="VBoxContainer" parent="Header"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 56
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Header/Rows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.8, 1)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 40
 text = "SHOP"
-horizontal_alignment = 1
 
-[node name="BankLabel" type="Label" parent="Centre/Box"]
-unique_name_in_owner = true
+[node name="LevelLabel" type="Label" parent="Header/Rows"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 22
 
-[node name="Upgrades" type="VBoxContainer" parent="Centre/Box"]
-unique_name_in_owner = true
+[node name="BankLabel" type="Label" parent="Header/Rows"]
 layout_mode = 2
-theme = SubResource("Theme_upgrades")
-theme_override_constants/separation = 14
+theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 22
 
-[node name="LaunchButton" type="Button" parent="Centre/Box"]
-unique_name_in_owner = true
+[node name="Hints" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Row" type="HBoxContainer" parent="Hints"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Launch next run"
+mouse_filter = 2
+theme_override_constants/separation = 28
+
+[node name="Move" type="Label" parent="Hints/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 18
+text = "[WASD/ARROWS] MOVE"
+
+[node name="Buy" type="Label" parent="Hints/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 18
+text = "[A/ENTER] BUY"
+
+[node name="Zoom" type="Label" parent="Hints/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 18
+text = "[LT/RT/WHEEL/Q/E] ZOOM"
+
+[node name="WarpButton" type="Button" parent="Hints/Row"]
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 0.3, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 18
+text = "[X/SPACE] WARP IN >>"
+flat = true
+
+[node name="Scanlines" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_scanlines")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

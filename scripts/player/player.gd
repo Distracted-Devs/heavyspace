@@ -13,6 +13,8 @@ extends RigidBody3D
 @export var pickup_component: PickupComponent
 @export var arcade_flight: ArcadeFlightComponent
 @export var cargo: CargoComponent
+@export var cargo_weight: CargoWeightComponent
+@export var missing_fuel_boost: MissingFuelBoostComponent
 
 
 func stop_flight() -> void:

@@ -1,0 +1,122 @@
+[gd_resource type="Resource" script_class="SkillTree" format=3 uid="uid://g7gpuobtrc3u"]
+
+[ext_resource type="Script" uid="uid://iyvj5nhcnxw7" path="res://scripts/progression/skill_tree.gd" id="1_tree"]
+[ext_resource type="Script" uid="uid://7g7ctbjoeur8" path="res://scripts/progression/skill_node.gd" id="2_node"]
+[ext_resource type="Resource" path="res://resources/progression/effects/cargo_tanks_effect.tres" id="3_tanks"]
+[ext_resource type="Resource" path="res://resources/progression/effects/fuel_tank_effect.tres" id="4_fuel"]
+[ext_resource type="Resource" path="res://resources/progression/effects/refill_rate_effect.tres" id="5_refill"]
+[ext_resource type="Resource" path="res://resources/progression/effects/booster_effect.tres" id="6_booster"]
+[ext_resource type="Resource" path="res://resources/progression/effects/pickup_radius_effect.tres" id="7_pickup"]
+[ext_resource type="Resource" path="res://resources/progression/effects/mining_effect.tres" id="8_mining"]
+[ext_resource type="Resource" path="res://resources/progression/effects/missing_fuel_boost_effect.tres" id="9_boost"]
+[ext_resource type="Resource" path="res://resources/progression/effects/manoeuvring_effect.tres" id="10_manoeuvre"]
+[ext_resource type="Resource" path="res://resources/progression/effects/mass_efficiency_effect.tres" id="11_mass"]
+
+[sub_resource type="Resource" id="Node_tank_1"]
+script = ExtResource("2_node")
+id = &"tank_1"
+title = "Mass Tank +1"
+effect = ExtResource("3_tanks")
+step = 1.0
+cost = 5.0
+
+[sub_resource type="Resource" id="Node_fuel_tank"]
+script = ExtResource("2_node")
+id = &"fuel_tank"
+title = "Fuel tank size +25%"
+effect = ExtResource("4_fuel")
+step = 0.25
+max_buys = 5
+required_level = 1
+grid = Vector2(1, -1)
+
+[sub_resource type="Resource" id="Node_refill_rate"]
+script = ExtResource("2_node")
+id = &"refill_rate"
+title = "Fuel refill rate +10%"
+effect = ExtResource("5_refill")
+step = 0.1
+max_buys = 5
+required_level = 1
+grid = Vector2(1, 0)
+
+[sub_resource type="Resource" id="Node_booster"]
+script = ExtResource("2_node")
+id = &"booster"
+title = "Booster strength +20%"
+effect = ExtResource("6_booster")
+max_buys = 5
+required_level = 1
+grid = Vector2(1, 1)
+
+[sub_resource type="Resource" id="Node_tank_2"]
+script = ExtResource("2_node")
+id = &"tank_2"
+title = "Mass Tank +1"
+effect = ExtResource("3_tanks")
+step = 1.0
+cost = 25.0
+max_buys = 2
+required_level = 4
+grid = Vector2(2, 0)
+
+[sub_resource type="Resource" id="Node_pickup_radius"]
+script = ExtResource("2_node")
+id = &"pickup_radius"
+title = "Pickup radius +20%"
+effect = ExtResource("7_pickup")
+max_buys = 5
+required_level = 6
+grid = Vector2(3, -2)
+
+[sub_resource type="Resource" id="Node_mining"]
+script = ExtResource("2_node")
+id = &"mining"
+title = "Mining efficiency +20%"
+effect = ExtResource("8_mining")
+max_buys = 5
+required_level = 6
+grid = Vector2(3, -1)
+
+[sub_resource type="Resource" id="Node_boost_missing_fuel"]
+script = ExtResource("2_node")
+id = &"boost_missing_fuel"
+title = "10% booster strength per 10% missing fuel"
+effect = ExtResource("9_boost")
+step = 1.0
+cost = 15.0
+required_level = 6
+grid = Vector2(3, 0)
+
+[sub_resource type="Resource" id="Node_manoeuvring"]
+script = ExtResource("2_node")
+id = &"manoeuvring"
+title = "Manoeuvring +20%"
+effect = ExtResource("10_manoeuvre")
+max_buys = 5
+required_level = 6
+grid = Vector2(3, 1)
+
+[sub_resource type="Resource" id="Node_mass_efficiency"]
+script = ExtResource("2_node")
+id = &"mass_efficiency"
+title = "Mass efficiency +15%"
+effect = ExtResource("11_mass")
+step = 0.15
+max_buys = 5
+required_level = 6
+grid = Vector2(3, 2)
+
+[sub_resource type="Resource" id="Node_tank_3"]
+script = ExtResource("2_node")
+id = &"tank_3"
+title = "Mass Tank +1"
+effect = ExtResource("3_tanks")
+step = 1.0
+cost = 25.0
+required_level = 15
+grid = Vector2(4, 0)
+
+[resource]
+script = ExtResource("1_tree")
+nodes = Array[ExtResource("2_node")]([SubResource("Node_tank_1"), SubResource("Node_fuel_tank"), SubResource("Node_refill_rate"), SubResource("Node_booster"), SubResource("Node_tank_2"), SubResource("Node_pickup_radius"), SubResource("Node_mining"), SubResource("Node_boost_missing_fuel"), SubResource("Node_manoeuvring"), SubResource("Node_mass_efficiency"), SubResource("Node_tank_3")])

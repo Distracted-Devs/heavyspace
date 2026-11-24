@@ -4,8 +4,8 @@ extends Node
 @export_group("Components")
 @export var player: Player
 
-@export_group("Upgrades")
-@export var upgrades: Array[Upgrade] = []
+@export_group("Skill tree")
+@export var tree: SkillTree
 
 var progression: Progression
 var started := false
@@ -26,20 +26,13 @@ func start_run() -> void:
 	):
 		return
 	if not Contract.require(
-		_upgrades_are_unique(),
-		"upgrades must be set with unique ids",
+		tree == null or tree.is_valid(),
+		"the skill tree must be valid",
 	):
 		return
-	for upgrade in upgrades:
-		upgrade.apply(player, progression.level_of(upgrade))
+	if tree != null:
+		var buys := progression.buys_by_id()
+		for effect in tree.effects():
+			effect.apply(player, tree.amount(effect, buys))
 	progression.start_run()
 	started = true
-
-
-func _upgrades_are_unique() -> bool:
-	var ids := { }
-	for upgrade in upgrades:
-		if upgrade == null or ids.has(upgrade.id):
-			return false
-		ids[upgrade.id] = true
-	return true

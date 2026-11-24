@@ -146,3 +146,19 @@ func test_thruster_without_fuel_never_runs_out() -> void:
 		2.0 * _thruster.back_thrust_force / _body.mass,
 		SPEED_TOLERANCE,
 	)
+
+
+func test_the_thrust_multiplier_scales_the_force() -> void:
+	_thruster.back_thrust_force = 3.0
+	_thruster.thrust_multiplier = 2.0
+	_input.thrust_intent = Vector3.FORWARD
+	await wait_physics_frames(FRAMES)
+	assert_almost_eq(_body.linear_velocity.length(), _expected_speed(6.0), 1e-2)
+
+
+func test_a_negative_thrust_multiplier_is_reported_and_ignored() -> void:
+	_thruster.thrust_multiplier = -1.0
+	assert_push_error(
+		"Pre-condition broken: thrust_multiplier must not be negative"
+	)
+	assert_eq(_thruster.thrust_multiplier, 1.0)
