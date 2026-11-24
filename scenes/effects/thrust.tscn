@@ -21,7 +21,7 @@ texture_mode = 1
 curve = SubResource("Curve_ld61u")
 
 [sub_resource type="Gradient" id="Gradient_3qj4e"]
-colors = PackedColorArray(0.138013, 0.1276, 0.44, 1, 0.111499, 0.432414, 1, 1)
+colors = PackedColorArray(0.0564804, 0.106145, 0.0156542, 1, 1, 1, 0.09, 1)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_o81up"]
 gradient = SubResource("Gradient_3qj4e")
