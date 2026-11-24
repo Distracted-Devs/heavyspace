@@ -148,6 +148,8 @@ entry per API, before that API is written.
   - `alignment = 1` leaves the velocity along forward, and `alignment = 0`
     leaves it unchanged
   - a body at rest stays at rest
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): with a `gravity_receiver` whose drift
+  is enabled, only `velocity − drift` is aligned and the drift is kept.
 - `Player.arcade_flight` (optional) is disabled by `Player.stop_flight()`
   (see [lose flow](09_lose_flow.md)).
 
@@ -191,6 +193,9 @@ entry per API, before that API is written.
   stat by `m = multiplier(level)`, leaves every other stat alone, and at
   level 0 changes nothing. Its resource in `resources/progression/upgrades/`
   has `base_cost` 5 and `cost_growth` 1.6.
+
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): `max_level` (−1, no cap) makes
+  `cost` INF at the cap; `is_maxed(level)`.
 
 ### StartingSizeUpgrade (`scripts/progression/upgrades/starting_size_upgrade.gd`)
 An `Upgrade` (see above). Resource `starting_size_upgrade.tres`: id
@@ -289,6 +294,11 @@ An `Upgrade` (see above). Resource `turn_speed_upgrade.tres`: id
   a warp starts. While the tree is paused (the shop) it gets no input.
 - `LoseController.disarm()` (see [lose flow](09_lose_flow.md)).
 
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): `warp_cost`, `warp_spends_cost` and
+  `run_start_mass` are gone. Warping needs full cargo tanks and banks the
+  cargo (`warp_needs_all_tanks`, `tanks_to_warp`, `bank_partial_tank`,
+  `warp_spend`).
+
 ### WarpEffect (`scripts/effects/warp_effect.gd`)
 AI generated placeholder: it MUST be reworked in Phase 5 (see the
 [roadmap](../roadmap.md)).
@@ -349,6 +359,8 @@ AI generated placeholder: it MUST be reworked in Phase 5 (see the
   it can't be afforded. Text isn't part of it.
 - `launch()` requires the shop to be open. It unpauses, emits `launched`
   and, with `reload_on_launch`, reloads the current scene.
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): a maxed
+  upgrade's button reads `name   Lv n (xm)   MAX`.
 
 ### MassComponent start multiplier (`scripts/components/mass_component.gd`)
 Extends the `MassComponent` contract in [flight](03_flight.md).

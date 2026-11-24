@@ -83,13 +83,7 @@ func _refresh() -> void:
 		var upgrade := upgrades[index]
 		var level := progression.level_of(upgrade)
 		var button := buttons[index]
-		button.text = "%s   Lv %d (x%.2f → x%.2f)   cost %.0f" % [
-			upgrade.display_name,
-			level,
-			upgrade.multiplier(level),
-			upgrade.multiplier(level + 1),
-			upgrade.cost(level),
-		]
+		button.text = _button_text(upgrade, level)
 		button.disabled = not progression.can_afford(upgrade)
 		if button.disabled and button.has_focus():
 			launch_button.grab_focus()
@@ -97,6 +91,22 @@ func _refresh() -> void:
 		_buttons_match(),
 		"each upgrade button must be disabled exactly when unaffordable",
 	)
+
+
+func _button_text(upgrade: Upgrade, level: int) -> String:
+	if upgrade.is_maxed(level):
+		return "%s   Lv %d (x%.2f)   MAX" % [
+			upgrade.display_name,
+			level,
+			upgrade.multiplier(level),
+		]
+	return "%s   Lv %d (x%.2f → x%.2f)   cost %.0f" % [
+		upgrade.display_name,
+		level,
+		upgrade.multiplier(level),
+		upgrade.multiplier(level + 1),
+		upgrade.cost(level),
+	]
 
 
 func _buttons_match() -> bool:

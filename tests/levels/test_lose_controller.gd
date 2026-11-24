@@ -72,6 +72,9 @@ func test_flying_into_a_heavier_planet_loses() -> void:
 	planet.radius = 1.0
 	planet.position = Vector3(0.0, 0.0, -3.0)
 	add_child_autofree(planet)
+	_player.gravity_receiver.drift_enabled = false
+	_player.gravity_receiver.gravity_constant = 10.0
+	_player.gravity_receiver.falloff_exponent = 2.0
 	_player.linear_velocity = Vector3(0.0, 0.0, -5.0)
 	await wait_physics_frames(FRAMES)
 	assert_true(_lose.lost)

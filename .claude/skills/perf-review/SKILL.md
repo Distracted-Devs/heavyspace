@@ -20,7 +20,8 @@ isn't automatically better than a slower, flexible one that's within budget.
    p95 and worst frame for the process and physics time
    (`Performance.TIME_PROCESS`, `Performance.TIME_PHYSICS_PROCESS`) and the
    feature's own timings (`Time.get_ticks_usec`). Run it with
-   `godot --headless -s benchmarks/<name>/<bench>.gd`.
+   `timeout 60 godot --headless -s benchmarks/<name>/<bench>.gd`, and keep
+   N small enough that it finishes well inside the minute.
 3. Measure with contracts on and off (`Contract.enabled = false`). Release
    builds don't run them, so the "off" figures are what players get.
 4. Record the baseline in the **Performance evaluation** section of

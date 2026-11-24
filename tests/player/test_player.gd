@@ -39,8 +39,9 @@ func test_back_thrust_follows_visual_forward_when_root_is_rotated() -> void:
 	assert_almost_eq(forward, Vector3.LEFT, Vector3.ONE * 1e-3)
 
 
-func test_coasting_keeps_its_speed_along_the_facing() -> void:
+func test_coasting_without_drag_keeps_its_speed_along_the_facing() -> void:
 	var player := _spawn_player()
+	player.linear_damp = 0.0
 	player.linear_velocity = Vector3(1.0, 2.0, -3.0)
 	var speed := player.linear_velocity.length()
 	await wait_physics_frames(THRUST_FRAMES)
@@ -121,8 +122,17 @@ func test_stopping_flight_disables_arcade_flight() -> void:
 	assert_eq(player.arcade_flight.process_mode, Node.PROCESS_MODE_DISABLED)
 
 
+func test_coasting_with_drag_slows_down() -> void:
+	var player := _spawn_player()
+	assert_gt(player.linear_damp, 0.0)
+	player.linear_velocity = -player.global_basis.z * 4.0
+	await wait_physics_frames(THRUST_FRAMES)
+	assert_lt(player.linear_velocity.length(), 4.0)
+
+
 func test_growing_slows_the_ship_by_the_momentum_factor() -> void:
 	var player := _spawn_player()
+	player.linear_damp = 0.0
 	var momentum: MomentumComponent = player.get_node("MomentumComponent")
 	var expected := 4.0 * pow(0.5, momentum.momentum_exponent)
 	player.linear_velocity = -player.global_basis.z * 4.0

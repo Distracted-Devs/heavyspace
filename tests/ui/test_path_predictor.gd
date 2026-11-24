@@ -242,3 +242,73 @@ func test_non_positive_step_is_reported_and_ignored() -> void:
 	_predictor.step = 0.0
 	assert_push_error("[Contract] Pre-condition broken: step must be positive")
 	assert_almost_eq(_predictor.step, 1.0 / 30.0, 1.0e-9)
+
+
+func test_the_falloff_exponent_changes_the_pull() -> void:
+	_predictor.duration = 1.0
+	_predict(Vector3(100.0, 0.0, 0.0), Vector3.ZERO)
+	var squared := _predictor.points[-1].x
+	_predictor.falloff_exponent = 3.0
+	_predict(Vector3(100.0, 0.0, 0.0), Vector3.ZERO)
+	assert_gt(_predictor.points[-1].x, squared, "a steeper falloff pulls less")
+
+
+func test_with_drift_gravity_bends_a_fully_aligned_path() -> void:
+	_predictor.drift_enabled = true
+	_predictor.duration = 5.0
+	var speed := 5.0
+	_predict(
+		Vector3(100.0, 0.0, 0.0),
+		Vector3.FORWARD * speed,
+		1.0,
+		Vector3.FORWARD,
+		1.0,
+	)
+	var end := _predictor.points[-1]
+	assert_lt(end.x, 100.0, "the path must curve towards the body")
+
+
+func test_without_drift_a_fully_aligned_path_stays_straight() -> void:
+	_predictor.duration = 5.0
+	_predict(
+		Vector3(100.0, 0.0, 0.0),
+		Vector3.FORWARD * 5.0,
+		1.0,
+		Vector3.FORWARD,
+		1.0,
+	)
+	assert_almost_eq(_predictor.points[-1].x, 100.0, 1e-6)
+
+
+func test_the_current_drift_carries_on_in_the_prediction() -> void:
+	_predictor.drift_enabled = true
+	_predictor.duration = 1.0
+	var drift := Vector3(0.0, 10.0, 0.0)
+	_predictor.predict(
+		Vector3(1000.0, 0.0, 0.0),
+		drift,
+		Vector3.FORWARD,
+		1.0,
+		0.0,
+		G,
+		_positions,
+		_masses,
+		_radii,
+		1.0,
+		Vector3.ZERO,
+		drift,
+	)
+	assert_gt(_predictor.points[-1].y, 5.0)
+
+
+func test_non_positive_falloff_exponent_is_reported_and_ignored() -> void:
+	_predictor.falloff_exponent = 0.0
+	assert_push_error("falloff_exponent must be positive")
+	assert_eq(_predictor.falloff_exponent, 2.0)
+
+
+func test_a_step_that_jumps_through_a_body_still_forecasts_an_impact() -> void:
+	_predictor.step = 1.0
+	_predict(Vector3(0.0, 0.0, 30.0), Vector3.FORWARD * 200.0)
+	assert_eq(_predictor.forecast, PathPredictor.Forecast.IMPACT)
+	assert_lt(_predictor.points[-1].distance_to(Vector3.ZERO), 30.0)

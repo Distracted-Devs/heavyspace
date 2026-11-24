@@ -17,14 +17,18 @@
 [ext_resource type="PackedScene" uid="uid://c71o8lajyu4a1" path="res://resources/models/low_poly_ship.fbx" id="15_ship"]
 [ext_resource type="PackedScene" path="res://scenes/effects/blue_thrust.tscn" id="16_thrust"]
 [ext_resource type="Script" uid="uid://d1i6ujkw1qm20" path="res://scripts/effects/thrust_effect.gd" id="17_thrust_effect"]
+[ext_resource type="Script" path="res://scripts/components/cargo_component.gd" id="18_cargo"]
+[ext_resource type="Script" path="res://scripts/components/cargo_weight_component.gd" id="19_cargo_weight"]
+[ext_resource type="Script" path="res://scripts/components/pass_through_component.gd" id="20_pass_through"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
 radius = 0.50158125
 
-[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight")]
+[node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight", "cargo")]
 gravity_scale = 0.0
 inertia = Vector3(0.1, 0.1, 0.1)
 linear_damp_mode = 1
+linear_damp = 0.25
 angular_damp = 1.0
 script = ExtResource("1_4fnjr")
 flight_input = NodePath("PlayerInputComponent")
@@ -37,6 +41,7 @@ contact_component = NodePath("ContactComponent")
 gravity_receiver = NodePath("GravityReceiverComponent")
 pickup_component = NodePath("PickupComponent")
 arcade_flight = NodePath("ArcadeFlightComponent")
+cargo = NodePath("CargoComponent")
 
 [node name="Mesh" type="Node3D" parent="." unique_id=971868309]
 
@@ -71,16 +76,17 @@ script = ExtResource("3_thrust")
 body = NodePath("..")
 flight_input = NodePath("../PlayerInputComponent")
 fuel = NodePath("../FuelComponent")
-back_thrust_force = 100.0
+back_thrust_force = 150.0
 
 [node name="RotationComponent" type="Node" parent="." unique_id=1645358276 node_paths=PackedStringArray("body", "flight_input")]
 script = ExtResource("4_rotate")
 body = NodePath("..")
 flight_input = NodePath("../PlayerInputComponent")
 
-[node name="ArcadeFlightComponent" type="Node" parent="." unique_id=1645358284 node_paths=PackedStringArray("body")]
+[node name="ArcadeFlightComponent" type="Node" parent="." unique_id=1645358284 node_paths=PackedStringArray("body", "gravity_receiver")]
 script = ExtResource("13_arcade")
 body = NodePath("..")
+gravity_receiver = NodePath("../GravityReceiverComponent")
 
 [node name="MassComponent" type="Node" parent="." unique_id=1645358277 node_paths=PackedStringArray("body")]
 script = ExtResource("5_mass")
@@ -92,12 +98,33 @@ body = NodePath("..")
 mass_component = NodePath("../MassComponent")
 momentum_exponent = 0.1
 
-[node name="GravityReceiverComponent" type="Node" parent="." unique_id=1645358278 node_paths=PackedStringArray("body")]
+[node name="GravityReceiverComponent" type="Node" parent="." unique_id=1645358278 node_paths=PackedStringArray("body", "mass_component")]
 script = ExtResource("6_gravity")
 body = NodePath("..")
+mass_component = NodePath("../MassComponent")
+gravity_constant = 10000.0
+falloff_exponent = 3.5
+drift_enabled = true
 
 [node name="FuelComponent" type="Node" parent="." unique_id=1645358279]
 script = ExtResource("7_fuel")
+refill_time = 7.5
+
+[node name="CargoComponent" type="Node" parent="." unique_id=1645358287]
+script = ExtResource("18_cargo")
+
+[node name="CargoWeightComponent" type="Node" parent="." unique_id=1645358288 node_paths=PackedStringArray("body", "mass_component", "cargo", "gravity_receiver")]
+script = ExtResource("19_cargo_weight")
+body = NodePath("..")
+mass_component = NodePath("../MassComponent")
+cargo = NodePath("../CargoComponent")
+gravity_receiver = NodePath("../GravityReceiverComponent")
+
+[node name="PassThroughComponent" type="Node" parent="." unique_id=1645358289 node_paths=PackedStringArray("body", "mass_component", "cargo")]
+script = ExtResource("20_pass_through")
+body = NodePath("..")
+mass_component = NodePath("../MassComponent")
+cargo = NodePath("../CargoComponent")
 
 [node name="ContactComponent" type="Node" parent="." unique_id=1645358280 node_paths=PackedStringArray("body", "mass_component")]
 script = ExtResource("9_contact")
@@ -108,12 +135,13 @@ mass_component = NodePath("../MassComponent")
 script = ExtResource("11_absorb")
 ship = NodePath("..")
 
-[node name="PickupComponent" type="Node" parent="." unique_id=1645358282 node_paths=PackedStringArray("body", "mass_component", "collider", "absorb")]
+[node name="PickupComponent" type="Node" parent="." unique_id=1645358282 node_paths=PackedStringArray("body", "mass_component", "collider", "absorb", "cargo")]
 script = ExtResource("10_pickup")
 body = NodePath("..")
 mass_component = NodePath("../MassComponent")
 collider = NodePath("../Collider")
 absorb = NodePath("../AbsorbEffect")
+cargo = NodePath("../CargoComponent")
 pickup_radius = 50.0
 
 [node name="GrowthComponent" type="Node" parent="." unique_id=1645358283 node_paths=PackedStringArray("mass_component", "mesh", "collider", "camera", "pickup")]

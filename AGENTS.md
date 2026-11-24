@@ -35,13 +35,22 @@ through the shell instead.
   other branches. UNDER NO CIRCUMSTANCES change other branches. Don't
   commit: leave that to the user.
 - Run Godot headless to check that changes run.
+- Never let a Godot run (tests, smoke or import) take longer than a minute.
+  Prefix every run with `timeout 60`, run one at a time (no loops), and
+  don't raise the Bash tool's timeout for it. If a run hits the limit,
+  find the test that hangs or runs long and fix it, rather than running
+  it again. A hook blocks uncapped runs, and the harness checks stop the
+  suite after 60 seconds.
 
 # Commands
 Run these from the project root. An exit code of 0 means pass, and 1 means
 fail.
-- After adding new `class_name` scripts or addons: `godot --headless --import`
-- Smoke (the project starts with no errors): `godot --headless --quit`
-- Full test suite: `godot --headless -s addons/gut/gut_cmdln.gd -gexit`
+- After adding new `class_name` scripts or addons:
+  `timeout 60 godot --headless --import`
+- Smoke (the project starts with no errors):
+  `timeout 60 godot --headless --quit`
+- Full test suite:
+  `timeout 60 godot --headless -s addons/gut/gut_cmdln.gd -gexit`
 - Format GDScript: `.githooks/format [files]`
 - Editor warnings: `.githooks/warnings [files]`
 

@@ -106,3 +106,38 @@ func test_runs_after_the_rotation_component() -> void:
 		_arcade.process_physics_priority,
 		autofree(RotationComponent.new()).process_physics_priority,
 	)
+
+
+func _add_drift(drift: Vector3) -> GravityReceiverComponent:
+	var receiver := GravityReceiverComponent.new()
+	receiver.body = _body
+	receiver.drift_enabled = true
+	receiver.set_physics_process(false)
+	_body.add_child(receiver)
+	receiver.drift = drift
+	_arcade.gravity_receiver = receiver
+	return receiver
+
+
+func test_the_gravity_drift_survives_alignment() -> void:
+	var drift := Vector3(0.0, -3.0, 0.0)
+	_add_drift(drift)
+	_body.linear_velocity = Vector3(4.0, 0.0, 0.0) + drift
+	_arcade.align()
+	assert_almost_eq(_body.linear_velocity, _forward() * 4.0 + drift, TOLERANCE)
+
+
+func test_a_ship_moved_only_by_drift_is_not_steered() -> void:
+	var drift := Vector3(2.0, 0.0, 0.0)
+	_add_drift(drift)
+	_body.linear_velocity = drift
+	_arcade.align()
+	assert_almost_eq(_body.linear_velocity, drift, TOLERANCE)
+
+
+func test_a_disabled_drift_is_steered_like_any_velocity() -> void:
+	var receiver := _add_drift(Vector3(2.0, 0.0, 0.0))
+	receiver.drift_enabled = false
+	_body.linear_velocity = Vector3(2.0, 0.0, 0.0)
+	_arcade.align()
+	assert_almost_eq(_body.linear_velocity, _forward() * 2.0, TOLERANCE)

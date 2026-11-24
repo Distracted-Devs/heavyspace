@@ -12,6 +12,7 @@ extends RigidBody3D
 @export var gravity_receiver: GravityReceiverComponent
 @export var pickup_component: PickupComponent
 @export var arcade_flight: ArcadeFlightComponent
+@export var cargo: CargoComponent
 
 
 func stop_flight() -> void:

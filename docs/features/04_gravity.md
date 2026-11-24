@@ -26,6 +26,12 @@ heavier than the player pulls.
   force is applied.
 - Post-condition: every applied force is finite. A non-finite force is
   reported and not applied.
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): the falloff is `G·M / r ^
+  falloff_exponent` (2 by default, so the above still holds), only
+  sources heavier than the core mass (`mass_component`, else `body.mass`)
+  pull, the check is on the acceleration, and with `drift_enabled` the
+  pull builds a damped `drift` added straight to the velocity instead of
+  a force. `acceleration_at` is shared with `PathPredictor`.
 
 ### GravityRegistry (`scripts/core/gravity_registry.gd`, autoload)
 - `register(source)` requires a non-null source that isn't already

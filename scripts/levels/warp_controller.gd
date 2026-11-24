@@ -10,15 +10,22 @@ signal warp_finished
 @export var warp_effect: WarpEffect
 
 @export_group("Warp")
-@export_range(0.0, 1000.0, 0.1, "or_greater") var warp_cost := 10.0:
+@export var warp_needs_all_tanks := true
+@export_range(0, 10, 1, "or_greater") var tanks_to_warp := 1:
 	set(value):
-		if not Contract.require(value >= 0.0, "warp_cost must not be negative"):
+		var message := "tanks_to_warp must not be negative"
+		if not Contract.require(value >= 0, message):
 			return
-		warp_cost = value
-@export var warp_spends_cost := true
+		tanks_to_warp = value
+@export var bank_partial_tank := true
+@export_range(0.0, 1000.0, 0.1, "or_greater") var warp_spend := 0.0:
+	set(value):
+		var message := "warp_spend must not be negative"
+		if not Contract.require(value >= 0.0, message):
+			return
+		warp_spend = value
 
 var progression: Progression
-var run_start_mass := 0.0
 var warping := false
 
 
@@ -28,27 +35,44 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	if not Contract.require(
-		player != null and lose_controller != null,
-		"player and lose_controller must be set",
-	):
-		return
-	run_start_mass = player.mass_component.current_mass
+	Contract.require(
+		player != null and lose_controller != null and player.cargo != null,
+		"player with a cargo and lose_controller must be set",
+	)
 
 
 func collected() -> float:
-	return player.mass_component.current_mass - run_start_mass
+	return player.cargo.stored
+
+
+func tanks_required() -> int:
+	var cargo := player.cargo
+	if warp_needs_all_tanks:
+		return cargo.tanks
+	return mini(tanks_to_warp, cargo.tanks)
 
 
 func can_warp() -> bool:
-	return not warping and not lose_controller.lost and collected() >= warp_cost
+	return (
+		not warping and not lose_controller.lost
+		and player.cargo.full_tanks() >= tanks_required()
+	)
+
+
+func bankable() -> float:
+	var cargo := player.cargo
+	var held := (
+		cargo.stored
+		if bank_partial_tank
+		else cargo.full_tanks() * cargo.tank_size
+	)
+	return maxf(held - warp_spend, 0.0)
 
 
 func warp_out() -> bool:
 	if not can_warp():
 		return false
-	var gained := collected()
-	var banked := maxf(gained - warp_cost if warp_spends_cost else gained, 0.0)
+	var banked := bankable()
 	var bank_before := progression.bank
 	progression.bank_mass(banked)
 	warping = true

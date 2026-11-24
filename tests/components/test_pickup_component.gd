@@ -209,6 +209,43 @@ func test_physics_frames_collect_and_grow() -> void:
 	assert_gt(_mass.current_mass, start)
 
 
+func _add_cargo(tank_size: float) -> CargoComponent:
+	var cargo := CargoComponent.new()
+	cargo.tank_size = tank_size
+	_ship.add_child(cargo)
+	_pickup.cargo = cargo
+	return cargo
+
+
+func test_with_a_cargo_absorbed_mass_fills_it_not_the_ship() -> void:
+	var body := await _ring_body_live()
+	var cargo := _add_cargo(100.0)
+	_pickup.pickup_radius = 0.5
+	_pickup.mass_conversion = 2.0
+	var eaten := body.mass
+	_park_ship(body.global_position, eaten)
+	_pickup.collect()
+	_finish_absorbing()
+	assert_almost_eq(cargo.stored, eaten * 2.0, 1.0e-9)
+	assert_almost_eq(_mass.current_mass, eaten, 1.0e-9)
+
+
+func test_a_full_cargo_catches_nothing() -> void:
+	var body := await _ring_body_live()
+	var cargo := _add_cargo(1.0)
+	cargo.add(1.0)
+	_park_ship(body.global_position, body.mass)
+	_pickup.collect()
+	assert_false(_absorb.is_absorbing(body))
+	assert_true(_pool.is_live(body))
+
+
+func test_what_does_not_fit_in_the_cargo_is_lost() -> void:
+	var cargo := _add_cargo(1.0)
+	_absorb.absorbed.emit(3.0)
+	assert_almost_eq(cargo.stored, 1.0, 1.0e-9)
+
+
 func test_without_a_pool_collect_does_nothing() -> void:
 	_pickup.pool = null
 	_pickup.collect()

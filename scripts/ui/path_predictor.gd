@@ -46,6 +46,14 @@ var max_sources := 0:
 			return
 		max_sources = value
 
+var falloff_exponent := 2.0:
+	set(value):
+		var message := "falloff_exponent must be positive"
+		if not Contract.require(value > 0.0, message):
+			return
+		falloff_exponent = value
+var drift_enabled := false
+
 var points := PackedVector3Array()
 var forecast := Forecast.NONE
 
@@ -98,6 +106,7 @@ func predict(
 	radii: PackedFloat64Array,
 	mass: float,
 	focus: Vector3,
+	drift := Vector3.ZERO,
 ) -> void:
 	points.clear()
 	points.append(position)
@@ -135,6 +144,7 @@ func predict(
 		masses,
 		radii,
 		focus,
+		drift if drift_enabled else Vector3.ZERO,
 	)
 	Contract.ensure(
 		points.size() <= floori(float(max_steps) / sample_every) + 2,
@@ -189,28 +199,39 @@ func _simulate(
 	masses: PackedFloat64Array,
 	radii: PackedFloat64Array,
 	focus: Vector3,
+	drift: Vector3,
 ) -> void:
 	var start_distance := position.distance_to(focus)
 	var swept := 0.0
 	var previous := position - focus
+	var own := velocity - drift
+	var kept := maxf(0.0, 1.0 - damping * step)
 	for index in step_count():
-		var acceleration := Vector3.ZERO
-		for source in heavier:
-			var to_source := positions[source] - position
-			var distance := to_source.length()
-			if distance < radii[source]:
-				points.append(position)
-				forecast = Forecast.IMPACT
-				return
-			var floored := maxf(distance, radii[source])
-			acceleration += (
-				to_source.normalized() * gravity_constant * masses[source]
-				/ (floored * floored)
-			)
-		velocity += acceleration * step
-		velocity *= maxf(0.0, 1.0 - damping * step)
-		velocity = _align(velocity, forward, alignment)
-		position += velocity * step
+		if _inside_any(position, heavier, positions, radii):
+			points.append(position)
+			forecast = Forecast.IMPACT
+			return
+		var pull := GravityReceiverComponent.acceleration_at(
+			position,
+			heavier,
+			positions,
+			masses,
+			radii,
+			gravity_constant,
+			falloff_exponent,
+		) * step
+		if drift_enabled:
+			drift = (drift + pull) * kept
+			own = _align(own * kept, forward, alignment)
+		else:
+			own = _align((own + pull) * kept, forward, alignment)
+		var next := position + (own + drift) * step
+		var hit := _first_hit(position, next, heavier, positions, radii)
+		if hit >= 0.0:
+			points.append(position.lerp(next, hit))
+			forecast = Forecast.IMPACT
+			return
+		position = next
 		var relative := position - focus
 		swept += atan2(
 			previous.cross(relative).length(),
@@ -226,6 +247,42 @@ func _simulate(
 	points.append(position)
 	if position.distance_to(focus) > start_distance * escape_factor:
 		forecast = Forecast.ESCAPE
+
+
+static func _first_hit(
+	from: Vector3,
+	to: Vector3,
+	heavier: PackedInt32Array,
+	positions: PackedVector3Array,
+	radii: PackedFloat64Array,
+) -> float:
+	var travel := to - from
+	var length_squared := travel.length_squared()
+	if length_squared == 0.0:
+		return -1.0
+	var first := INF
+	for source in heavier:
+		var along := clampf(
+			(positions[source] - from).dot(travel) / length_squared,
+			0.0,
+			1.0,
+		)
+		var closest := from + travel * along
+		if closest.distance_to(positions[source]) < radii[source]:
+			first = minf(first, along)
+	return first if first < INF else -1.0
+
+
+static func _inside_any(
+	position: Vector3,
+	heavier: PackedInt32Array,
+	positions: PackedVector3Array,
+	radii: PackedFloat64Array,
+) -> bool:
+	for source in heavier:
+		if position.distance_to(positions[source]) < radii[source]:
+			return true
+	return false
 
 
 static func _align(

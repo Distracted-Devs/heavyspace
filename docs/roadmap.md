@@ -112,3 +112,6 @@ Features:
 - The warp-out VFX (`scripts/effects/warp_effect.gd`, from
   [game loop](features/12_game_loop.md) step 3.7) MUST be reworked: it is
   AI generated, a placeholder stretch, shoot and fade.
+
+Features:
+- [Mass tanks](features/14_mass_tanks.md) ✅ (5.1–5.12)

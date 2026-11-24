@@ -28,15 +28,17 @@
 [ext_resource type="Script" path="res://scripts/effects/crash_effect.gd" id="26_crash"]
 [ext_resource type="PackedScene" path="res://scenes/ui/fuel_gauge.tscn" id="27_gauge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/minimap.tscn" id="28_minimap"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/cargo_tanks_upgrade.tres" id="29_cargo_tanks"]
+[ext_resource type="PackedScene" path="res://scenes/ui/cargo_gauge.tscn" id="30_cargo_gauge"]
 
 [node name="GeneratedLevel" type="Node3D" unique_id=1472244937]
 
 [node name="Player" parent="." unique_id=976860773 instance=ExtResource("1_player")]
 
-[node name="GravityReceiverComponent" parent="Player"]
-gravity_constant = 10.0
-
 [node name="PickupComponent" parent="Player" node_paths=PackedStringArray("pool")]
+pool = NodePath("../../LiveBodyPool")
+
+[node name="PassThroughComponent" parent="Player" node_paths=PackedStringArray("pool")]
 pool = NodePath("../../LiveBodyPool")
 
 [node name="Clock" type="Node" parent="." unique_id=2030729022]
@@ -58,6 +60,7 @@ streamer = NodePath("../HierarchyStreamer")
 script = ExtResource("7_spawn")
 streamer = NodePath("../HierarchyStreamer")
 player = NodePath("../Player")
+start_at_rest = true
 
 [node name="PauseController" type="Node" parent="." unique_id=868928998]
 script = ExtResource("9_pause")
@@ -74,7 +77,7 @@ lose_controller = NodePath("../LoseController")
 
 [node name="RunStarter" type="Node" parent="." unique_id=1530000001 node_paths=PackedStringArray("player")]
 script = ExtResource("13_starter")
-upgrades = Array[ExtResource("23_upgrade")]([ExtResource("17_size"), ExtResource("18_tank"), ExtResource("19_refill"), ExtResource("20_booster"), ExtResource("21_pickup"), ExtResource("22_turn")])
+upgrades = Array[ExtResource("23_upgrade")]([ExtResource("17_size"), ExtResource("18_tank"), ExtResource("19_refill"), ExtResource("20_booster"), ExtResource("21_pickup"), ExtResource("22_turn"), ExtResource("29_cargo_tanks")])
 player = NodePath("../Player")
 
 [node name="WarpController" type="Node" parent="." unique_id=1530000002 node_paths=PackedStringArray("player", "lose_controller", "warp_effect")]
@@ -121,3 +124,8 @@ fuel = NodePath("../Player/FuelComponent")
 [node name="Minimap" parent="." unique_id=1530000011 node_paths=PackedStringArray("player", "pool") instance=ExtResource("28_minimap")]
 player = NodePath("../Player")
 pool = NodePath("../LiveBodyPool")
+
+[node name="CargoGauge" parent="." unique_id=1530000012 node_paths=PackedStringArray("cargo", "warp_controller", "below") instance=ExtResource("30_cargo_gauge")]
+cargo = NodePath("../Player/CargoComponent")
+warp_controller = NodePath("../WarpController")
+below = NodePath("../FuelGauge/Panel")

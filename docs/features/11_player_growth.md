@@ -227,6 +227,8 @@ An eaten body and everything below it leave the hierarchy for good.
     body heavier than the player is ever caught
 - On `absorb.absorbed(mass)`, `mass_component.current_mass += mass ×
   mass_conversion`.
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): with a `cargo`, absorbed mass fills
+  the cargo instead and nothing is caught while it is full.
 - `Player.stop_flight()` also disables the pickup (see
   [lose flow](09_lose_flow.md)). Bodies already in flight still arrive.
 

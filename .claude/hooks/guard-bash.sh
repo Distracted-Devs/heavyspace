@@ -3,7 +3,8 @@
 # Deliberately broad: matches "git commit", "git -C dir push", "x && git ...".
 
 . "$(dirname "$0")/lib.sh"
-COMMAND=$(jq -r '.tool_input.command // empty')
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
 deny() {
 	jq -n --arg reason "$1" '{
@@ -34,6 +35,22 @@ fi
 
 matches '\.claude/state' &&
 	deny "The harness state is only changed by .claude/bin/feature."
+
+# Godot runs (tests, smoke, imports) are capped at 60 seconds each. A hung
+# run once blocked the session for 20 minutes.
+GODOT_RUN="(^|[^[:alnum:]_./-])godot[[:space:]]+(-|res:)"
+GODOT_CAPPED="timeout[[:space:]]+(-[^[:space:]]+[[:space:]]+)*([1-5]?[0-9]|60)s?[[:space:]]+godot[[:space:]]+(-|res:)"
+if matches "$GODOT_RUN"; then
+	runs=$(echo "$COMMAND" | grep -Eo "$GODOT_RUN" | wc -l)
+	capped=$(echo "$COMMAND" | grep -Eo "$GODOT_CAPPED" | wc -l)
+	[ "$capped" -ge "$runs" ] ||
+		deny "Every godot run must be capped at 60 seconds: prefix it with 'timeout 60 godot ...'. Never let a test run longer than a minute."
+	matches '(^|[;&|(`[:space:]])(for|while|until)[[:space:]]' &&
+		deny "Don't run godot in a loop: one capped run (timeout 60) per command, so nothing runs longer than a minute."
+	tool_timeout=$(echo "$INPUT" | jq -r '.tool_input.timeout // 0')
+	[ "$tool_timeout" -le 90000 ] ||
+		deny "A godot command must not set a Bash timeout over 90000 ms. Runs are capped at 60 seconds."
+fi
 
 matches 'feature[[:space:]]+(accept|discard|done)\b' &&
 	deny "Only the user moves a feature to its next phase. Ask them to run it with '! .claude/bin/feature <accept|discard|done>' in the prompt."

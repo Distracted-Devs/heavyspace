@@ -19,6 +19,12 @@ extends Resource
 		if not Contract.require(value >= 1.0, "cost_growth must be at least 1"):
 			return
 		cost_growth = value
+@export_range(-1, 100, 1, "or_greater") var max_level := -1:
+	set(value):
+		var message := "max_level must be at least -1"
+		if not Contract.require(value >= -1, message):
+			return
+		max_level = value
 
 
 func multiplier(level: int) -> float:
@@ -32,7 +38,13 @@ func cost(level: int) -> float:
 		return INF
 	if not Contract.require(level >= 0, "level must not be negative"):
 		return INF
+	if is_maxed(level):
+		return INF
 	return roundf(base_cost * pow(cost_growth, level))
+
+
+func is_maxed(level: int) -> bool:
+	return max_level >= 0 and level >= max_level
 
 
 func apply(player: Player, level: int) -> void:

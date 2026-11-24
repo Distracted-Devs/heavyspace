@@ -7,6 +7,7 @@ extends Node
 @export var collider: CollisionShape3D
 @export var pool: LiveBodyPool
 @export var absorb: AbsorbEffect
+@export var cargo: CargoComponent
 
 @export_group("Pickup")
 @export_range(0.0, 100.0, 0.1, "or_greater") var pickup_radius := 8.0:
@@ -48,6 +49,8 @@ func reach() -> float:
 func collect() -> void:
 	if pool == null or absorb == null:
 		return
+	if cargo != null and cargo.is_full():
+		return
 	var caught := pool.bodies_within(
 		body.global_position,
 		reach(),
@@ -79,4 +82,7 @@ func _heavier_first(a: MassBody, b: MassBody) -> bool:
 
 
 func _on_absorbed(mass: float) -> void:
+	if cargo != null:
+		cargo.add(mass * mass_conversion)
+		return
 	mass_component.current_mass += mass * mass_conversion

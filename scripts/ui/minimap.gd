@@ -112,12 +112,16 @@ func refresh(delta: float) -> void:
 	_predictor.duration = duration
 	_predictor.max_steps = max_steps
 	_predictor.max_sources = max_sources
+	var receiver := player.gravity_receiver
+	_predictor.falloff_exponent = receiver.falloff_exponent
+	_predictor.drift_enabled = receiver.drift_enabled
+	var core_mass := receiver.core_mass()
 	var positions := GravityRegistry.positions
 	var masses := GravityRegistry.masses
 	_gather_candidates()
 	var focus := PathPredictor.focus_index(
 		player.global_position,
-		player.mass,
+		core_mass,
 		_candidate_positions,
 		_candidate_masses,
 		_candidate_depths,
@@ -137,8 +141,9 @@ func refresh(delta: float) -> void:
 		positions,
 		masses,
 		GravityRegistry.radii,
-		player.mass,
+		core_mass,
 		_focus,
+		receiver.drift,
 	)
 	_update_zoom(delta)
 	_update_plane(delta)
@@ -193,6 +198,7 @@ func danger_material() -> Material:
 
 
 func _sync_bodies() -> void:
+	var core_mass := player.gravity_receiver.core_mass()
 	var reach := view_radius * BODY_REACH
 	var wanted: Dictionary[int, MassBody] = { }
 	for node in get_tree().get_nodes_in_group(MassBody.GROUP):
@@ -214,7 +220,7 @@ func _sync_bodies() -> void:
 		map_body.position = body.global_position - _focus
 		map_body.scale = Vector3.ONE * body.radius
 		map_body.material_override = (
-			_danger_material if body.mass > player.mass else _edible_material
+			_danger_material if body.mass > core_mass else _edible_material
 		)
 		map_body.visible = not _blocks_view(map_body.position, body.radius)
 

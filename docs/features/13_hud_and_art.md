@@ -226,6 +226,10 @@ Changes to existing APIs are recorded in the files that own them:
     the starting distance from `focus`, else `NONE`
   - with nothing heavier, `forecast` is `ESCAPE` and `points` is just
     `position`
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): `falloff_exponent` (2) and
+  `drift_enabled` (off) settings, and a last `drift` argument. The pull
+  is `GravityReceiverComponent.acceleration_at`; with drift, the drift
+  takes the pull and is damped while only the own velocity is aligned.
 
 ### Minimap (`scripts/ui/minimap.gd`, `scenes/ui/minimap.tscn`)
 - Top right: a square `0.34 × screen height` (at least 160 px), with
@@ -242,6 +246,9 @@ Changes to existing APIs are recorded in the files that own them:
   fits) (View); and the predictor's `step` (0.25 s), `duration` (20 s), `max_steps`
   (2400) and `max_sources` (8) (Prediction; step and duration were 1/30 s
   and 120 s, coarsened in the performance review, option A).
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): the predictor gets the receiver's
+  exponent, drift setting and drift, and "heavier" (focus, prediction and
+  map colours) uses the core mass, not `body.mass` with cargo.
 - `refresh(delta)` (each frame) requires `player`. The prediction uses
   the player's facing (`−Z`) and its `ArcadeFlightComponent.alignment`
   (0 without one). Afterwards:

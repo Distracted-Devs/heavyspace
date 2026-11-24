@@ -85,6 +85,8 @@ func test_freed_bodies_leave_the_map() -> void:
 
 
 func test_path_colour_follows_the_forecast() -> void:
+	_player.gravity_receiver.gravity_constant = 10.0
+	_player.gravity_receiver.falloff_exponent = 2.0
 	_body(Vector3(0.0, 0.0, -60.0), _player.mass * 1.0e6)
 	await wait_physics_frames(1)
 	_map.refresh(0.1)

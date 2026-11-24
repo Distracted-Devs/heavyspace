@@ -2,6 +2,7 @@ extends GutTest
 
 const LEVEL_PATH := "res://scenes/levels/generated_level.tscn"
 const FRAMES := 30
+const LEVEL_SEED := 11
 
 const UPGRADES := "res://resources/progression/upgrades/"
 
@@ -23,6 +24,9 @@ func _build(progression: Progression) -> Node3D:
 	var level: Node3D = scene.instantiate()
 	var player: Player = level.get_node("Player")
 	player.flight_input.capture_mouse = false
+	(level.get_node("HierarchyStreamer") as HierarchyStreamer).level_seed = (
+		LEVEL_SEED
+	)
 	(level.get_node("RunStarter") as RunStarter).progression = progression
 	(level.get_node("WarpController") as WarpController).progression = (
 		progression
@@ -76,10 +80,11 @@ func test_level_starts_with_the_giant_and_its_systems() -> void:
 	assert_eq(_pool().root_body.mass, streamer.root_mass)
 
 
-func test_player_starts_in_orbit_around_its_home_system() -> void:
+func test_player_starts_at_rest_near_its_home_system() -> void:
 	var distance := _player().global_position.distance_to(_home_centre())
 	assert_almost_eq(distance, 300.0, 1.0e-2)
 	assert_true(_streamer().is_expanded(PackedInt32Array([0])))
+	assert_lt(_player().linear_velocity.length(), 0.1)
 
 
 func test_home_system_is_a_real_body_once_physics_runs() -> void:
@@ -106,8 +111,16 @@ func test_home_ring_bodies_start_no_heavier_than_the_player() -> void:
 
 func test_level_wires_the_pickup_to_the_pool_and_sets_gravity() -> void:
 	var pickup: PickupComponent = _player().get_node("PickupComponent")
+	var pass_through: PassThroughComponent = _player().get_node(
+		"PassThroughComponent"
+	)
 	assert_eq(pickup.pool, _pool(), "the pickup must use the level's pool")
-	assert_eq(_player().gravity_receiver.gravity_constant, 10.0)
+	assert_eq(pickup.cargo, _player().cargo)
+	assert_eq(pass_through.pool, _pool())
+	var receiver := _player().gravity_receiver
+	assert_eq(receiver.gravity_constant, 10000.0)
+	assert_eq(receiver.falloff_exponent, 3.5)
+	assert_true(receiver.drift_enabled)
 	assert_eq(_streamer().focus_mass, _player().mass_component)
 
 
@@ -120,8 +133,9 @@ func test_level_wires_the_game_loop() -> void:
 	assert_eq(warp.player, _player())
 	assert_eq(warp.lose_controller, _level.get_node("LoseController"))
 	assert_eq(warp.warp_effect, effect)
-	assert_eq(warp.warp_cost, 10.0)
-	assert_true(warp.warp_spends_cost)
+	assert_true(warp.warp_needs_all_tanks)
+	assert_true(warp.bank_partial_tank)
+	assert_eq(warp.warp_spend, 0.0)
 	assert_eq(effect.camera, _player().camera_component.camera)
 	assert_eq(effect.mesh, _player().get_node("Mesh"))
 	assert_eq(effect.fade, _level.get_node("WarpFade/Fade"))
@@ -129,13 +143,14 @@ func test_level_wires_the_game_loop() -> void:
 	assert_eq(shop.run_starter, starter)
 
 
-func test_the_run_starter_holds_all_six_upgrades() -> void:
+func test_the_run_starter_holds_all_seven_upgrades() -> void:
 	var starter: RunStarter = _level.get_node("RunStarter")
 	var ids := { }
 	for upgrade in starter.upgrades:
 		ids[upgrade.id] = true
-	assert_eq(starter.upgrades.size(), 6)
-	assert_eq(ids.size(), 6)
+	assert_eq(starter.upgrades.size(), 7)
+	assert_eq(ids.size(), 7)
+	assert_true(ids.has(&"cargo_tanks"))
 	assert_true(starter.started)
 	assert_eq(_progression.runs, 1)
 
@@ -166,16 +181,22 @@ func test_the_run_starts_upgraded_and_the_home_ring_follows() -> void:
 	for index in ring.count():
 		assert_lte(ring.layout.mass[index], start_mass)
 		heaviest = maxf(heaviest, ring.layout.mass[index])
-	assert_gt(heaviest, base_mass, "the ring must follow the upgraded mass")
+	var ceiling := (_streamer().tiers[1] as Tier).mass_ceiling_fraction
+	assert_gt(
+		heaviest,
+		base_mass * ceiling,
+		"the ring must follow the upgraded mass",
+	)
 
 
 func test_warping_banks_and_opens_the_shop_then_launch_unpauses() -> void:
 	var warp: WarpController = _level.get_node("WarpController")
 	var effect: WarpEffect = _level.get_node("WarpEffect")
 	var shop: ShopOverlay = _level.get_node("ShopOverlay")
-	_player().mass_component.current_mass += 14.0
+	var cargo := _player().cargo
+	cargo.add(cargo.capacity())
 	assert_true(warp.warp_out())
-	assert_almost_eq(_progression.bank, 4.0, 1e-4)
+	assert_almost_eq(_progression.bank, cargo.capacity(), 1e-4)
 	assert_false(shop.is_open)
 	effect.advance(effect.warp_duration)
 	assert_true(shop.is_open)
@@ -191,3 +212,19 @@ func test_minimap_focuses_on_the_home_system_not_the_giant() -> void:
 	var home := _home_centre()
 	assert_almost_eq(minimap.focus_position().distance_to(home), 0.0, 1.0)
 	assert_ne(minimap.focus_position(), _pool().root_body.global_position)
+
+
+func test_the_cargo_gauge_follows_the_cargo_under_the_fuel_gauge() -> void:
+	var gauge: CargoGauge = _level.get_node("CargoGauge")
+	assert_eq(gauge.cargo, _player().cargo)
+	assert_eq(gauge.warp_controller, _level.get_node("WarpController"))
+	assert_eq(gauge.below, _level.get_node("FuelGauge/Panel"))
+
+
+func test_the_player_carries_the_tuned_values() -> void:
+	var player := _player()
+	assert_eq(player.thruster.back_thrust_force, 150.0)
+	assert_eq(player.linear_damp, 0.25)
+	assert_eq(player.fuel_component.refill_time, 7.5)
+	assert_eq(player.cargo.tank_size, 5.0)
+	assert_eq(player.cargo.tanks, 1)

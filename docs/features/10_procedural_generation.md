@@ -321,6 +321,9 @@ Agree each API's contract with the user at the start of its step.
   - it faces along that tangent (−Z forward), with up along the ring
     plane's normal
   - the camera's far plane is `camera_far`
+- Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): `start_at_rest` (off; on in the
+  level) zeroes the velocity, spin and drift after placing and facing
+  the player.
 - The systems tier's speeds match real orbits around the giant (inner
   period 450s gives `GM ≈ 1e8`), so the ship falls around the giant with its
   home system. At 300 the ship is about half the home system's Hill radius

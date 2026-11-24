@@ -10,7 +10,7 @@ func expected_id() -> StringName:
 
 
 func expected_step() -> float:
-	return 0.25
+	return 0.1
 
 
 func effects() -> Dictionary:

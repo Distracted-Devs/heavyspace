@@ -10,6 +10,7 @@ extends Node
 @export_range(0.0, 10000.0, 0.1, "or_greater") var spawn_distance := 300.0
 @export_range(-180.0, 180.0, 0.1) var spawn_angle_degrees := 0.0
 @export_range(1.0, 1.0e6, 1.0, "or_greater") var camera_far := 60000.0
+@export var start_at_rest := false
 
 
 func _ready() -> void:
@@ -58,6 +59,8 @@ func spawn() -> void:
 	if streamer.clock == null or streamer.clock.running:
 		home_velocity = systems.child_velocity(home_index, time)
 	player.linear_velocity = home_velocity + prograde * orbit_speed
+	if start_at_rest:
+		_stop(player)
 	player.camera_component.camera.far = camera_far
 	Contract.ensure(
 		(
@@ -69,6 +72,18 @@ func spawn() -> void:
 			< 1.0e-3 * spawn_distance
 		),
 		"player must start in the home ring's plane at spawn_distance",
+	)
+
+
+func _stop(ship: Player) -> void:
+	ship.linear_velocity = Vector3.ZERO
+	ship.angular_velocity = Vector3.ZERO
+	if ship.gravity_receiver != null:
+		ship.gravity_receiver.reset_drift()
+	Contract.ensure(
+		ship.linear_velocity == Vector3.ZERO
+		and ship.angular_velocity == Vector3.ZERO,
+		"a player started at rest must not move",
 	)
 
 

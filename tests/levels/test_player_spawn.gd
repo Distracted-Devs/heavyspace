@@ -136,3 +136,21 @@ func test_missing_streamer_is_reported() -> void:
 	assert_push_error(
 		"[Contract] Pre-condition broken: streamer and player must be set"
 	)
+
+
+func test_starting_at_rest_leaves_the_player_still() -> void:
+	_spawn.start_at_rest = true
+	_player.gravity_receiver.drift = Vector3.ONE
+	add_child_autofree(_spawn)
+	assert_eq(_player.linear_velocity, Vector3.ZERO)
+	assert_eq(_player.angular_velocity, Vector3.ZERO)
+	assert_eq(_player.gravity_receiver.drift, Vector3.ZERO)
+
+
+func test_starting_at_rest_still_faces_along_the_ring() -> void:
+	_spawn.start_at_rest = true
+	add_child_autofree(_spawn)
+	var outward := (_player.global_position - _home_centre()).normalized()
+	var forward := -_player.global_basis.z
+	assert_almost_eq(forward.dot(outward), 0.0, 1.0e-4)
+	assert_almost_eq(forward.dot(_ring().global_basis.y), 0.0, 1.0e-4)

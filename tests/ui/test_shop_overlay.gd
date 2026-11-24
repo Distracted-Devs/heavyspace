@@ -89,6 +89,26 @@ func test_buttons_show_each_upgrades_values() -> void:
 	assert_string_contains(text, "%.0f" % _booster.cost(1))
 
 
+func test_a_maxed_upgrade_shows_max_and_is_disabled() -> void:
+	var capped: Upgrade = _booster.duplicate()
+	capped.id = &"capped"
+	capped.max_level = 1
+	var starter: RunStarter = autofree(RunStarter.new())
+	starter.upgrades = [capped]
+	var shop: ShopOverlay = SHOP_SCENE.instantiate()
+	shop.warp_controller = _warp
+	shop.run_starter = starter
+	shop.progression = _progression
+	shop.reload_on_launch = false
+	add_child_autofree(shop)
+	_progression.bank_mass(1000.0)
+	_progression.buy(capped)
+	shop.open()
+	assert_string_contains(shop.buttons[0].text, "MAX")
+	assert_true(shop.buttons[0].disabled)
+	shop.launch()
+
+
 func test_the_bank_label_shows_the_bank() -> void:
 	_progression.bank_mass(12.5)
 	_shop.open()

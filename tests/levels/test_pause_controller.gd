@@ -21,6 +21,7 @@ func after_each() -> void:
 func _spawn_player() -> Player:
 	var player: Player = PLAYER_SCENE.instantiate()
 	player.flight_input.capture_mouse = false
+	player.linear_damp = 0.0
 	return add_child_autofree(player)
 
 

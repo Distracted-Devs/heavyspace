@@ -28,6 +28,10 @@ func expected_step() -> float:
 	return 0.0
 
 
+func expected_cost_growth() -> float:
+	return 1.6
+
+
 func effects() -> Dictionary:
 	return { }
 
@@ -46,6 +50,7 @@ func stats(player: Player) -> Dictionary:
 		"pitch_torque": player.rotator.pitch_torque,
 		"turn_torque": player.rotator.turn_torque,
 		"roll_torque": player.rotator.roll_torque,
+		"cargo_tanks": float(player.cargo.tanks),
 	}
 
 
@@ -62,6 +67,8 @@ func assert_changes_only_its_own_stat() -> void:
 			expected *= by
 		elif changes.get(stat) == "÷":
 			expected /= by
+		elif changes.get(stat) == "+":
+			expected += by - 1.0
 		assert_almost_eq(after[stat], expected, 1e-6, stat)
 	player.free()
 
@@ -79,5 +86,5 @@ func assert_tuned_values() -> void:
 	assert_eq(tuned.id, expected_id())
 	assert_eq(tuned.step, expected_step())
 	assert_eq(tuned.base_cost, 5.0)
-	assert_eq(tuned.cost_growth, 1.6)
+	assert_eq(tuned.cost_growth, expected_cost_growth())
 	assert_ne(tuned.display_name, "")

@@ -79,9 +79,10 @@ $named"
 	[ "${#failures[@]}" -eq 0 ] || report
 	cached && report
 
-	godot --headless --import > /dev/null 2>&1
+	timeout "$GODOT_TIMEOUT" godot --headless --import > /dev/null 2>&1
 	local errors
-	errors=$(godot --headless --quit-after 120 "res://$folder/main.tscn" 2>&1 |
+	errors=$(timeout "$GODOT_TIMEOUT" godot --headless --quit-after 120 \
+		"res://$folder/main.tscn" 2>&1 |
 		godot_errors)
 	[ -z "$errors" ] || fail "$folder/main.tscn reports errors when run headless \
 for 120 frames:
@@ -128,7 +129,7 @@ $words"
 	cached && report
 
 	[ -z "$(added_since_base '*.gd' ':!prototypes/')" ] ||
-		godot --headless --import > /dev/null 2>&1
+		timeout "$GODOT_TIMEOUT" godot --headless --import > /dev/null 2>&1
 
 	if [ -n "$changed" ]; then
 		local warnings
@@ -139,14 +140,23 @@ $warnings"
 	fi
 
 	local output
-	if ! output=$(godot --headless -s addons/gut/gut_cmdln.gd -gexit 2>&1); then
+	local status=0
+	output=$(timeout "$GODOT_TIMEOUT" godot --headless \
+		-s addons/gut/gut_cmdln.gd -gexit 2>&1) || status=$?
+	if [ "$status" -eq 124 ]; then
+		fail "The test suite ran longer than ${GODOT_TIMEOUT}s and was stopped. \
+Find the test that hangs or runs long and fix it: no run may take over a \
+minute.
+$(echo "$output" | strip_ansi | grep -E '^\* test|^res://' | tail -5)"
+	elif [ "$status" -ne 0 ]; then
 		fail "The test suite failed:
 $(echo "$output" | strip_ansi |
 			grep -E -i -B1 -A3 'fail|error' | grep -v '^--$' | head -60)"
 	fi
 
 	local errors
-	errors=$(godot --headless --quit 2>&1 | godot_errors)
+	errors=$(timeout "$GODOT_TIMEOUT" godot --headless --quit 2>&1 |
+		godot_errors)
 	[ -z "$errors" ] || fail "The smoke run (godot --headless --quit) reports \
 errors:
 $errors"

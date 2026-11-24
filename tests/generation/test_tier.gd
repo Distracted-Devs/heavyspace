@@ -162,6 +162,6 @@ func test_shipped_ring_tier_is_capped_at_the_player_mass() -> void:
 	var rings: Tier = load("res://resources/generation/rings_tier.tres")
 	assert_false(systems.is_mass_capped())
 	assert_true(rings.is_mass_capped())
-	assert_eq(rings.mass_ceiling_fraction, 1.0)
-	assert_eq(rings.mass_min, 0.1)
+	assert_eq(rings.mass_ceiling_fraction, 0.1)
+	assert_eq(rings.mass_min, 0.01)
 	assert_eq(rings.mass_bias, 1.5)

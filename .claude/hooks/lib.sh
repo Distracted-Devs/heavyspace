@@ -6,6 +6,8 @@ HOOKS="$ROOT/.claude/hooks"
 STATE_DIR="$ROOT/.claude/state"
 STATE="$STATE_DIR/feature.json"
 FEATURES="$ROOT/docs/features"
+# Every godot run (tests, smoke, imports) is stopped after this many seconds.
+GODOT_TIMEOUT=60
 CODE_SPEC=('*.gd' '*.tscn' '*.tres' '*.gdshader' 'project.godot')
 
 mkdir -p "$STATE_DIR"
