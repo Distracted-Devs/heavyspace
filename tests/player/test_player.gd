@@ -158,10 +158,27 @@ func test_ship_mesh_and_collider_are_scaled_up_together() -> void:
 	)
 
 
-func test_thrust_plume_is_dense_and_travels_with_the_ship() -> void:
+func test_thrust_plume_is_dense_and_drawn_in_the_ships_frame() -> void:
 	var player: Player = autofree(PLAYER_SCENE.instantiate())
 	var thrust: GPUParticles3D = player.get_node("Mesh/BlueThrust")
 	var process := thrust.process_material as ParticleProcessMaterial
 	assert_eq(thrust.amount, THRUST_AMOUNT)
 	assert_almost_eq(thrust.lifetime, THRUST_LIFETIME, 1e-6)
-	assert_eq(process.inherit_velocity_ratio, 1.0)
+	assert_true(thrust.local_coords, "the plume moves with the ship")
+	assert_eq(process.inherit_velocity_ratio, 0.0)
+
+
+func test_thrust_plume_blows_out_of_the_back_of_the_ship() -> void:
+	var player: Player = autofree(PLAYER_SCENE.instantiate())
+	var thrust: GPUParticles3D = player.get_node("Mesh/BlueThrust")
+	var process := thrust.process_material as ParticleProcessMaterial
+	var mesh: Node3D = player.get_node("Mesh")
+	var in_ship := mesh.basis * thrust.basis
+	var travel := (in_ship * process.direction).normalized()
+	var backwards := Vector3.BACK
+	assert_gt(
+		travel.dot(backwards),
+		0.99,
+		"the ship faces -Z, so smoke goes +Z",
+	)
+	assert_gt(thrust.position.z, 0.0, "it starts behind the ship's centre")

@@ -149,6 +149,10 @@ Changes to existing APIs are recorded in the files that own them:
   and `fuel.fuel > 0`.
 - On the player it drives Ayla's `BlueThrust` smoke, scale 1, at
   (0, 0, 0.75) under the ship mesh, so it grows with the ship.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md),
+  step 5.44): the smoke is emitted along the emitter's −Y, out of the
+  back of the ship (+Y pointed forwards), and simulated in the ship's
+  frame (local coordinates, no inherited velocity).
 
 ### CrashEffect (`scripts/effects/crash_effect.gd`)
 - A `Node3D`. Exports: `lose_controller: LoseController` (optional) and

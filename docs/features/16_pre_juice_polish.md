@@ -195,6 +195,9 @@ retuned.
   perf review: inherit `e^(−drag × lifetime)` of the velocity (≈ 0.89),
   derived from the ship's drag, so no particle can overtake within its
   lifetime at any speed. It changes the thrust contract and its test.
+  In step 5.44 it turned out the drag wasn't the cause: the smoke was
+  emitted forwards all along. It now blows out of the back, in the
+  ship's frame.
 
 ### Tried and dropped, or test-only
 - Cropping every icon (v1).
@@ -291,6 +294,16 @@ device tracking, and ring jitter is a general `Tier` rule.
   emitted exactly once.
 - `play_in_on_ready` (exported, off; on in the level): plays in from
   `_ready`, after the player has applied its growth.
+
+### BlueThrust (changed, see [HUD and art](13_hud_and_art.md), step 5.44)
+- The smoke is emitted out of the back of the ship: its direction is the
+  emitter's −Y, which the player's transform turns to the ship's +Z (the
+  ship faces −Z). It was +Y, which points forwards: the smoke only looked
+  right while the ship outran it.
+- It is simulated in the ship's frame (`local_coords` on, inherit
+  velocity ratio 0), so it moves with the ship and can't get ahead of it
+  or pass through it. It swings with the ship when it turns rather than
+  trailing. `ThrustEffect` is unchanged.
 
 ### DeviceTracker (`scripts/input/device_tracker.gd`, autoload `InputDevice`)
 - `enum Device { KEYBOARD_MOUSE, CONTROLLER }`, moved from
@@ -760,6 +773,21 @@ The rewrite's steps, each with a **Done:** line. Ticked (✅) when done.
 - **Done:** `tests/ui/test_tutorial_overlay.gd` checks the phases and the
   session rule.
 
+### 5.44 Thrust plume stays with the ship ✅
+A follow-up after `done`, agreed with the user (see the edge cases).
+- `blue_thrust.tscn`: the emission direction is −Y (out of the back of
+  the ship; +Y pointed forwards), local coordinates on, inherit velocity
+  ratio 0, so the plume is simulated in the ship's frame.
+- The real cause: the smoke was always emitted forwards. With no
+  inherited velocity (before this feature) a moving ship outran it, so it
+  trailed; once it kept the ship's velocity (v1) it went ahead after a
+  short boost. Tried and dropped on the way: inheriting `e^(−drag ×
+  lifetime)` of the velocity (the smoke still went ahead and through the
+  ship), then local coordinates alone (the user saw it blow forwards).
+- **Done:** `test_player.gd` checks the plume is drawn in the ship's frame
+  with no inherited velocity, and that its direction, through the
+  player's transforms, points out of the back of the ship.
+
 ## Performance evaluation
 The load measured, the budget, and each option weighed:
 
@@ -846,4 +874,6 @@ shape change as a planet goes live at 3,000 units. The bench's GPU mode
 
 **Follow-up agreed before `done`**: the thrust plume fix noted under
 edge cases (inherit `e^(−drag × lifetime)` of the ship's velocity),
-made as a separate production change after this feature is done.
+made as a separate production change after this feature was done: step
+5.44, which in the end put the plume in the ship's frame (local
+coordinates). It costs nothing on the CPU.
