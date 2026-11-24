@@ -272,6 +272,8 @@ An `Upgrade` (see above). Resource `turn_speed_upgrade.tres`: id
 - Users (run starter, warp controller, shop) have a
   `progression: Progression`. If it is null when they enter the tree, they
   take `RunProgress.progression`. Tests set their own.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)): it
+  also holds one `tutorial := TutorialProgress.new()` for the session.
 
 ### RunStarter (`scripts/levels/run_starter.gd`)
 - Changed 2026-11-24 (see [skill tree](15_skill_tree.md)): `upgrades` is

@@ -1,0 +1,89 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_menu"]
+[ext_resource type="Theme" path="res://resources/ui/holo_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/controls_view.gd" id="3_view"]
+
+[node name="PauseMenu" type="CanvasLayer" node_paths=PackedStringArray("header", "view", "resume_button", "restart_button", "quit_button")]
+layer = 20
+visible = false
+script = ExtResource("1_menu")
+header = NodePath("Centre/Column/Panel/Rows/Header")
+view = NodePath("Centre/Column/Panel/Rows/ViewCentre/ControlsView")
+resume_button = NodePath("Centre/Column/Buttons/Resume")
+restart_button = NodePath("Centre/Column/Buttons/Restart")
+quit_button = NodePath("Centre/Column/Buttons/Quit")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Centre" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Column" type="VBoxContainer" parent="Centre"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Centre/Column"]
+layout_mode = 2
+theme_type_variation = &"HoloTitle"
+text = "// PAUSED"
+horizontal_alignment = 1
+
+[node name="Panel" type="PanelContainer" parent="Centre/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HoloPanel"
+
+[node name="Rows" type="VBoxContainer" parent="Centre/Column/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Centre/Column/Panel/Rows"]
+layout_mode = 2
+theme_type_variation = &"HoloText"
+theme_override_font_sizes/font_size = 18
+text = "// CONTROLS : KEYBOARD & MOUSE"
+
+[node name="ViewCentre" type="CenterContainer" parent="Centre/Column/Panel/Rows"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ControlsView" type="Control" parent="Centre/Column/Panel/Rows/ViewCentre"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_view")
+
+[node name="Buttons" type="HBoxContainer" parent="Centre/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Resume" type="Button" parent="Centre/Column/Buttons"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "RESUME"
+
+[node name="Restart" type="Button" parent="Centre/Column/Buttons"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "RESTART"
+
+[node name="Quit" type="Button" parent="Centre/Column/Buttons"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "QUIT"

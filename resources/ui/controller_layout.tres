@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ControllerLayout" format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/controller_layout.gd" id="1_layout"]
+
+[resource]
+script = ExtResource("1_layout")
+picture = "res://resources/input_textures/controller_layout.svg"
+slot_names = PackedStringArray("lt", "lb", "view", "dpad_up", "dpad_right", "dpad_left", "dpad_down", "ls", "rt", "rb", "menu", "y", "x", "b", "a", "rs")
+slot_on_right = Array[bool]([false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true])
+slot_heights = PackedFloat32Array(0.0759, 0.1838, 0.3136, 0.3775, 0.4461, 0.5133, 0.5792, 0.779, 0.0759, 0.1838, 0.3136, 0.3775, 0.4461, 0.5133, 0.5792, 0.779)
+slot_lines = Array[PackedStringArray]([PackedStringArray("rect256"), PackedStringArray("rect254", "rect255"), PackedStringArray("rect285", "rect284"), PackedStringArray("rect234"), PackedStringArray("rect172"), PackedStringArray("rect247", "rect248"), PackedStringArray("rect235", "rect238"), PackedStringArray("rect253", "rect252"), PackedStringArray("rect283"), PackedStringArray("rect228", "rect229"), PackedStringArray("rect227", "rect226"), PackedStringArray("rect220"), PackedStringArray("rect221"), PackedStringArray("rect224", "rect225"), PackedStringArray("rect222", "rect223"), PackedStringArray("rect282", "rect268")])
+button_slots = Dictionary[int, String]({
+0: "a",
+1: "b",
+2: "x",
+3: "y",
+4: "view",
+6: "menu",
+7: "ls",
+8: "rs",
+9: "lb",
+10: "rb",
+11: "dpad_up",
+12: "dpad_down",
+13: "dpad_left",
+14: "dpad_right"
+})
+axis_slots = Dictionary[int, String]({
+0: "ls",
+1: "ls",
+2: "rs",
+3: "rs",
+4: "lt",
+5: "rt"
+})

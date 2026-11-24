@@ -19,6 +19,10 @@ paused.
 - `PlayerInputComponent` releases the mouse on `NOTIFICATION_PAUSED` and
   recaptures it on `NOTIFICATION_UNPAUSED`, only if `capture_mouse` is on.
 - A "Paused" label is visible only while paused.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  `PauseMenu` replaces the "Paused" label and `PauseOverlay` is removed.
+  `restart()` is split out of the input handling, emits `restarting` and
+  reloads the scene unless `reload_on_restart` is off.
 
 ## Steps
 

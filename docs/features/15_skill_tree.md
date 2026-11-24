@@ -434,6 +434,9 @@ Replaces the list of upgrade buttons with the skill tree.
   node's current state.
 - `launch()` requires the shop to be open. It unpauses, emits `launched`
   and, with `reload_on_launch`, reloads the current scene.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  the hints are `InputPrompt`s and WARP IN shows the `warp_out` icon, all
+  following the active device.
 
 ## Steps
 The rewrite's steps, each with a **Done:** line. Ticked (✅) when done.

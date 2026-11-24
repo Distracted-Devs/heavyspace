@@ -1,20 +1,86 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/lose_overlay.gd" id="1_lose"]
+[ext_resource type="Theme" path="res://resources/ui/holo_theme.tres" id="2_theme"]
+[ext_resource type="Shader" path="res://resources/shaders/holo_scanlines.gdshader" id="3_scanlines"]
+[ext_resource type="Script" path="res://scripts/ui/input_prompt.gd" id="4_prompt"]
+[ext_resource type="Script" path="res://scripts/effects/pulse_effect.gd" id="5_pulse"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scanlines"]
+shader = ExtResource("3_scanlines")
+shader_parameter/tint = Color(1, 0.3, 0.8, 0.07)
 
 [node name="LoseOverlay" type="CanvasLayer"]
 layer = 15
 script = ExtResource("1_lose")
 
-[node name="Label" type="Label" parent="."]
+[node name="Backdrop" type="ColorRect" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 48
-text = "Crashed! Press R / Back to restart"
+mouse_filter = 2
+color = Color(0.03, 0, 0.06, 0.55)
+
+[node name="Scanlines" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_scanlines")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Centre" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Panel" type="PanelContainer" parent="Centre"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HoloAlertPanel"
+
+[node name="Rows" type="VBoxContainer" parent="Centre/Panel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Centre/Panel/Rows"]
+layout_mode = 2
+theme_type_variation = &"HoloTitle"
+theme_override_font_sizes/font_size = 44
+text = "// CRASHED"
 horizontal_alignment = 1
-vertical_alignment = 1
+
+[node name="Reason" type="Label" parent="Centre/Panel/Rows"]
+modulate = Color(1, 1, 1, 0.8)
+layout_mode = 2
+theme_type_variation = &"HoloText"
+text = "HULL BREACH: YOU HIT SOMETHING HEAVIER"
+horizontal_alignment = 1
+
+[node name="Gap" type="Control" parent="Centre/Panel/Rows"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Restart" type="HBoxContainer" parent="Centre/Panel/Rows"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 10
+script = ExtResource("4_prompt")
+actions = Array[StringName]([&"restart"])
+text = "RESTART"
+icon_size = 44.0
+label_type = &"HoloPrompt"
+
+[node name="RestartPulse" type="Node" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("5_pulse")
+target = NodePath("../Centre/Panel/Rows/Restart")

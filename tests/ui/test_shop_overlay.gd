@@ -209,6 +209,28 @@ func test_a_run_starter_without_a_valid_tree_is_reported() -> void:
 	assert_eq(shop.views.size(), 0)
 
 
+func test_hints_are_prompts_for_the_shop_controls() -> void:
+	var expected := {
+		"Move": [[&"ui_up", &"ui_left", &"ui_down", &"ui_right"], "MOVE"],
+		"Buy": [[&"ui_accept"], "BUY"],
+		"Zoom": [[&"shop_zoom_out", &"shop_zoom_in"], "ZOOM"],
+	}
+	for hint: String in expected:
+		var prompt := _shop.get_node("Hints/Row/" + hint) as InputPrompt
+		assert_not_null(prompt, hint)
+		assert_eq(Array(prompt.actions), expected[hint][0])
+		assert_eq(prompt.text, expected[hint][1])
+
+
+func test_warp_in_shows_the_warp_out_icon() -> void:
+	assert_eq(_shop.warp_button.text, " WARP IN >>")
+	var prompt_icon: ButtonPromptIcon = _shop.get_node(
+		"Hints/Row/WarpButton/WarpIcon"
+	)
+	assert_eq(Array(prompt_icon.actions), [&"warp_out"])
+	assert_not_null(_shop.warp_button.icon)
+
+
 func test_views_are_styled_only_when_the_shop_opens() -> void:
 	var view := _view(&"tank_1")
 	assert_eq(view.footer.text, "")

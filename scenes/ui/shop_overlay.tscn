@@ -4,6 +4,12 @@
 [ext_resource type="Script" path="res://scripts/ui/shop_camera.gd" id="2_camera"]
 [ext_resource type="Environment" path="res://resources/environments/space.tres" id="3_space"]
 [ext_resource type="Shader" path="res://resources/shaders/holo_scanlines.gdshader" id="4_scanlines"]
+[ext_resource type="Theme" path="res://resources/ui/holo_theme.tres" id="5_theme"]
+[ext_resource type="Script" path="res://scripts/ui/input_prompt.gd" id="6_prompt"]
+[ext_resource type="Script" path="res://scripts/ui/button_prompt_icon.gd" id="7_button_icon"]
+[ext_resource type="Script" path="res://scripts/ui/shop_guide.gd" id="8_guide"]
+[ext_resource type="Script" path="res://scripts/effects/bounce_effect.gd" id="9_bounce"]
+[ext_resource type="Script" path="res://scripts/effects/pulse_effect.gd" id="10_pulse"]
 
 [sub_resource type="SystemFont" id="SystemFont_mono"]
 font_names = PackedStringArray("Menlo", "Consolas", "DejaVu Sans Mono", "monospace")
@@ -113,6 +119,7 @@ offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
+theme = ExtResource("5_theme")
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Row" type="HBoxContainer" parent="Hints"]
@@ -120,26 +127,32 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 28
 
-[node name="Move" type="Label" parent="Hints/Row"]
+[node name="Move" type="HBoxContainer" parent="Hints/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
-theme_override_fonts/font = SubResource("SystemFont_mono")
-theme_override_font_sizes/font_size = 18
-text = "[WASD/ARROWS] MOVE"
+mouse_filter = 2
+script = ExtResource("6_prompt")
+actions = Array[StringName]([&"ui_up", &"ui_left", &"ui_down", &"ui_right"])
+text = "MOVE"
+icon_size = 26.0
+label_type = &"HoloHint"
 
-[node name="Buy" type="Label" parent="Hints/Row"]
+[node name="Buy" type="HBoxContainer" parent="Hints/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
-theme_override_fonts/font = SubResource("SystemFont_mono")
-theme_override_font_sizes/font_size = 18
-text = "[A/ENTER] BUY"
+mouse_filter = 2
+script = ExtResource("6_prompt")
+actions = Array[StringName]([&"ui_accept"])
+text = "BUY"
+icon_size = 26.0
+label_type = &"HoloHint"
 
-[node name="Zoom" type="Label" parent="Hints/Row"]
+[node name="Zoom" type="HBoxContainer" parent="Hints/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 0.9, 1, 0.6)
-theme_override_fonts/font = SubResource("SystemFont_mono")
-theme_override_font_sizes/font_size = 18
-text = "[LT/RT/WHEEL/Q/E] ZOOM"
+mouse_filter = 2
+script = ExtResource("6_prompt")
+actions = Array[StringName]([&"shop_zoom_out", &"shop_zoom_in"])
+text = "ZOOM"
+icon_size = 26.0
+label_type = &"HoloHint"
 
 [node name="WarpButton" type="Button" parent="Hints/Row"]
 layout_mode = 2
@@ -148,8 +161,80 @@ theme_override_colors/font_color = Color(1, 0.3, 0.8, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 18
-text = "[X/SPACE] WARP IN >>"
+theme_override_constants/icon_max_width = 26
+text = " WARP IN >>"
 flat = true
+
+[node name="WarpIcon" type="Node" parent="Hints/Row/WarpButton" node_paths=PackedStringArray("button")]
+script = ExtResource("7_button_icon")
+button = NodePath("..")
+actions = Array[StringName]([&"warp_out"])
+
+[node name="WarpArrow" type="Label" parent="Hints/Row/WarpButton"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"HoloMagenta"
+theme_override_font_sizes/font_size = 30
+text = "▼"
+horizontal_alignment = 1
+
+[node name="BuyTag" type="VBoxContainer" parent="."]
+visible = false
+mouse_filter = 2
+theme = ExtResource("5_theme")
+theme_override_constants/separation = 0
+
+[node name="Prompt" type="HBoxContainer" parent="BuyTag"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+script = ExtResource("6_prompt")
+actions = Array[StringName]([&"ui_accept"])
+text = "BUY"
+icon_size = 28.0
+label_type = &"HoloGold"
+
+[node name="Arrow" type="Label" parent="BuyTag"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HoloMagenta"
+theme_override_font_sizes/font_size = 26
+text = "▼"
+horizontal_alignment = 1
+
+[node name="ShopGuide" type="Node" parent="." node_paths=PackedStringArray("shop", "buy_tag", "buy_hint", "warp_arrow", "buy_tag_bounce", "buy_hint_pulse", "warp_pulse", "warp_arrow_bounce")]
+script = ExtResource("8_guide")
+shop = NodePath("..")
+buy_tag = NodePath("../BuyTag")
+buy_hint = NodePath("../Hints/Row/Buy")
+warp_arrow = NodePath("../Hints/Row/WarpButton/WarpArrow")
+buy_tag_bounce = NodePath("BuyTagBounce")
+buy_hint_pulse = NodePath("BuyHintPulse")
+warp_pulse = NodePath("WarpPulse")
+warp_arrow_bounce = NodePath("WarpArrowBounce")
+
+[node name="BuyTagBounce" type="Node" parent="ShopGuide" node_paths=PackedStringArray("target")]
+script = ExtResource("9_bounce")
+target = NodePath("../../BuyTag")
+active = false
+
+[node name="BuyHintPulse" type="Node" parent="ShopGuide" node_paths=PackedStringArray("target")]
+script = ExtResource("10_pulse")
+target = NodePath("../../Hints/Row/Buy")
+brightness = 1.8
+active = false
+
+[node name="WarpPulse" type="Node" parent="ShopGuide" node_paths=PackedStringArray("target")]
+script = ExtResource("10_pulse")
+target = NodePath("../../Hints/Row/WarpButton")
+brightness = 1.8
+active = false
+
+[node name="WarpArrowBounce" type="Node" parent="ShopGuide" node_paths=PackedStringArray("target")]
+script = ExtResource("9_bounce")
+target = NodePath("../../Hints/Row/WarpButton/WarpArrow")
+active = false
 
 [node name="Scanlines" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_scanlines")

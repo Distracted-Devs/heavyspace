@@ -116,4 +116,4 @@ Features:
 Features:
 - [Mass tanks](features/14_mass_tanks.md) ✅ (5.1–5.12)
 - [Skill tree](features/15_skill_tree.md) ✅ (5.13–5.22)
-- [Pre-juice polish](features/16_pre_juice_polish.md) (5.23–5.43)
+- [Pre-juice polish](features/16_pre_juice_polish.md) ✅ (5.23–5.43)

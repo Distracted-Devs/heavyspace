@@ -32,6 +32,31 @@ func _pause_event() -> InputEventAction:
 	return event
 
 
+func _action(action_name: StringName) -> InputEventAction:
+	var event := InputEventAction.new()
+	event.action = action_name
+	event.pressed = true
+	return event
+
+
+func test_restart_unpauses_and_announces_itself() -> void:
+	_pause.reload_on_restart = false
+	watch_signals(_pause)
+	_pause.set_paused(true)
+	_pause.restart()
+	assert_false(get_tree().paused)
+	assert_signal_emit_count(_pause, "restarting", 1)
+
+
+func test_restart_action_restarts_even_while_paused() -> void:
+	_pause.reload_on_restart = false
+	watch_signals(_pause)
+	_pause.set_paused(true)
+	_pause._unhandled_input(_action(&"restart"))
+	assert_signal_emit_count(_pause, "restarting", 1)
+	assert_false(get_tree().paused)
+
+
 func test_set_paused_pauses_and_unpauses_the_tree() -> void:
 	_pause.set_paused(true)
 	assert_true(get_tree().paused)

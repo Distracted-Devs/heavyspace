@@ -23,3 +23,27 @@ func test_message_is_hidden_until_the_player_loses() -> void:
 	assert_false(_overlay.visible)
 	_player.contact_component.heavier_contact.emit(_player, 100.0)
 	assert_true(_overlay.visible)
+
+
+func test_it_says_what_happened_in_the_holo_look() -> void:
+	var title: Label = _overlay.get_node("Centre/Panel/Rows/Title")
+	var reason: Label = _overlay.get_node("Centre/Panel/Rows/Reason")
+	assert_eq(title.text, "// CRASHED")
+	assert_eq(reason.text, "HULL BREACH: YOU HIT SOMETHING HEAVIER")
+	var panel: PanelContainer = _overlay.get_node("Centre/Panel")
+	assert_eq(panel.theme_type_variation, &"HoloAlertPanel")
+
+
+func test_it_prompts_a_restart_with_a_pulse() -> void:
+	var prompt: InputPrompt = _overlay.get_node("Centre/Panel/Rows/Restart")
+	assert_eq(Array(prompt.actions), [&"restart"])
+	assert_eq(prompt.text, "RESTART")
+	var pulse: PulseEffect = _overlay.get_node("RestartPulse")
+	assert_eq(pulse.target, prompt)
+	assert_true(pulse.active)
+
+
+func test_the_backdrop_lets_the_mouse_through() -> void:
+	for part_name in ["Backdrop", "Scanlines", "Centre"]:
+		var part: Control = _overlay.get_node(part_name)
+		assert_eq(part.mouse_filter, Control.MOUSE_FILTER_IGNORE, part_name)

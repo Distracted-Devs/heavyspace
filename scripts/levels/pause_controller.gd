@@ -2,6 +2,9 @@ class_name PauseController
 extends Node
 
 signal paused_changed(paused: bool)
+signal restarting
+
+@export var reload_on_restart := true
 
 var paused: bool:
 	get:
@@ -17,7 +20,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		set_paused(not paused)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("restart"):
-		set_paused(false)
+		restart()
+
+
+func restart() -> void:
+	set_paused(false)
+	restarting.emit()
+	if reload_on_restart:
 		get_tree().reload_current_scene()
 
 

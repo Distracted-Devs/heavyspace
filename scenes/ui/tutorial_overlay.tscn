@@ -1,0 +1,138 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="1_overlay"]
+[ext_resource type="Theme" path="res://resources/ui/holo_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/target_marker.gd" id="3_marker"]
+[ext_resource type="Script" path="res://scripts/ui/input_prompt.gd" id="4_prompt"]
+[ext_resource type="Script" path="res://scripts/tutorial/flight_training.gd" id="5_training"]
+[ext_resource type="Script" path="res://scripts/tutorial/training_step.gd" id="6_step"]
+[ext_resource type="Script" path="res://scripts/effects/bounce_effect.gd" id="7_bounce"]
+
+[sub_resource type="Resource" id="Step_pitch"]
+script = ExtResource("6_step")
+title = "PITCH"
+hint = "tip the nose up and down"
+actions = Array[StringName]([&"pitch_down", &"pitch_up"])
+
+[sub_resource type="Resource" id="Step_yaw"]
+script = ExtResource("6_step")
+title = "YAW"
+hint = "swing the nose left and right"
+actions = Array[StringName]([&"turn_left", &"turn_right"])
+
+[sub_resource type="Resource" id="Step_roll"]
+script = ExtResource("6_step")
+title = "ROLL"
+hint = "roll the ship over"
+actions = Array[StringName]([&"roll_left", &"roll_right"])
+
+[sub_resource type="Resource" id="Step_look"]
+script = ExtResource("6_step")
+title = "LOOK"
+hint = "look around with the camera"
+actions = Array[StringName]([&"look_up", &"look_down", &"look_left", &"look_right"])
+keyboard_fallback = "mouse_xy"
+counts_mouse_motion = true
+
+[sub_resource type="Resource" id="Step_boost"]
+script = ExtResource("6_step")
+title = "BOOST"
+hint = "fire the booster to fly forward"
+actions = Array[StringName]([&"back_thruster"])
+
+[node name="TutorialOverlay" type="CanvasLayer" node_paths=PackedStringArray("training", "panel", "header", "prompt", "hint", "bar", "planet_marker", "cargo_arrow", "cargo_bounce")]
+layer = 11
+script = ExtResource("1_overlay")
+training = NodePath("Training")
+panel = NodePath("Stack/Centre/Panel")
+header = NodePath("Stack/Centre/Panel/Rows/Header")
+prompt = NodePath("Stack/Centre/Panel/Rows/Prompt")
+hint = NodePath("Stack/Centre/Panel/Rows/Hint")
+bar = NodePath("Stack/Centre/Panel/Rows/Bar")
+planet_marker = NodePath("PlanetMarker")
+cargo_arrow = NodePath("CargoArrow")
+cargo_bounce = NodePath("CargoBounce")
+
+[node name="PlanetMarker" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("3_marker")
+
+[node name="CargoArrow" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(220, 40)
+offset_right = 220.0
+offset_bottom = 40.0
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Stack" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+alignment = 2
+
+[node name="Centre" type="CenterContainer" parent="Stack"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Stack/Centre"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HoloPanel"
+
+[node name="Rows" type="VBoxContainer" parent="Stack/Centre/Panel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="Label" parent="Stack/Centre/Panel/Rows"]
+modulate = Color(1, 1, 1, 0.7)
+layout_mode = 2
+theme_type_variation = &"HoloText"
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="Prompt" type="HBoxContainer" parent="Stack/Centre/Panel/Rows"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 10
+script = ExtResource("4_prompt")
+icon_size = 40.0
+label_type = &"HoloPrompt"
+
+[node name="Hint" type="Label" parent="Stack/Centre/Panel/Rows"]
+layout_mode = 2
+theme_type_variation = &"HoloText"
+horizontal_alignment = 1
+
+[node name="Bar" type="Control" parent="Stack/Centre/Panel/Rows"]
+custom_minimum_size = Vector2(320, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BottomMargin" type="Control" parent="Stack"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Training" type="Node" parent="."]
+script = ExtResource("5_training")
+steps = Array[ExtResource("6_step")]([SubResource("Step_pitch"), SubResource("Step_yaw"), SubResource("Step_roll"), SubResource("Step_look"), SubResource("Step_boost")])
+
+[node name="CargoBounce" type="Node" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("7_bounce")
+target = NodePath("../CargoArrow")
+direction = Vector2(1, 0)
+distance = 10.0
+active = false

@@ -40,6 +40,8 @@ stops the ship and offers a restart. Contacts are sorted by mass, so pickups
   crash during a warp doesn't lose).
 - `LoseOverlay` shows "Crashed! Press R / Back to restart", only after
   losing. Restart (via `PauseController`) and pause still work.
+- Changed 2026-11-24 (see [pre-juice polish](16_pre_juice_polish.md)):
+  the crash screen is in the holo look, with a pulsing restart prompt.
 
 ### Player.stop_flight (`scripts/player/player.gd`)
 - It freezes the body where it is, and disables the input, thruster,
