@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_tier")
-mass_ceiling_fraction = 0.1
-mass_min = 0.01
+mass_ceiling_fraction = 0.02
+mass_min = 0.02
+mass_bias = 0.09999999999999999
 expand_distance = 1000.0
