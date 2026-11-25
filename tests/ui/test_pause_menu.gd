@@ -84,10 +84,10 @@ func test_pad_b_does_nothing_while_hidden() -> void:
 	assert_signal_not_emitted(_pause, "paused_changed")
 
 
-func test_header_names_the_active_device() -> void:
-	assert_eq(_menu.header.text, "// CONTROLS : KEYBOARD & MOUSE")
+func test_header_follows_the_active_device() -> void:
+	var keyboard := _menu.header.text
 	_devices.device = DeviceTracker.Device.CONTROLLER
-	assert_eq(_menu.header.text, "// CONTROLS : CONTROLLER")
+	assert_ne(_menu.header.text, keyboard)
 
 
 func test_its_view_follows_the_same_devices() -> void:

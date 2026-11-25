@@ -59,29 +59,36 @@ func test_it_waits_for_the_warp_in() -> void:
 func test_training_shows_each_step() -> void:
 	_build()
 	_warp_in()
-	assert_eq(_overlay.header.text, "// FLIGHT TRAINING 1/5")
-	assert_eq(_prompt_text(), "PITCH")
 	assert_eq(Array(_overlay.prompt.actions), [&"pitch_down", &"pitch_up"])
-	assert_eq(_overlay.hint.text, "TIP THE NOSE UP AND DOWN")
 	_overlay.training.step_started.emit(3)
-	assert_eq(_overlay.header.text, "// FLIGHT TRAINING 4/5")
-	assert_eq(_prompt_text(), "LOOK")
+	var look: TrainingStep = _overlay.training.steps[3]
+	assert_eq(Array(_overlay.prompt.actions), Array(look.actions))
 	assert_eq(_overlay.prompt.keyboard_fallback, "mouse_xy")
 
 
-func test_a_completed_step_says_nice() -> void:
+func test_a_completed_step_changes_the_hint() -> void:
 	_build()
 	_warp_in()
+	var during := _overlay.hint.text
 	_overlay.training.step_completed.emit(0)
-	assert_eq(_overlay.hint.text, "NICE!")
+	assert_ne(_overlay.hint.text, during)
 
 
 func test_the_games_course() -> void:
 	_build()
-	var titles := []
+	var firsts := []
 	for step in _overlay.training.steps:
-		titles.append(step.title)
-	assert_eq(titles, ["PITCH", "YAW", "ROLL", "LOOK", "BOOST"])
+		firsts.append(step.actions[0])
+	assert_eq(
+		firsts,
+		[
+			&"pitch_down",
+			&"turn_left",
+			&"roll_left",
+			&"look_up",
+			&"back_thruster",
+		],
+	)
 	assert_true(_overlay.training.steps[3].counts_mouse_motion)
 
 
@@ -91,8 +98,6 @@ func test_finishing_training_moves_on_to_the_objective() -> void:
 	_overlay.training.finished.emit()
 	assert_true(_tutorial.is_done(Part.CONTROLS))
 	assert_eq(_overlay.phase, Phase.OBJECTIVE)
-	assert_eq(_overlay.header.text, "// OBJECTIVE")
-	assert_eq(_prompt_text(), "MINE YOUR QUOTA")
 	_overlay.refresh(0.0)
 	assert_true(_overlay.planet_marker.has_target)
 	assert_true(_overlay.cargo_arrow.visible)
@@ -113,7 +118,6 @@ func test_the_planet_marker_marks_the_nearest_root_child() -> void:
 		if from.distance_to(centre) < from.distance_to(nearest):
 			nearest = centre
 	assert_eq(_overlay.planet_marker.target, nearest)
-	assert_string_starts_with(_overlay.planet_marker.text, "PLANET ")
 
 
 func test_the_planet_marker_hides_once_arrived() -> void:
@@ -136,9 +140,10 @@ func test_the_first_pickup_ends_the_objective_after_a_while() -> void:
 	_tutorial.finish(Part.CONTROLS)
 	_build()
 	_warp_in()
+	var objective := _prompt_text()
 	_player().cargo.add(0.5)
 	_overlay.refresh(0.0)
-	assert_eq(_prompt_text(), "NICE! KEEP MINING")
+	assert_ne(_prompt_text(), objective, "it praises the first pickup")
 	assert_false(_overlay.planet_marker.has_target)
 	assert_false(_overlay.cargo_arrow.visible)
 	_overlay.refresh(_overlay.objective_linger + 0.1)

@@ -66,6 +66,12 @@ below.
   expected with `assert_push_error("...")`.
 - Checks only run in debug builds, and can be switched off with the
   `heavy_space/contracts/enabled` project setting.
+- Test behaviour, not presentation. Don't assert UI text (titles,
+  labels, button captions, formatted readouts): a reworded or restyled
+  string isn't a broken rule. Check what the text stands for instead: the
+  state, the value or the action behind it, or that a control shows or
+  hides. Likewise don't pin tuned values (particle counts, scales, export
+  defaults) or find nodes by path when an export or API reaches them.
 
 Formatting, spelling, warnings, the full suite and the smoke run all happen
 automatically after edits and when you finish a turn, so don't run them

@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1_labels")
-actions = Array[StringName]([&"back_thruster", &"pitch_down", &"pitch_up", &"turn_left", &"turn_right", &"roll_left", &"roll_right", &"warp_out", &"restart", &"pause", &"look_up", &"look_down", &"look_left", &"look_right"])
-labels = PackedStringArray("Boost", "Pitch down", "Pitch up", "Yaw left", "Yaw right", "Roll left", "Roll right", "Warp out", "Restart", "Pause", "Look", "Look", "Look", "Look")
-short_labels = PackedStringArray("Boost", "Pitch ↓", "Pitch ↑", "Yaw ←", "Yaw →", "Roll ←", "Roll →", "Warp out", "Restart", "Pause", "Look", "Look", "Look", "Look")
-axis_labels = PackedStringArray("Boost", "Pitch", "Pitch", "Yaw", "Yaw", "Roll", "Roll", "Warp out", "Restart", "Pause", "Look", "Look", "Look", "Look")
+actions = Array[StringName]([&"back_thruster", &"pitch_down", &"pitch_up", &"turn_left", &"turn_right", &"roll_left", &"roll_right", &"warp_out", &"pause", &"look_up", &"look_down", &"look_left", &"look_right"])
+labels = PackedStringArray("Boost", "Pitch down", "Pitch up", "Yaw left", "Yaw right", "Roll left", "Roll right", "Warp out", "Pause", "Look", "Look", "Look", "Look")
+short_labels = PackedStringArray("Boost", "Pitch ↓", "Pitch ↑", "Yaw ←", "Yaw →", "Roll ←", "Roll →", "Warp out", "Pause", "Look", "Look", "Look", "Look")
+axis_labels = PackedStringArray("Boost", "Pitch", "Pitch", "Yaw", "Yaw", "Roll", "Roll", "Warp out", "Pause", "Look", "Look", "Look", "Look")
 keyboard_extra_icons = PackedStringArray("mouse_xy")
 keyboard_extra_labels = PackedStringArray("Look")

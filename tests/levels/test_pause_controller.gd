@@ -48,13 +48,43 @@ func test_restart_unpauses_and_announces_itself() -> void:
 	assert_signal_emit_count(_pause, "restarting", 1)
 
 
-func test_restart_action_restarts_even_while_paused() -> void:
+func _crash() -> void:
+	var lose: LoseController = autofree(LoseController.new())
+	lose.lost = true
+	_pause.lose_controller = lose
+
+
+func test_restart_action_restarts_after_a_crash_even_while_paused() -> void:
 	_pause.reload_on_restart = false
+	_crash()
 	watch_signals(_pause)
 	_pause.set_paused(true)
 	_pause._unhandled_input(_action(&"restart"))
 	assert_signal_emit_count(_pause, "restarting", 1)
 	assert_false(get_tree().paused)
+
+
+func test_restart_action_does_nothing_mid_run() -> void:
+	_pause.reload_on_restart = false
+	_pause.lose_controller = autofree(LoseController.new())
+	watch_signals(_pause)
+	_pause._unhandled_input(_action(&"restart"))
+	assert_signal_not_emitted(_pause, "restarting")
+
+
+func test_restart_action_does_nothing_without_a_lose_controller() -> void:
+	_pause.reload_on_restart = false
+	watch_signals(_pause)
+	_pause._unhandled_input(_action(&"restart"))
+	assert_signal_not_emitted(_pause, "restarting")
+
+
+func test_restart_is_x_on_the_pad_and_select_is_free() -> void:
+	var buttons: Array[int] = []
+	for event in InputMap.action_get_events(&"restart"):
+		if event is InputEventJoypadButton:
+			buttons.append((event as InputEventJoypadButton).button_index)
+	assert_eq(buttons, [JOY_BUTTON_X])
 
 
 func test_set_paused_pauses_and_unpauses_the_tree() -> void:

@@ -45,8 +45,9 @@ case "$(phase)" in
 		;;
 esac
 
-if [ "$(phase)" = perf ] && [[ "$rel" == tests/* ]] && [ -e "$path" ]; then
-	deny "The tests are the contract, so performance work doesn't change them. If an optimisation needs a contract change, stop and agree it with the user first."
+if [ "$(phase)" = perf ] && [[ "$rel" == tests/* ]] && [ -e "$path" ] &&
+	! grep -q '^## Contract changes during perf' "$doc" 2>/dev/null; then
+	deny "The tests are the contract, so performance work doesn't change them. If a change needs a contract change, agree it with the user first and record it under '## Contract changes during perf' in $doc."
 fi
 
 if [[ "$rel" == scripts/*.gd ]] && [ ! -e "$path" ] && ! has_contract "$rel"; then

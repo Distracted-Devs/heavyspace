@@ -59,20 +59,19 @@ func _rect(index: int) -> Rect2:
 	return Rect2(rect.x, rect.y, rect.z, rect.w)
 
 
-func test_bound_keys_get_their_captions() -> void:
+func test_bound_keys_get_their_actions_caption() -> void:
 	var captions: Dictionary = LAYOUT.captions(LABELS)
-	assert_eq(Array(captions.get(KEY_W)), ["Pitch ↓"])
-	assert_eq(Array(captions.get(KEY_S)), ["Pitch ↑"])
-	assert_eq(Array(captions.get(KEY_A)), ["Yaw ←"])
-	assert_eq(Array(captions.get(KEY_E)), ["Roll →"])
-	assert_eq(Array(captions.get(KEY_SHIFT)), ["Boost"])
-	assert_eq(Array(captions.get(KEY_SPACE)), ["Warp out"])
-	assert_eq(Array(captions.get(KEY_R)), ["Restart"])
+	var row: int = LABELS.index_of(&"pitch_down")
+	assert_eq(Array(captions.get(KEY_W)), [LABELS.short_labels[row]])
+	for key in [KEY_S, KEY_A, KEY_E, KEY_SHIFT, KEY_SPACE]:
+		assert_eq(Array(captions.get(key, [])).size(), 1, str(key))
+	assert_false(captions.has(KEY_R), "restart is a crash-only prompt")
 	assert_false(captions.has(KEY_ESCAPE))
 
 
 func test_bindings_off_the_picture_are_extras() -> void:
+	var pause: String = LABELS.labels[LABELS.index_of(&"pause")]
 	assert_eq(
 		LAYOUT.extras(LABELS, ICON_SET),
-		[["esc", "Pause"], ["mouse_xy", "Look"]],
+		[["esc", pause], ["mouse_xy", LABELS.keyboard_extra_labels[0]]],
 	)

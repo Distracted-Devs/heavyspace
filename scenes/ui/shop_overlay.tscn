@@ -11,9 +11,6 @@
 [ext_resource type="Script" path="res://scripts/effects/bounce_effect.gd" id="9_bounce"]
 [ext_resource type="Script" path="res://scripts/effects/pulse_effect.gd" id="10_pulse"]
 
-[sub_resource type="SystemFont" id="SystemFont_mono"]
-font_names = PackedStringArray("Menlo", "Consolas", "DejaVu Sans Mono", "monospace")
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 14.0
 content_margin_top = 14.0
@@ -92,20 +89,17 @@ mouse_filter = 2
 [node name="Title" type="Label" parent="Header/Rows"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.8, 1)
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 40
 text = "SHOP"
 
 [node name="LevelLabel" type="Label" parent="Header/Rows"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 22
 
 [node name="BankLabel" type="Label" parent="Header/Rows"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 22
 
 [node name="Hints" type="PanelContainer" parent="."]
@@ -159,7 +153,6 @@ layout_mode = 2
 focus_mode = 0
 theme_override_colors/font_color = Color(1, 0.3, 0.8, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 18
 theme_override_constants/icon_max_width = 26
 text = " WARP IN >>"

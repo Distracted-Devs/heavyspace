@@ -15,7 +15,7 @@
 [sub_resource type="Resource" id="Node_tank_1"]
 script = ExtResource("2_node")
 id = &"tank_1"
-title = "Mass Tank +1"
+title = "Cargo Tank +1"
 effect = ExtResource("3_tanks")
 step = 1.0
 cost = 5.0
@@ -52,7 +52,7 @@ grid = Vector2(1, 1)
 [sub_resource type="Resource" id="Node_tank_2"]
 script = ExtResource("2_node")
 id = &"tank_2"
-title = "Mass Tank +1"
+title = "Cargo Tank +1"
 effect = ExtResource("3_tanks")
 step = 1.0
 cost = 25.0
@@ -100,7 +100,7 @@ grid = Vector2(3, 1)
 [sub_resource type="Resource" id="Node_mass_efficiency"]
 script = ExtResource("2_node")
 id = &"mass_efficiency"
-title = "Mass efficiency +15%"
+title = "Cargo efficiency +15%"
 effect = ExtResource("11_mass")
 step = 0.15
 max_buys = 5
@@ -110,7 +110,7 @@ grid = Vector2(3, 2)
 [sub_resource type="Resource" id="Node_tank_3"]
 script = ExtResource("2_node")
 id = &"tank_3"
-title = "Mass Tank +1"
+title = "Cargo Tank +1"
 effect = ExtResource("3_tanks")
 step = 1.0
 cost = 25.0

@@ -387,6 +387,8 @@ device tracking, and ring jitter is a general `Tier` rule.
 - `require_valid()` reports and returns false unless each pair of
   parallel arrays is the same length.
 - `index_of(action)` is the action's row, or −1.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): `restart` is no
+  longer labelled; it's a crash-only prompt.
 
 ### ControllerLayout (`scripts/ui/controller_layout.gd`)
 - A Resource for `controller_layout.svg`: `picture`, the line colour to
@@ -640,6 +642,10 @@ The rewrite's steps, each with a **Done:** line. Ticked (✅) when done.
   ratio 1.
 - **Done:** a test checks the player scene's mesh scale and collider
   radius, and the thrust's amount, lifetime and inherited velocity.
+- Changed in [game feel](17_game_feel.md): the ship is ×2 (mesh and
+  collider). The test now checks the collider radius is the base radius ×
+  the mesh scale, whatever that scale is, and finds the plume through
+  `ThrustEffect.particles`. The pinned amount and lifetime test is gone.
 
 ### 5.24 Spawn faces the nearest planet ✅
 - `PlayerSpawn.face_nearest_planet` (on): after placing the player, it

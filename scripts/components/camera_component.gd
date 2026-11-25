@@ -32,6 +32,16 @@ const RELATIVE_PRECISION := 1e-5
 
 var yaw := 0.0
 var pitch := 0.0
+var follow_rotation := Quaternion.IDENTITY:
+	set(value):
+		if not Contract.require(
+			value.is_normalized(),
+			"follow_rotation must be a unit quaternion",
+		):
+			return
+		follow_rotation = value
+var follow_offset := Vector3.ZERO
+var follow_roll := 0.0
 
 
 func _ready() -> void:
@@ -52,7 +62,9 @@ func update_look(stick: Vector2, mouse: Vector2, delta: float) -> void:
 func _apply() -> void:
 	var limit := _max_pitch()
 	pitch = clampf(pitch, -limit, limit)
-	rotation = Vector3(pitch, yaw, 0.0)
+	var look := Basis.from_euler(Vector3(pitch, yaw, 0.0))
+	var roll := Basis(Vector3.BACK, follow_roll)
+	transform = Transform3D(Basis(follow_rotation) * look * roll, follow_offset)
 	camera.transform = Transform3D(Basis.IDENTITY, Vector3.BACK * distance)
 	Contract.invariant(
 		absf(pitch) <= limit + TOLERANCE,
@@ -60,7 +72,7 @@ func _apply() -> void:
 	)
 	Contract.invariant(
 		_is_framing_the_ship(),
-		"camera must be at distance and look at the ship",
+		"camera must be at distance and look at the pivot",
 	)
 
 

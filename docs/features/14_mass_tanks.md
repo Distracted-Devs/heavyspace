@@ -367,6 +367,22 @@ display name "Mass tanks", step 1, base cost 5, cost growth 2, max level 2
     `ready_flash_hz` while ready), a filling one `filling_colour`
   - with `below` set, the panel sits `gap_px` under it
 - Invariant: `fills.size() == cargo.tanks`, and every fill is in [0, 1].
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)):
+  - The title is always `CARGO`. The readout (`readout`, `readout_text()`)
+    and the full-width track and scanlines are gone; only the tanks draw.
+    The panel has no border, background or top padding, and `gap_px`
+    defaults to 2.
+  - New Layout exports: `tanks_per_row ≥ 1` (5), `row_gap_px ≥ 0` (3) and
+    `tank_gap_ratio` in [0, 0.5) (0.08). A bad value is reported and
+    ignored.
+  - `rows()` is `max(1, ceil(tanks ÷ tanks_per_row))`; `bar_height()` is
+    `rows × bar_height_px + (rows − 1) × row_gap_px`, and the bar is laid
+    out that tall and `bar_width()` wide (the boost bar's width).
+  - `tank_rect(i)` requires an owned tank (else it's reported and returns
+    an empty rect). Tank `i` is in column `i mod tanks_per_row` and row
+    `i ÷ tanks_per_row`, in a slot `bar_width() ÷ tanks_per_row` wide less
+    `max(2, slot × tank_gap_ratio)`, and `bar_height_px − 1` tall.
+  - Invariant: every tank's rect lies inside the bar.
 
 ## Steps
 The rewrite's steps, each with a **Done:** line. Ticked (✅) when done.

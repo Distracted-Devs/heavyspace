@@ -25,7 +25,6 @@ func test_the_games_labels_are_valid_and_cover_every_control() -> void:
 		&"roll_left",
 		&"roll_right",
 		&"warp_out",
-		&"restart",
 		&"pause",
 		&"look_up",
 	]:
@@ -33,15 +32,22 @@ func test_the_games_labels_are_valid_and_cover_every_control() -> void:
 
 
 func test_each_action_has_a_label_a_caption_and_an_axis_label() -> void:
-	var row: int = LABELS.index_of(&"pitch_down")
-	assert_eq(LABELS.labels[row], "Pitch down")
-	assert_eq(LABELS.short_labels[row], "Pitch ↓")
-	assert_eq(LABELS.axis_labels[row], "Pitch")
+	for row in LABELS.actions.size():
+		var action: StringName = LABELS.actions[row]
+		assert_false(LABELS.labels[row].is_empty(), action)
+		assert_false(LABELS.short_labels[row].is_empty(), action)
+		assert_false(LABELS.axis_labels[row].is_empty(), action)
+
+
+func test_a_sticks_pair_shares_its_axis_label() -> void:
+	var down: int = LABELS.index_of(&"pitch_down")
+	var up: int = LABELS.index_of(&"pitch_up")
+	assert_eq(LABELS.axis_labels[down], LABELS.axis_labels[up])
 
 
 func test_mouse_look_is_a_keyboard_extra() -> void:
 	assert_eq(Array(LABELS.keyboard_extra_icons), ["mouse_xy"])
-	assert_eq(Array(LABELS.keyboard_extra_labels), ["Look"])
+	assert_eq(LABELS.keyboard_extra_labels.size(), 1)
 
 
 func test_unknown_action_has_no_row() -> void:
@@ -56,3 +62,7 @@ func test_mismatched_arrays_are_reported() -> void:
 		"[Contract] Pre-condition broken: "
 		+ "each action needs a label, a short label and an axis label"
 	)
+
+
+func test_restart_isnt_labelled_as_its_a_crash_only_prompt() -> void:
+	assert_eq(LABELS.index_of(&"restart"), -1)

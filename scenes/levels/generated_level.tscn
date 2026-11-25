@@ -26,10 +26,27 @@
 [ext_resource type="Script" path="res://scripts/effects/grow_in_effect.gd" id="32_grow_in"]
 [ext_resource type="PackedScene" path="res://scenes/ui/warp_prompt.tscn" id="33_warp_prompt"]
 [ext_resource type="PackedScene" path="res://scenes/ui/tutorial_overlay.tscn" id="34_tutorial"]
+[ext_resource type="Script" path="res://scripts/levels/settings_binder.gd" id="40_settings_binder"]
+[ext_resource type="Script" path="res://scripts/effects/camera_shake_effect.gd" id="41_camera_shake"]
+[ext_resource type="Script" path="res://scripts/effects/radial_blur_effect.gd" id="42_radial_blur"]
+[ext_resource type="Script" path="res://scripts/effects/rumble/warp_rumble.gd" id="43_warp_rumble"]
+[ext_resource type="Script" path="res://scripts/effects/rumble/crash_rumble.gd" id="44_crash_rumble"]
+[ext_resource type="Script" path="res://scripts/effects/time_scale_effect.gd" id="45_time_scale"]
+[ext_resource type="Script" path="res://scripts/effects/crash_bounce_effect.gd" id="46_crash_bounce"]
+[ext_resource type="Script" path="res://scripts/ui/shop_juice.gd" id="47_shop_juice"]
 
 [node name="GeneratedLevel" type="Node3D" unique_id=1472244937]
 
 [node name="Player" parent="." unique_id=976860773 instance=ExtResource("1_player")]
+
+[node name="ThrustEffect" parent="Player" node_paths=PackedStringArray("warp_effect")]
+warp_effect = NodePath("../../WarpEffect")
+
+[node name="CameraFollowEffect" parent="Player" node_paths=PackedStringArray("warp_effect")]
+warp_effect = NodePath("../../WarpEffect")
+
+[node name="SpeedLinesEffect" parent="Player" node_paths=PackedStringArray("warp_effect")]
+warp_effect = NodePath("../../WarpEffect")
 
 [node name="PickupComponent" parent="Player" node_paths=PackedStringArray("pool")]
 pool = NodePath("../../LiveBodyPool")
@@ -63,8 +80,9 @@ player = NodePath("../Player")
 start_at_rest = true
 face_nearest_planet = true
 
-[node name="PauseController" type="Node" parent="." unique_id=868928998]
+[node name="PauseController" type="Node" parent="." unique_id=868928998 node_paths=PackedStringArray("lose_controller")]
 script = ExtResource("9_pause")
+lose_controller = NodePath("../LoseController")
 
 [node name="PauseMenu" parent="." unique_id=1101605013 node_paths=PackedStringArray("pause_controller") instance=ExtResource("10_pause_menu")]
 pause_controller = NodePath("../PauseController")
@@ -73,8 +91,9 @@ pause_controller = NodePath("../PauseController")
 script = ExtResource("11_lose")
 player = NodePath("../Player")
 
-[node name="LoseOverlay" parent="." unique_id=1531787066 node_paths=PackedStringArray("lose_controller") instance=ExtResource("12_lose_overlay")]
+[node name="LoseOverlay" parent="." unique_id=1531787066 node_paths=PackedStringArray("lose_controller", "time_scale_effect") instance=ExtResource("12_lose_overlay")]
 lose_controller = NodePath("../LoseController")
+time_scale_effect = NodePath("../TimeScaleEffect")
 
 [node name="RunStarter" type="Node" parent="." unique_id=1530000001 node_paths=PackedStringArray("player")]
 script = ExtResource("13_starter")
@@ -142,3 +161,43 @@ lose_controller = NodePath("../LoseController")
 warp_controller = NodePath("../WarpController")
 warp_effect = NodePath("../WarpEffect")
 cargo_panel = NodePath("../CargoGauge/Panel")
+
+[node name="SettingsBinder" type="Node" parent="." unique_id=1530000016 node_paths=PackedStringArray("player_input")]
+script = ExtResource("40_settings_binder")
+player_input = NodePath("../Player/PlayerInputComponent")
+
+[node name="CameraShakeEffect" type="Node" parent="." unique_id=1530000017 node_paths=PackedStringArray("camera_component", "lose_controller", "warp_effect")]
+script = ExtResource("41_camera_shake")
+camera_component = NodePath("../Player/CameraComponent")
+lose_controller = NodePath("../LoseController")
+warp_effect = NodePath("../WarpEffect")
+
+[node name="RadialBlurEffect" type="CanvasLayer" parent="." unique_id=1530000018 node_paths=PackedStringArray("engine_meter", "camera", "focus", "warp_effect")]
+script = ExtResource("42_radial_blur")
+engine_meter = NodePath("../Player/EngineMeterComponent")
+camera = NodePath("../Player/CameraComponent/Camera3D")
+focus = NodePath("../Player/Mesh")
+warp_effect = NodePath("../WarpEffect")
+
+[node name="WarpRumble" type="Node" parent="." unique_id=1530000019 node_paths=PackedStringArray("warp_effect")]
+script = ExtResource("43_warp_rumble")
+warp_effect = NodePath("../WarpEffect")
+
+[node name="CrashRumble" type="Node" parent="." unique_id=1530000020 node_paths=PackedStringArray("lose_controller")]
+script = ExtResource("44_crash_rumble")
+lose_controller = NodePath("../LoseController")
+
+[node name="TimeScaleEffect" type="Node" parent="." unique_id=1530000021 node_paths=PackedStringArray("lose_controller")]
+script = ExtResource("45_time_scale")
+lose_controller = NodePath("../LoseController")
+
+[node name="CrashBounceEffect" type="Node" parent="." unique_id=1530000022 node_paths=PackedStringArray("player", "mesh", "camera_component", "lose_controller")]
+script = ExtResource("46_crash_bounce")
+player = NodePath("../Player")
+mesh = NodePath("../Player/Mesh")
+camera_component = NodePath("../Player/CameraComponent")
+lose_controller = NodePath("../LoseController")
+
+[node name="ShopJuice" type="Node" parent="." unique_id=1530000023 node_paths=PackedStringArray("shop")]
+script = ExtResource("47_shop_juice")
+shop = NodePath("../ShopOverlay")

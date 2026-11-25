@@ -21,9 +21,16 @@
 [ext_resource type="Script" uid="uid://gjwy56ruy6qb" path="res://scripts/components/cargo_weight_component.gd" id="19_cargo_weight"]
 [ext_resource type="Script" uid="uid://qfutnymjyv2b" path="res://scripts/components/pass_through_component.gd" id="20_pass_through"]
 [ext_resource type="Script" uid="uid://b26jlpmjsptsf" path="res://scripts/components/missing_fuel_boost_component.gd" id="21_missing_fuel_boost"]
+[ext_resource type="Script" path="res://scripts/components/engine_meter_component.gd" id="22_engine_meter"]
+[ext_resource type="Script" path="res://scripts/effects/bank_effect.gd" id="23_bank"]
+[ext_resource type="Script" path="res://scripts/effects/camera_follow_effect.gd" id="24_camera_follow"]
+[ext_resource type="Script" path="res://scripts/effects/speed_lines_effect.gd" id="25_speed_lines"]
+[ext_resource type="Script" path="res://scripts/effects/space_dust_effect.gd" id="26_space_dust"]
+[ext_resource type="Script" path="res://scripts/effects/rumble/thrust_rumble.gd" id="27_thrust_rumble"]
+[ext_resource type="Script" path="res://scripts/effects/rumble/pickup_rumble.gd" id="28_pickup_rumble"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_7l7pj"]
-radius = 0.6520556
+radius = 1.0031625
 
 [node name="Player" type="RigidBody3D" unique_id=1196993607 node_paths=PackedStringArray("flight_input", "thruster", "rotator", "mass_component", "fuel_component", "camera_component", "contact_component", "gravity_receiver", "pickup_component", "arcade_flight", "cargo", "cargo_weight", "missing_fuel_boost")]
 gravity_scale = 0.0
@@ -53,7 +60,7 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 transform = Transform3D(0.2483, 0, 0, 0, 0.2483, 0, 0, 0, 0.2483, 0, 0.0471, 0.8387)
 
 [node name="ThrustFX" parent="Mesh" unique_id=800424819 instance=ExtResource("16_thrust")]
-transform = Transform3D(0.35, 0, 0, 0, -1.5298985e-08, 0.35, 0, -0.35, -1.5298985e-08, 0, 0, 0.75)
+transform = Transform3D(0.745, 0, 0, 0, -3.2564984e-08, 0.745, 0, -0.745, -3.2564984e-08, 0, 0, 0.75)
 amount = 70
 
 [node name="Collider" type="CollisionShape3D" parent="." unique_id=506654686]
@@ -156,13 +163,50 @@ collider = NodePath("../Collider")
 camera = NodePath("../CameraComponent")
 pickup = NodePath("../PickupComponent")
 
-[node name="ThrustEffect" type="Node" parent="." unique_id=1645358286 node_paths=PackedStringArray("flight_input", "fuel", "particles")]
+[node name="ThrustEffect" type="Node" parent="." unique_id=1645358286 node_paths=PackedStringArray("engine_meter", "particles")]
 script = ExtResource("17_thrust_effect")
-flight_input = NodePath("../PlayerInputComponent")
-fuel = NodePath("../FuelComponent")
+engine_meter = NodePath("../EngineMeterComponent")
 particles = NodePath("../Mesh/ThrustFX")
 
 [node name="MissingFuelBoostComponent" type="Node" parent="." unique_id=949296949 node_paths=PackedStringArray("thruster", "fuel")]
 script = ExtResource("21_missing_fuel_boost")
 thruster = NodePath("../ThrusterComponent")
 fuel = NodePath("../FuelComponent")
+
+[node name="EngineMeterComponent" type="Node" parent="." unique_id=1645358300 node_paths=PackedStringArray("body", "flight_input", "fuel", "thruster")]
+script = ExtResource("22_engine_meter")
+body = NodePath("..")
+flight_input = NodePath("../PlayerInputComponent")
+fuel = NodePath("../FuelComponent")
+thruster = NodePath("../ThrusterComponent")
+
+[node name="BankEffect" type="Node" parent="." unique_id=1645358301 node_paths=PackedStringArray("ship", "mesh")]
+script = ExtResource("23_bank")
+ship = NodePath("..")
+mesh = NodePath("../Mesh")
+
+[node name="CameraFollowEffect" type="Node" parent="." unique_id=1645358302 node_paths=PackedStringArray("ship", "camera_component", "engine_meter", "bank_effect")]
+script = ExtResource("24_camera_follow")
+ship = NodePath("..")
+camera_component = NodePath("../CameraComponent")
+engine_meter = NodePath("../EngineMeterComponent")
+bank_effect = NodePath("../BankEffect")
+
+[node name="SpeedLinesEffect" type="Node3D" parent="." unique_id=1645358303 node_paths=PackedStringArray("ship", "engine_meter", "camera_component")]
+script = ExtResource("25_speed_lines")
+ship = NodePath("..")
+engine_meter = NodePath("../EngineMeterComponent")
+camera_component = NodePath("../CameraComponent")
+
+[node name="SpaceDustEffect" type="Node3D" parent="." unique_id=1645358304 node_paths=PackedStringArray("ship", "camera_component")]
+script = ExtResource("26_space_dust")
+ship = NodePath("..")
+camera_component = NodePath("../CameraComponent")
+
+[node name="ThrustRumble" type="Node" parent="." unique_id=1645358305 node_paths=PackedStringArray("engine_meter")]
+script = ExtResource("27_thrust_rumble")
+engine_meter = NodePath("../EngineMeterComponent")
+
+[node name="PickupRumble" type="Node" parent="." unique_id=1645358306 node_paths=PackedStringArray("absorb_effect")]
+script = ExtResource("28_pickup_rumble")
+absorb_effect = NodePath("../AbsorbEffect")

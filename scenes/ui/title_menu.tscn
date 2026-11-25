@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/title_menu.gd" id="1_menu"]
+[ext_resource type="Theme" uid="uid://bgei2k013omi7" path="res://resources/ui/holo_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://blsa7ah0v8xq1" path="res://resources/ui/title_logo.png" id="3_logo"]
+
+[node name="TitleMenu" type="CanvasLayer" node_paths=PackedStringArray("main_page", "options_page", "start_button", "options_button", "exit_button", "vibration_button", "invert_pitch_button", "back_button")]
+layer = 40
+script = ExtResource("1_menu")
+main_page = NodePath("Root/Side/Centre/Column/Main")
+options_page = NodePath("Root/Side/Centre/Column/Options")
+start_button = NodePath("Root/Side/Centre/Column/Main/Start")
+options_button = NodePath("Root/Side/Centre/Column/Main/Options")
+exit_button = NodePath("Root/Side/Centre/Column/Main/Exit")
+vibration_button = NodePath("Root/Side/Centre/Column/Options/Vibration")
+invert_pitch_button = NodePath("Root/Side/Centre/Column/Options/InvertPitch")
+back_button = NodePath("Root/Side/Centre/Column/Options/Back")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Side" type="MarginContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_right = 0.42
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Centre" type="CenterContainer" parent="Root/Side"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="Root/Side/Centre"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="Logo" type="TextureRect" parent="Root/Side/Centre/Column"]
+texture_filter = 5
+custom_minimum_size = Vector2(520, 190)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Main" type="VBoxContainer" parent="Root/Side/Centre/Column"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+
+[node name="Start" type="Button" parent="Root/Side/Centre/Column/Main"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "START"
+
+[node name="Options" type="Button" parent="Root/Side/Centre/Column/Main"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "OPTIONS"
+
+[node name="Exit" type="Button" parent="Root/Side/Centre/Column/Main"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "EXIT"
+
+[node name="Options" type="VBoxContainer" parent="Root/Side/Centre/Column"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+
+[node name="Vibration" type="Button" parent="Root/Side/Centre/Column/Options"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "VIBRATION: ON"
+
+[node name="InvertPitch" type="Button" parent="Root/Side/Centre/Column/Options"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "INVERT PITCH: OFF"
+
+[node name="Back" type="Button" parent="Root/Side/Centre/Column/Options"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "BACK"

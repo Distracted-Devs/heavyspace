@@ -64,7 +64,6 @@ func test_hidden_after_a_crash() -> void:
 func test_it_prompts_the_warp_with_a_pulse() -> void:
 	var prompt: InputPrompt = _prompt.get_node("Stack/Centre/Panel/Rows/Warp")
 	assert_eq(Array(prompt.actions), [&"warp_out"])
-	assert_eq(prompt.text, "WARP OUT >>")
 	var pulse: PulseEffect = _prompt.get_node("Pulse")
 	assert_eq(pulse.target, _prompt.get_node("Stack/Centre/Panel"))
 

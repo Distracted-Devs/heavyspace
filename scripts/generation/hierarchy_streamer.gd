@@ -41,6 +41,8 @@ func _ready() -> void:
 	if not _require_valid_tiers():
 		return
 	resolved_seed = level_seed if level_seed != 0 else _random_seed()
+	if OS.is_debug_build():
+		print("[Debug] Level seed %d" % resolved_seed)
 	var warning := mass_cap_warning()
 	if warning != "" and OS.is_debug_build():
 		print("[Debug] %s" % warning)

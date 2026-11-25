@@ -377,6 +377,8 @@ One node of the shop's tree: a focusable Button, 240 × 140.
 - `MassText.mkg(mass)` (`scripts/ui/mass_text.gd`) writes mass as
   `nMkg`: whole numbers without decimals, else one decimal (1 mass = 1
   Mkg). The shop's bank uses it too.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): `slot_rect(index)`
+  gives each slot square.
 
 ### ShopCamera (`scripts/ui/shop_camera.gd`)
 The shop's view onto the tree: a Node the shop drives each frame, so tests

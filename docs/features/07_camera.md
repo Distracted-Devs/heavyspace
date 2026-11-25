@@ -23,6 +23,10 @@ stick or the mouse. The input side (`look_intent`, `mouse_look`) is in
   positions far from the origin only hold about 7 significant figures
   (changed in [HUD and art](13_hud_and_art.md), 2026-11-23: the fixed
   0.001 broke after growing, far out).
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): the pivot also
+  takes a `follow_rotation`, `follow_offset` and `follow_roll` from the
+  camera follow effect, and the framing invariant is relative to the
+  pivot.
 
 ## Steps
 

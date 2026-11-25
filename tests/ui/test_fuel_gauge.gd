@@ -25,10 +25,10 @@ func after_each() -> void:
 	Contract.enabled = _was_enabled
 
 
-func test_full_tank_reads_full_and_lights_every_segment() -> void:
+func test_full_tank_fills_the_whole_bar() -> void:
 	_gauge.refresh(0.0)
 	assert_eq(_gauge.fraction, 1.0)
-	assert_eq(_gauge.lit_segments(), float(_gauge.segments))
+	assert_almost_eq(_gauge.fill_width(), _gauge.bar_width() - 1.0, 1.0e-4)
 	assert_false(_gauge.warning)
 	assert_eq(_gauge.bar_colour(), _gauge.colour)
 
@@ -37,14 +37,8 @@ func test_fraction_is_fuel_over_tank_size() -> void:
 	_fuel.draw(1.0)
 	_gauge.refresh(0.0)
 	assert_almost_eq(_gauge.fraction, 0.75, 1.0e-6)
-	assert_almost_eq(_gauge.lit_segments(), 15.0, 1.0e-4)
-
-
-func test_readout_shows_percent_and_seconds_of_boost_left() -> void:
-	_fuel.draw(1.0)
-	_gauge.refresh(0.0)
-	assert_eq(_gauge.readout_text(), "FUEL  75% | T-1.5s")
-	assert_eq(_gauge.readout.text, _gauge.readout_text())
+	var whole := _gauge.bar_width() - 1.0
+	assert_almost_eq(_gauge.fill_width(), 0.75 * whole, 1.0e-4)
 
 
 func test_warns_below_the_low_fuel_fraction() -> void:
@@ -65,22 +59,14 @@ func test_warning_flashes_over_time() -> void:
 	assert_gt(alphas.max() - alphas.min(), 0.2)
 
 
-func test_empty_tank_lights_nothing() -> void:
+func test_empty_tank_fills_nothing() -> void:
 	_fuel.draw(4.0)
 	_gauge.refresh(0.0)
 	assert_eq(_gauge.fraction, 0.0)
-	assert_eq(_gauge.lit_segments(), 0.0)
+	assert_eq(_gauge.fill_width(), 0.0)
 
 
 func test_missing_fuel_is_reported() -> void:
 	_gauge.fuel = null
 	_gauge.refresh(0.0)
 	assert_push_error("[Contract] Pre-condition broken: fuel must be set")
-
-
-func test_too_few_segments_are_reported_and_ignored() -> void:
-	_gauge.segments = 1
-	assert_push_error(
-		"[Contract] Pre-condition broken: segments must be within [2, 60]"
-	)
-	assert_eq(_gauge.segments, 20)

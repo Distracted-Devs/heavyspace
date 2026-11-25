@@ -58,13 +58,6 @@ theme_override_font_sizes/font_size = 44
 text = "// CRASHED"
 horizontal_alignment = 1
 
-[node name="Reason" type="Label" parent="Centre/Panel/Rows"]
-modulate = Color(1, 1, 1, 0.8)
-layout_mode = 2
-theme_type_variation = &"HoloText"
-text = "HULL BREACH: YOU HIT SOMETHING HEAVIER"
-horizontal_alignment = 1
-
 [node name="Gap" type="Control" parent="Centre/Panel/Rows"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2

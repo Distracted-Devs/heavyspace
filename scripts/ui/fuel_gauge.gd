@@ -6,14 +6,13 @@ const MIN_BAR_HEIGHT := 10.0
 const FONT_SCREEN_RATIO := 0.02
 const MIN_FONT_SIZE := 9
 const PADDING_SCREEN_RATIO := 0.01
-const SEGMENT_GAP_RATIO := 0.25
+const TITLE := "BOOST"
 
 @export_group("Components")
 @export var fuel: FuelComponent
 @export var panel: PanelContainer
 @export var title: Label
 @export var bar: Control
-@export var readout: Label
 
 @export_group("Layout")
 @export_range(0.05, 0.5) var bar_width_ratio := 0.16
@@ -25,14 +24,6 @@ const SEGMENT_GAP_RATIO := 0.25
 		):
 			return
 		bar_height_px = value
-@export_range(2, 60) var segments := 20:
-	set(value):
-		if not Contract.require(
-			value >= 2 and value <= 60,
-			"segments must be within [2, 60]",
-		):
-			return
-		segments = value
 @export_range(0.0, 0.2) var margin_ratio := 0.015
 
 @export_group("Warning")
@@ -61,6 +52,7 @@ var _flash_time := 0.0
 
 
 func _ready() -> void:
+	title.text = TITLE
 	bar.draw.connect(_draw_bar)
 	get_viewport().size_changed.connect(_update_layout)
 	_update_layout()
@@ -81,8 +73,6 @@ func refresh(delta: float) -> void:
 		"font_color",
 		shown if warning else Color(shown, 0.8),
 	)
-	readout.add_theme_color_override("font_color", shown)
-	readout.text = readout_text()
 	bar.queue_redraw()
 	Contract.invariant(
 		fraction >= 0.0 and fraction <= 1.0,
@@ -97,16 +87,12 @@ func bar_colour() -> Color:
 	return Color(low_colour, 0.5 + 0.5 * flash)
 
 
-func lit_segments() -> float:
-	return fraction * segments
+func bar_width() -> float:
+	return bar.custom_minimum_size.x
 
 
-func seconds_left() -> float:
-	return fuel.fuel / fuel.burn_rate
-
-
-func readout_text() -> String:
-	return "FUEL %3d%% | T-%.1fs" % [roundi(fraction * 100.0), seconds_left()]
+func fill_width() -> float:
+	return fraction * maxf(bar_width() - 1.0, 0.0)
 
 
 func _update_layout() -> void:
@@ -118,24 +104,13 @@ func _update_layout() -> void:
 	var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
 	if style:
 		style.set_content_margin_all(maxf(3.0, screen.y * PADDING_SCREEN_RATIO))
+		style.content_margin_bottom = 0.0
 	title.add_theme_font_size_override("font_size", font_size - 1)
-	readout.add_theme_font_size_override("font_size", font_size)
 
 
 func _draw_bar() -> void:
 	var rect := Rect2(Vector2.ZERO, bar.size)
-	var segment_width := rect.size.x / segments
-	var gap := maxf(1.0, segment_width * SEGMENT_GAP_RATIO)
-	var lit := lit_segments()
-	var shown := bar_colour()
 	bar.draw_rect(rect.grow(-1.0), TRACK_COLOUR)
-	for index in segments:
-		if index >= lit:
-			break
-		var width := segment_width - gap
-		if index + 1 > lit:
-			width = maxf(0.0, width * (lit - index))
-		bar.draw_rect(
-			Rect2(index * segment_width + 0.5, 0.5, width, rect.size.y - 1.0),
-			shown,
-		)
+	var width := fill_width()
+	if width > 0.0:
+		bar.draw_rect(Rect2(0.5, 0.5, width, rect.size.y - 1.0), bar_colour())

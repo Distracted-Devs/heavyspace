@@ -203,6 +203,8 @@ Agree each API's contract with the user at the start of its step.
 - After each tick, and when it enters the tree, the global shader parameter
   `clock_time` (declared in `project.godot`) equals `time`.
 - Invariant: `time ≥ 0`, and it never goes backwards.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): it advances by
+  `delta × speed` (exported, 1).
 - `running` (exported, default on; [HUD and art](13_hud_and_art.md) step
   4.2): while off, `time` holds and nothing orbits. The generated level
   turns it off for now.
@@ -412,6 +414,8 @@ Agree each API's contract with the user at the start of its step.
 ### 2.8 Generated level ✅
 - `scenes/levels/generated_level.tscn` replaces `test_level.tscn` as the
   main scene, with the prototype's tuned values.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): the title screen
+  is now the main scene; its START loads the generated level.
 - The player spawns with its home system's velocity, and the camera's far
   plane covers the system.
 - `MassTintDebug` also tints drawn bodies through the renderer. (It was

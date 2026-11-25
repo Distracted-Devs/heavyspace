@@ -195,6 +195,8 @@ An eaten body and everything below it leave the hierarchy for good.
   `absorbed(mass)` is emitted once with `body.mass + extra_mass`.
 - `absorbing_count()` is the number in flight. They are kept in flat
   arrays (body, offset, scale, elapsed, mass) with swap-remove.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): with squash on
+  (the default), a caught body squashes, then stretches towards the ship.
 
 ### LiveBodyPool.bodies_within (`scripts/generation/live_body_pool.gd`)
 - `bodies_within(centre, reach, max_mass) -> Array[MassBody]` requires

@@ -6,8 +6,6 @@ const BODY_REACH := 1.5
 const PATH_END_ALPHA := 0.25
 const NEAR_RATIO := 0.01
 const FAR_RATIO := 4.0
-const TITLE_FONT_RATIO := 0.026
-const MIN_TITLE_FONT := 9
 const BORDER_RATIO := 0.004
 
 @export_group("Components")
@@ -15,7 +13,6 @@ const BORDER_RATIO := 0.004
 @export var pool: LiveBodyPool
 @export var frame: Panel
 @export var border: Panel
-@export var title: Label
 @export var grid: ColorRect
 @export var map_root: Node3D
 @export var camera: Camera3D
@@ -379,11 +376,6 @@ func _update_layout() -> void:
 	(
 		border.get_theme_stylebox("panel") as StyleBoxFlat
 	).set_border_width_all(int(line))
-	title.position = Vector2(line * 3.0, line * 2.0)
-	title.add_theme_font_size_override(
-		"font_size",
-		maxi(MIN_TITLE_FONT, int(screen_height * TITLE_FONT_RATIO) - 4),
-	)
 
 
 func _flat_material(colour: Color) -> StandardMaterial3D:

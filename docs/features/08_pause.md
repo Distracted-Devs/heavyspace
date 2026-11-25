@@ -23,6 +23,8 @@ paused.
   `PauseMenu` replaces the "Paused" label and `PauseOverlay` is removed.
   `restart()` is split out of the input handling, emits `restarting` and
   reloads the scene unless `reload_on_restart` is off.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): the `restart`
+  action (R / pad X) only restarts after a crash; Select is unbound.
 
 ## Steps
 

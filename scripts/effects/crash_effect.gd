@@ -15,6 +15,7 @@ extends Node3D
 			return
 		lifetime = value
 @export var prewarm := true
+@export var follow_ship := true
 
 var _explosions: Array[Node3D] = []
 var _ages := PackedFloat64Array()
@@ -41,6 +42,9 @@ func play() -> void:
 	add_child(blast)
 	blast.global_position = ship.global_position
 	blast.scale = ship.global_basis.get_scale()
+	if follow_ship:
+		for particles in blast.find_children("*", "GPUParticles3D"):
+			(particles as GPUParticles3D).local_coords = true
 	_explosions.append(blast)
 	_ages.append(0.0)
 
@@ -48,6 +52,8 @@ func play() -> void:
 func advance(delta: float) -> void:
 	for slot in range(_explosions.size() - 1, -1, -1):
 		_ages[slot] += delta
+		if follow_ship and ship != null:
+			_explosions[slot].global_position = ship.global_position
 		if _ages[slot] >= lifetime:
 			_explosions[slot].queue_free()
 			_forget(slot)

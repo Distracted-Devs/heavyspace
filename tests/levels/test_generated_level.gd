@@ -61,11 +61,15 @@ func _home_centre() -> Vector3:
 	return systems.child_position(0, clock.time)
 
 
-func test_generated_level_is_the_main_scene() -> void:
+func test_the_title_screen_is_the_main_scene_and_starts_the_level() -> void:
 	var main_scene: String = ProjectSettings.get_setting(
 		"application/run/main_scene"
 	)
-	assert_eq(ResourceLoader.load(main_scene).resource_path, LEVEL_PATH)
+	assert_eq(main_scene, "res://scenes/title/title_screen.tscn")
+	var title: TitleScreen = autofree(
+		(load(main_scene) as PackedScene).instantiate()
+	)
+	assert_eq(title.game_scene, LEVEL_PATH)
 
 
 func test_level_starts_with_the_giant_and_its_systems() -> void:

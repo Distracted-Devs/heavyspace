@@ -68,3 +68,18 @@ func test_shader_time_matches_the_clock() -> void:
 		pass_test("The headless renderer doesn't keep shader globals.")
 		return
 	assert_almost_eq(float(shader_time), _clock.time, 1.0e-6)
+
+
+func test_speed_scales_how_fast_time_passes() -> void:
+	_clock.speed = 100.0
+	_clock._physics_process(0.25)
+	assert_almost_eq(_clock.time, 25.0, 1.0e-6)
+
+
+func test_a_negative_speed_is_reported_and_ignored() -> void:
+	var was := Contract.enabled
+	Contract.enabled = true
+	_clock.speed = -1.0
+	assert_push_error("speed must not be negative")
+	assert_eq(_clock.speed, 1.0)
+	Contract.enabled = was

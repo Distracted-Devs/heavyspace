@@ -2,9 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/ui/skill_node_view.gd" id="1_view"]
 
-[sub_resource type="SystemFont" id="SystemFont_mono"]
-font_names = PackedStringArray("Menlo", "Consolas", "DejaVu Sans Mono", "monospace")
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab"]
 bg_color = Color(0, 0.04, 0.07, 0.75)
 border_width_left = 2
@@ -17,7 +14,6 @@ border_color = Color(1, 1, 1, 0.9)
 custom_minimum_size = Vector2(240, 140)
 offset_right = 240.0
 offset_bottom = 140.0
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 19
 autowrap_mode = 3
 script = ExtResource("1_view")
@@ -33,7 +29,6 @@ offset_top = 100.0
 offset_right = 232.0
 offset_bottom = 128.0
 mouse_filter = 2
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 
@@ -48,7 +43,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_tab")
 
 [node name="Tab" type="Label" parent="TabPanel"]
 layout_mode = 2
-theme_override_fonts/font = SubResource("SystemFont_mono")
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 vertical_alignment = 1

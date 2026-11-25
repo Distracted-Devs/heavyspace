@@ -153,6 +153,8 @@ Changes to existing APIs are recorded in the files that own them:
   step 5.44): the smoke is emitted along the emitter's −Y, out of the
   back of the ship (+Y pointed forwards), and simulated in the ship's
   frame (local coordinates, no inherited velocity).
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): always on,
+  spooled by an `EngineMeterComponent`; it replaces the on/off rule above.
 
 ### CrashEffect (`scripts/effects/crash_effect.gd`)
 - A `Node3D`. Exports: `lose_controller: LoseController` (optional) and
@@ -172,6 +174,8 @@ Changes to existing APIs are recorded in the files that own them:
   is ready, it instantiates one hidden explosion as its child and frees it
   at once, so the first crash doesn't pay the explosion's first creation.
   It never counts in `active_count()`.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): with
+  `follow_ship` (on) the explosion travels with the ship.
 
 ### FuelGauge (`scripts/ui/fuel_gauge.gd`, `scenes/ui/fuel_gauge.tscn`)
 - Ayla's holo thrust readout, top left: a `CanvasLayer` with a framed
@@ -191,6 +195,13 @@ Changes to existing APIs are recorded in the files that own them:
   - the readout is `FUEL nn% | T-s.ss` (`%3d%% | T-%.1fs`): the percentage
     and the seconds of boost left, `fuel / burn_rate`
 - Invariant: `0 ≤ fraction ≤ 1`.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): the title is
+  always `BOOST`, and the bar is one solid fill of `fill_width()` =
+  `fraction × (bar_width() − 1)` over the track, where `bar_width()` is
+  the laid-out bar width. The panel has no border, background or bottom
+  padding. Removed: the readout (`readout`, `readout_text()`,
+  `seconds_left()`) and the segments (`segments`, `lit_segments()`). Text
+  uses the theme's font.
 
 ### PathPredictor (`scripts/ui/path_predictor.gd`)
 - A `RefCounted` that works over `GravityRegistry`'s flat arrays.
@@ -253,6 +264,8 @@ Changes to existing APIs are recorded in the files that own them:
 - Changed 2026-11-24 (see [mass tanks](14_mass_tanks.md)): the predictor gets the receiver's
   exponent, drift setting and drift, and "heavier" (focus, prediction and
   map colours) uses the core mass, not `body.mass` with cargo.
+- Changed 2026-11-25 (see [game feel](17_game_feel.md)): the "ORBIT"
+  title and its `title` export are gone.
 - `refresh(delta)` (each frame) requires `player`. The prediction uses
   the player's facing (`−Z`) and its `ArcadeFlightComponent.alignment`
   (0 without one). Afterwards:

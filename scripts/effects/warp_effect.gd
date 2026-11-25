@@ -83,6 +83,13 @@ func play_in() -> void:
 		_show(1.0)
 
 
+func intensity() -> float:
+	if not playing:
+		return 0.0
+	var progress := clampf(_elapsed / warp_duration, 0.0, 1.0)
+	return 1.0 - progress if playing_in else progress
+
+
 func advance(delta: float) -> void:
 	if not playing:
 		return

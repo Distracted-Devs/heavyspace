@@ -10,12 +10,9 @@ func test_a_new_step_counts_only_its_actions() -> void:
 
 func test_a_step_keeps_what_it_teaches() -> void:
 	var step := TrainingStep.new()
-	step.title = "LOOK"
-	step.hint = "look around with the camera"
 	step.actions = [&"look_up", &"look_down"]
 	step.keyboard_fallback = "mouse_xy"
 	step.counts_mouse_motion = true
-	assert_eq(step.title, "LOOK")
 	assert_eq(Array(step.actions), [&"look_up", &"look_down"])
 	assert_eq(step.keyboard_fallback, "mouse_xy")
 	assert_true(step.counts_mouse_motion)

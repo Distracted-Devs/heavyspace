@@ -82,3 +82,31 @@ func test_non_positive_lifetime_is_reported_and_ignored() -> void:
 		"[Contract] Pre-condition broken: lifetime must be positive"
 	)
 	assert_eq(_effect.lifetime, 5.0)
+
+
+func test_the_explosion_follows_the_ship() -> void:
+	_effect.play()
+	_ship.position = Vector3(40.0, 0.0, 0.0)
+	_effect.advance(0.1)
+	assert_eq(_blast().global_position, _ship.global_position)
+
+
+func test_a_following_explosion_simulates_in_its_own_frame() -> void:
+	_effect.play()
+	var all := _blast().find_children("*", "GPUParticles3D")
+	assert_false(all.is_empty())
+	assert_true(
+		all.all(
+			func(node: Node) -> bool:
+				return node.local_coords,
+		)
+	)
+
+
+func test_an_explosion_can_stay_where_it_was_set_off() -> void:
+	_effect.follow_ship = false
+	_effect.play()
+	var at := _blast().global_position
+	_ship.position = Vector3(40.0, 0.0, 0.0)
+	_effect.advance(0.1)
+	assert_eq(_blast().global_position, at)

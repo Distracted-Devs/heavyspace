@@ -1,28 +1,15 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/cargo_gauge.gd" id="1_cargo_gauge"]
-[ext_resource type="Shader" path="res://resources/shaders/holo_scanlines.gdshader" id="2_scanlines"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0, 0.04, 0.07, 0.6)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.88, 0.3, 0.6)
+draw_center = false
 
-[sub_resource type="SystemFont" id="SystemFont_mono"]
-font_names = PackedStringArray("Menlo", "Consolas", "DejaVu Sans Mono", "monospace")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_scanlines"]
-shader = ExtResource("2_scanlines")
-
-[node name="CargoGauge" type="CanvasLayer" node_paths=PackedStringArray("panel", "title", "bar", "readout")]
+[node name="CargoGauge" type="CanvasLayer" node_paths=PackedStringArray("panel", "title", "bar")]
 script = ExtResource("1_cargo_gauge")
 panel = NodePath("Panel")
 title = NodePath("Panel/Rows/Title")
 bar = NodePath("Panel/Rows/Bar")
-readout = NodePath("Panel/Rows/Readout")
 
 [node name="Panel" type="PanelContainer" parent="."]
 mouse_filter = 2
@@ -34,21 +21,7 @@ theme_override_constants/separation = 2
 
 [node name="Title" type="Label" parent="Panel/Rows"]
 theme_override_colors/font_color = Color(0.95, 0.7, 0.15, 0.8)
-theme_override_fonts/font = SubResource("SystemFont_mono")
-text = "// MASS TANKS"
+text = "CARGO"
 
 [node name="Bar" type="Control" parent="Panel/Rows"]
 mouse_filter = 2
-
-[node name="Scanlines" type="ColorRect" parent="Panel/Rows/Bar"]
-material = SubResource("ShaderMaterial_scanlines")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Readout" type="Label" parent="Panel/Rows"]
-theme_override_colors/font_color = Color(0.95, 0.7, 0.15, 1)
-theme_override_fonts/font = SubResource("SystemFont_mono")

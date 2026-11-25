@@ -177,13 +177,22 @@ func _style() -> void:
 		add_theme_color_override(colour, title)
 
 
+func slot_rect(index: int) -> Rect2:
+	if not Contract.require(
+		index >= 0 and index < slot_count,
+		"index must be a slot",
+	):
+		return Rect2()
+	return Rect2(
+		Vector2(index * (slot_size + slot_gap), 0.0),
+		Vector2(slot_size, slot_size),
+	)
+
+
 func _draw_slots() -> void:
 	var unlocked := state != State.LOCKED
 	for index in slot_count:
-		var square := Rect2(
-			Vector2(index * (slot_size + slot_gap), 0.0),
-			Vector2(slot_size, slot_size),
-		)
+		var square := slot_rect(index)
 		var bought := index < filled
 		slots.draw_rect(square, track)
 		if bought:

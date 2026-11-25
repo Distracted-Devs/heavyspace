@@ -3,6 +3,8 @@ extends Node
 
 signal absorbed(mass: float)
 
+const SQUASH_MIN_DISTANCE := 0.001
+
 @export_group("Components")
 @export var ship: Node3D
 
@@ -13,6 +15,31 @@ signal absorbed(mass: float)
 			return
 		suck_duration = value
 @export var shrink := true
+
+@export_group("Squash")
+@export var squash_enabled := true
+@export_range(0.0, 0.99, 0.01) var anticipation := 0.2:
+	set(value):
+		if not Contract.require(
+			value >= 0.0 and value < 1.0,
+			"anticipation must be within [0, 1)",
+		):
+			return
+		anticipation = value
+@export_range(0.0, 0.99, 0.01) var squash_amount := 0.3:
+	set(value):
+		if not Contract.require(
+			value >= 0.0 and value < 1.0,
+			"squash_amount must be within [0, 1)",
+		):
+			return
+		squash_amount = value
+@export_range(0.0, 10.0, 0.1, "or_greater") var stretch_amount := 2.0:
+	set(value):
+		var message := "stretch_amount must not be negative"
+		if not Contract.require(value >= 0.0, message):
+			return
+		stretch_amount = value
 
 var _bodies: Array[MassBody] = []
 var _offsets := PackedVector3Array()
@@ -77,13 +104,36 @@ func advance(delta: float) -> void:
 		var t := minf(_elapsed[slot] / suck_duration, 1.0)
 		var remaining := 1.0 - t * t
 		body.global_position = ship.global_position + _offsets[slot] * remaining
-		if shrink:
-			body.mesh.scale = _scales[slot] * remaining
+		var size := _scales[slot] * remaining if shrink else _scales[slot]
+		if squash_enabled:
+			_squash(body, size, t)
+		elif shrink:
+			body.mesh.scale = size
 		if t >= 1.0:
 			var mass := _masses[slot]
 			body.queue_free()
 			_forget(slot)
 			absorbed.emit(mass)
+
+
+func _squash(body: MassBody, size: Vector3, t: float) -> void:
+	var to_ship := ship.global_position - body.global_position
+	if to_ship.length() < SQUASH_MIN_DISTANCE:
+		body.mesh.scale = size
+		return
+	var pull := to_ship.normalized()
+	var length := AbsorbSquash.along(
+		t,
+		anticipation,
+		squash_amount,
+		stretch_amount,
+	)
+	var across := 1.0 / sqrt(length)
+	var up := Vector3.UP if absf(pull.y) < 0.95 else Vector3.RIGHT
+	body.mesh.global_basis = (
+		Basis.looking_at(pull, up)
+		* Basis.from_scale(size * Vector3(across, across, length))
+	)
 
 
 func _stop_gravity(body: MassBody) -> void:

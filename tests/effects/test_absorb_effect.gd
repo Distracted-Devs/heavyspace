@@ -91,6 +91,7 @@ func test_body_follows_a_moving_ship() -> void:
 
 
 func test_body_shrinks_as_it_closes_in() -> void:
+	_effect.squash_enabled = false
 	var body := _body(Vector3(14.0, 0.0, 0.0), 2.0, 1.5)
 	_effect.absorb(body)
 	_effect.advance(DURATION * 0.5)
@@ -102,6 +103,7 @@ func test_body_shrinks_as_it_closes_in() -> void:
 
 
 func test_body_keeps_its_size_with_shrink_off() -> void:
+	_effect.squash_enabled = false
 	_effect.shrink = false
 	var body := _body(Vector3(14.0, 0.0, 0.0), 2.0, 1.5)
 	_effect.absorb(body)
@@ -193,3 +195,26 @@ func test_non_positive_suck_duration_is_rejected() -> void:
 		"[Contract] Pre-condition broken: suck_duration must be positive"
 	)
 	assert_eq(_effect.suck_duration, DURATION)
+
+
+func test_a_caught_body_squashes_first() -> void:
+	var body := _body(Vector3(14.0, 0.0, 0.0), 2.0, 1.0)
+	_effect.shrink = false
+	_effect.absorb(body)
+	_effect.advance(DURATION * _effect.anticipation * 0.5)
+	var towards_ship := body.mesh.global_basis.z
+	assert_almost_eq(towards_ship.length(), 1.0 - _effect.squash_amount, 1e-3)
+
+
+func test_a_caught_body_stretches_towards_the_ship_keeping_its_volume() -> void:
+	var body := _body(Vector3(14.0, 0.0, 0.0), 2.0, 1.0)
+	_effect.shrink = false
+	_effect.absorb(body)
+	_effect.advance(DURATION * 0.9)
+	var basis := body.mesh.global_basis
+	var towards_ship := (
+		_ship.global_position - body.global_position
+	).normalized()
+	assert_almost_eq(absf(basis.z.normalized().dot(towards_ship)), 1.0, 1e-4)
+	assert_gt(basis.z.length(), 1.5)
+	assert_almost_eq(basis.determinant(), 1.0, 1e-3)

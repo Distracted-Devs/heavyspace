@@ -105,11 +105,11 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if not is_open:
 		return
-	if event.is_action("pause") or event.is_action("restart"):
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("warp_out"):
+	if event.is_action_pressed("warp_out"):
 		get_viewport().set_input_as_handled()
 		launch()
+	elif event.is_action("pause") or event.is_action("restart"):
+		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.is_action(&"shop_zoom_in"):
 			camera.step_zoom(1.0)

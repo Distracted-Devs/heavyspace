@@ -113,7 +113,6 @@ func test_effects_keep_their_time_between_frames() -> void:
 func test_the_tag_is_a_buy_prompt() -> void:
 	var prompt: InputPrompt = _guide.buy_tag.get_node("Prompt")
 	assert_eq(Array(prompt.actions), [&"ui_accept"])
-	assert_eq(prompt.text, "BUY")
 
 
 func test_switching_either_off_hides_it() -> void:

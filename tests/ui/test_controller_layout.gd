@@ -21,20 +21,31 @@ func test_the_games_layout_is_valid() -> void:
 	assert_eq(LAYOUT.slot_names.size(), 16)
 
 
+func _label(action: StringName) -> String:
+	return LABELS.labels[LABELS.index_of(action)]
+
+
+func _axis(action: StringName) -> String:
+	return LABELS.axis_labels[LABELS.index_of(action)]
+
+
 func test_every_bound_control_is_at_its_slot() -> void:
 	var entries: Dictionary = LAYOUT.entries(LABELS, ICON_SET)
-	assert_eq(entries.get("rt"), [["rt", "Boost"]])
-	assert_eq(entries.get("lb"), [["lb", "Roll left"]])
-	assert_eq(entries.get("rb"), [["rb", "Roll right"]])
-	assert_eq(entries.get("x"), [["x_color", "Warp out"]])
-	assert_eq(entries.get("view"), [["view", "Restart"]])
-	assert_eq(entries.get("menu"), [["menu", "Pause"]])
+	assert_eq(entries.get("rt"), [["rt", _label(&"back_thruster")]])
+	assert_eq(entries.get("lb"), [["lb", _label(&"roll_left")]])
+	assert_eq(entries.get("rb"), [["rb", _label(&"roll_right")]])
+	assert_eq(entries.get("x"), [["x_color", _label(&"warp_out")]])
+	assert_false(entries.has("view"), "Select is unbound")
+	assert_eq(entries.get("menu"), [["menu", _label(&"pause")]])
 
 
 func test_a_sticks_axes_are_grouped_by_axis_label() -> void:
 	var entries: Dictionary = LAYOUT.entries(LABELS, ICON_SET)
-	assert_eq(entries.get("ls"), [["l_y", "Pitch"], ["l_x", "Yaw"]])
-	assert_eq(entries.get("rs"), [["r_2d", "Look"]])
+	assert_eq(
+		entries.get("ls"),
+		[["l_y", _axis(&"pitch_down")], ["l_x", _axis(&"turn_left")]],
+	)
+	assert_eq(entries.get("rs"), [["r_2d", _axis(&"look_up")]])
 
 
 func test_unbound_slots_have_no_entries() -> void:

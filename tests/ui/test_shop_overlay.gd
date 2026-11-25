@@ -106,20 +106,12 @@ func test_with_nothing_buyable_the_first_node_has_focus() -> void:
 	assert_true(_view(&"tank_1").has_focus())
 
 
-func test_the_labels_show_the_level_and_bank() -> void:
-	_progression.bank_mass(12.0)
-	_shop.open()
-	assert_eq(_shop.level_label.text, "PILOT LV 0")
-	assert_eq(_shop.bank_label.text, "BANK 12Mkg")
-
-
 func test_pressing_a_view_buys_its_node_and_refreshes() -> void:
 	_progression.bank_mass(20.0)
 	_shop.open()
 	_view(&"tank_1").pressed.emit()
 	assert_eq(_progression.buys(TREE.find(&"tank_1")), 1)
-	assert_eq(_shop.bank_label.text, "BANK 15Mkg")
-	assert_eq(_shop.level_label.text, "PILOT LV 1")
+	assert_eq(_progression.bank, 15.0)
 	assert_eq(_view(&"tank_1").state, SkillNodeView.State.MAXED)
 	assert_eq(_view(&"booster").state, SkillNodeView.State.BUYABLE)
 
@@ -180,6 +172,18 @@ func test_pause_and_restart_are_swallowed_while_open() -> void:
 	assert_true(get_tree().paused)
 
 
+func test_pad_x_warps_in_although_it_is_also_restart() -> void:
+	_shop.open()
+	watch_signals(_shop)
+	var x := InputEventJoypadButton.new()
+	x.button_index = JOY_BUTTON_X
+	x.pressed = true
+	assert_true(x.is_action_pressed(&"restart"), "X is also restart")
+	_shop._input(x)
+	assert_signal_emitted(_shop, "launched")
+	assert_false(_shop.is_open)
+
+
 func test_pause_and_restart_pass_through_when_closed() -> void:
 	var spy: ActionSpy = add_child_autofree(ActionSpy.new())
 	_press(&"pause")
@@ -211,19 +215,17 @@ func test_a_run_starter_without_a_valid_tree_is_reported() -> void:
 
 func test_hints_are_prompts_for_the_shop_controls() -> void:
 	var expected := {
-		"Move": [[&"ui_up", &"ui_left", &"ui_down", &"ui_right"], "MOVE"],
-		"Buy": [[&"ui_accept"], "BUY"],
-		"Zoom": [[&"shop_zoom_out", &"shop_zoom_in"], "ZOOM"],
+		"Move": [&"ui_up", &"ui_left", &"ui_down", &"ui_right"],
+		"Buy": [&"ui_accept"],
+		"Zoom": [&"shop_zoom_out", &"shop_zoom_in"],
 	}
 	for hint: String in expected:
 		var prompt := _shop.get_node("Hints/Row/" + hint) as InputPrompt
 		assert_not_null(prompt, hint)
-		assert_eq(Array(prompt.actions), expected[hint][0])
-		assert_eq(prompt.text, expected[hint][1])
+		assert_eq(Array(prompt.actions), expected[hint])
 
 
 func test_warp_in_shows_the_warp_out_icon() -> void:
-	assert_eq(_shop.warp_button.text, " WARP IN >>")
 	var prompt_icon: ButtonPromptIcon = _shop.get_node(
 		"Hints/Row/WarpButton/WarpIcon"
 	)
@@ -233,6 +235,8 @@ func test_warp_in_shows_the_warp_out_icon() -> void:
 
 func test_views_are_styled_only_when_the_shop_opens() -> void:
 	var view := _view(&"tank_1")
-	assert_eq(view.footer.text, "")
+	assert_eq(view.slot_count, 0)
 	_shop.open()
-	assert_eq(view.footer.text, "5Mkg")
+	assert_eq(view.slot_count, TREE.find(&"tank_1").max_buys)
+	var node := TREE.find(&"tank_1")
+	assert_eq(view.state, SkillNodeView.state_of(node, _progression))

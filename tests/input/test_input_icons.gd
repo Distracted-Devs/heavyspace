@@ -48,7 +48,7 @@ func test_keys_are_named_by_their_physical_key() -> void:
 func test_pad_buttons_and_triggers_use_the_sets_names() -> void:
 	assert_eq(_names([&"warp_out"], CONTROLLER), ["x_color"])
 	assert_eq(_names([&"pause"], CONTROLLER), ["menu"])
-	assert_eq(_names([&"restart"], CONTROLLER), ["view"])
+	assert_eq(_names([&"restart"], CONTROLLER), ["x_color"])
 	assert_eq(_names([&"roll_left", &"roll_right"], CONTROLLER), ["lb", "rb"])
 	assert_eq(_names([&"back_thruster"], CONTROLLER), ["rt"])
 

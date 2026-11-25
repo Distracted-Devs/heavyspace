@@ -210,3 +210,24 @@ func test_runs_by_itself_each_frame() -> void:
 	_effect.play()
 	await wait_seconds(0.2)
 	assert_signal_emit_count(_effect, "finished", 1)
+
+
+func test_intensity_is_zero_when_not_playing() -> void:
+	assert_eq(_effect.intensity(), 0.0)
+
+
+func test_intensity_rises_over_a_warp_out() -> void:
+	_effect.play()
+	_effect.advance(_effect.warp_duration * 0.25)
+	assert_almost_eq(_effect.intensity(), 0.25, 1e-4)
+	_effect.advance(_effect.warp_duration * 0.5)
+	assert_almost_eq(_effect.intensity(), 0.75, 1e-4)
+
+
+func test_intensity_falls_over_a_warp_in() -> void:
+	_effect.play_in()
+	assert_almost_eq(_effect.intensity(), 1.0, 1e-4)
+	_effect.advance(_effect.warp_duration * 0.25)
+	assert_almost_eq(_effect.intensity(), 0.75, 1e-4)
+	_effect.advance(_effect.warp_duration)
+	assert_eq(_effect.intensity(), 0.0)

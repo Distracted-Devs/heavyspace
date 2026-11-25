@@ -26,6 +26,10 @@ formatting, spelling, tests, warnings and the smoke run. When a hook blocks
 something, fix the cause. Don't work around it, for example by editing
 through the shell instead.
 
+Tests check rules, not presentation. Never assert on UI text (titles,
+labels, captions, formatted readouts), tuned values or node paths: they
+change for reasons that aren't bugs. See the `rewrite` skill.
+
 # Always
 - Check the file structure first using `ls`.
 - Check there are no outstanding changes with `git status` before editing.

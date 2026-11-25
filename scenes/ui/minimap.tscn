@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="1_map"]
 [ext_resource type="Shader" path="res://resources/shaders/minimap_grid.gdshader" id="2_grid"]
 [ext_resource type="Shader" path="res://resources/shaders/arcade_scanlines.gdshader" id="3_scanlines"]
-[ext_resource type="FontFile" path="res://resources/fonts/pixelify_sans_bold.ttf" id="4_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
 bg_color = Color(0.04, 0.04, 0.08, 0.8)
@@ -48,11 +47,10 @@ border_width_right = 3
 border_width_bottom = 3
 border_color = Color(1, 1, 1, 1)
 
-[node name="Minimap" type="CanvasLayer" node_paths=PackedStringArray("frame", "border", "title", "grid", "map_root", "camera", "ship_marker", "path")]
+[node name="Minimap" type="CanvasLayer" node_paths=PackedStringArray("frame", "border", "grid", "map_root", "camera", "ship_marker", "path")]
 script = ExtResource("1_map")
 frame = NodePath("Frame")
 border = NodePath("Frame/Border")
-title = NodePath("Frame/Title")
 grid = NodePath("Frame/Grid")
 map_root = NodePath("Frame/View/Viewport/Map")
 camera = NodePath("Frame/View/Viewport/Map/Camera")
@@ -131,14 +129,3 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_border")
 
-[node name="Title" type="Label" parent="Frame"]
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.85)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("4_font")
-text = "ORBIT"
