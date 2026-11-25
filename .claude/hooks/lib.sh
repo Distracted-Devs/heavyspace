@@ -41,7 +41,7 @@ added_since_base() {
 }
 
 # A feature's notes, repo-relative: docs/features/NN_<name>.md, numbered in
-# roadmap order. A feature without a file yet gets the next number.
+# the order they were started. A feature without a file yet gets the next number.
 feature_doc() {
 	local name="$1" file last
 	for file in "$FEATURES"/[0-9][0-9]_"$name".md; do

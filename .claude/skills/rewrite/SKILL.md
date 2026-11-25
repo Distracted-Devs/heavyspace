@@ -17,9 +17,9 @@ below.
 2. Split the feature into components and effects, and propose the split to
    the user. Add the agreed steps under **Steps** in
    `docs/features/NN_<name>.md`, in the format the other feature files use: a
-   `### <phase>.<n> Title` heading, bullets, and a **Done:** line. Ask the
-   user which phase the feature belongs to, number the steps to follow on in
-   that phase, and list the feature under it in `docs/roadmap.md`.
+   `### <NN>.<n> Title` heading, bullets, and a **Done:** line, where `NN`
+   is the feature file's number (so `17_<name>.md` has steps 17.1, 17.2 and
+   so on). The roadmap is closed, so don't add the feature to it.
    Each step is a single unit of work that leaves the project opening and
    running.
 3. Contracts come first. When a step builds several APIs, split it so each
@@ -73,5 +73,5 @@ yourself. Fix whatever they report.
 
 ## Finishing
 When every step's **Done** contract is met, tick the steps (✅) in the
-feature file and in `docs/roadmap.md`, and run `.claude/bin/feature perf`. It runs the full checks and moves the
+feature file, and run `.claude/bin/feature perf`. It runs the full checks and moves the
 feature into the performance evaluation (the `perf-review` skill).

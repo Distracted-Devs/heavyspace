@@ -1,4 +1,17 @@
-# Roadmap
+# Roadmap (closed)
+**Closed after Phase 5's pre-juice polish (5.44).** The project is now off
+the roadmap: new features aren't planned here, aren't added to a phase, and
+this file isn't updated any more. It's kept as a record, since the commit
+history uses its step numbers. See `AGENTS.md` for how features are numbered
+now.
+
+Left open when the roadmap closed (pick these up as features if wanted):
+- Phase 1: the user's manual check of every control on keyboard and mouse
+  and on a controller.
+- Phase 5: the rest of the game feel and juice (controller shake, camera
+  shake, camera movement, VFX), and the rework of the placeholder warp-out
+  VFX (`scripts/effects/warp_effect.gd`).
+
 The phases in order, and the features in each. Every feature has its own
 file in `docs/features/` with its contracts and its steps, numbered in
 roadmap order (`NN_<name>.md`). Step numbers
