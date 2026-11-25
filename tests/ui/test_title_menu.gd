@@ -4,7 +4,6 @@ const MENU_SCENE := preload("res://scenes/ui/title_menu.tscn")
 
 var _was_enabled: bool
 var _settings: GameSettings
-var _mixer: RumbleMixer
 var _menu: TitleMenu
 
 
@@ -15,12 +14,8 @@ func before_each() -> void:
 	_settings.path = "user://test_title_settings.cfg"
 	_settings.load_on_ready = false
 	add_child_autofree(_settings)
-	_mixer = RumbleMixer.new()
-	_mixer.set_process(false)
-	add_child_autofree(_mixer)
 	_menu = MENU_SCENE.instantiate()
-	_menu.settings = _settings
-	_menu.rumble = _mixer
+	_menu.options_list.settings = _settings
 	add_child_autofree(_menu)
 	watch_signals(_menu)
 
@@ -51,23 +46,7 @@ func test_options_open_and_back_returns() -> void:
 	assert_false(_menu.options_page.visible)
 
 
-func test_an_option_flips_its_setting() -> void:
-	_menu.invert_pitch_button.pressed.emit()
-	assert_true(_settings.invert_pitch)
-	_menu.vibration_button.pressed.emit()
-	assert_false(_settings.vibration)
-	_menu.vibration_button.pressed.emit()
-	assert_true(_settings.vibration)
-
-
-func test_flipping_an_option_relabels_it() -> void:
-	var before := _menu.invert_pitch_button.text
-	_menu.invert_pitch_button.pressed.emit()
-	assert_ne(_menu.invert_pitch_button.text, before)
-
-
-func test_turning_vibration_on_gives_a_test_pulse() -> void:
-	_settings.vibration = false
-	_menu.vibration_button.pressed.emit()
-	assert_true(_settings.vibration)
-	assert_almost_eq(_mixer.strong(), _menu.pulse_strong, 1e-5)
+func test_the_options_page_holds_the_options() -> void:
+	assert_true(_menu.options_page.is_ancestor_of(_menu.options_list))
+	_menu.options_list.show_fps_button.pressed.emit()
+	assert_true(_settings.show_fps)

@@ -22,6 +22,13 @@ var invert_pitch := false:
 		invert_pitch = value
 		_changed()
 
+var show_fps := false:
+	set(value):
+		if value == show_fps:
+			return
+		show_fps = value
+		_changed()
+
 var _loading := false
 
 
@@ -39,6 +46,7 @@ func load_saved() -> void:
 	_loading = true
 	vibration = _read_bool(file, "vibration", vibration)
 	invert_pitch = _read_bool(file, "invert_pitch", invert_pitch)
+	show_fps = _read_bool(file, "show_fps", show_fps)
 	_loading = false
 
 
@@ -48,6 +56,7 @@ func save() -> void:
 	var file := ConfigFile.new()
 	file.set_value(SECTION, "vibration", vibration)
 	file.set_value(SECTION, "invert_pitch", invert_pitch)
+	file.set_value(SECTION, "show_fps", show_fps)
 	var saved := file.save(path)
 	Contract.ensure(saved == OK, "settings must save to %s" % path)
 

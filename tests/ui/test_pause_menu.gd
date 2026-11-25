@@ -7,6 +7,7 @@ var _was_enabled: bool
 var _pause: PauseController
 var _devices: DeviceTracker
 var _menu: PauseMenu
+var _settings: GameSettings
 
 
 func before_each() -> void:
@@ -19,11 +20,17 @@ func before_each() -> void:
 	_menu.pause_controller = _pause
 	_menu.devices = _devices
 	_menu.quit_on_request = false
+	_settings = GameSettings.new()
+	_settings.path = "user://test_pause_settings.cfg"
+	_settings.load_on_ready = false
+	add_child_autofree(_settings)
+	_menu.options_list.settings = _settings
 	add_child_autofree(_menu)
 
 
 func after_each() -> void:
 	get_tree().paused = false
+	DirAccess.remove_absolute(_settings.path)
 	Contract.enabled = _was_enabled
 
 
@@ -70,6 +77,51 @@ func test_quit_asks_to_quit() -> void:
 	watch_signals(_menu)
 	_menu.quit_button.pressed.emit()
 	assert_signal_emit_count(_menu, "quit_requested", 1)
+
+
+func test_quit_goes_to_the_title_screen() -> void:
+	var main_scene: String = ProjectSettings.get_setting(
+		"application/run/main_scene"
+	)
+	assert_eq(_menu.title_scene, main_scene)
+
+
+func test_it_opens_on_the_controls() -> void:
+	_pause.set_paused(true)
+	assert_true(_menu.controls_panel.visible)
+	assert_false(_menu.options_panel.visible)
+
+
+func test_options_swap_in_for_the_controls_and_back_returns() -> void:
+	_pause.set_paused(true)
+	_menu.options_button.pressed.emit()
+	assert_true(_menu.options_panel.visible)
+	assert_false(_menu.controls_panel.visible)
+	assert_true(_menu.options_list.first_button().has_focus())
+	_menu.options_back_button.pressed.emit()
+	assert_true(_menu.controls_panel.visible)
+	assert_false(_menu.options_panel.visible)
+
+
+func test_pad_b_on_the_options_goes_back_not_out() -> void:
+	_pause.set_paused(true)
+	_menu.options_button.pressed.emit()
+	_press_b()
+	assert_true(get_tree().paused)
+	assert_true(_menu.controls_panel.visible)
+
+
+func test_reopening_shows_the_controls_again() -> void:
+	_pause.set_paused(true)
+	_menu.options_button.pressed.emit()
+	_pause.set_paused(false)
+	_pause.set_paused(true)
+	assert_true(_menu.controls_panel.visible)
+
+
+func test_the_pause_options_change_the_settings() -> void:
+	_menu.options_list.show_fps_button.pressed.emit()
+	assert_true(_settings.show_fps)
 
 
 func test_pad_b_resumes_while_shown() -> void:

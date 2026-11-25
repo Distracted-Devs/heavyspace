@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/options_list.gd" id="1_list"]
+
+[node name="OptionsList" type="VBoxContainer" node_paths=PackedStringArray("vibration_button", "invert_pitch_button", "show_fps_button")]
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+script = ExtResource("1_list")
+vibration_button = NodePath("Vibration")
+invert_pitch_button = NodePath("InvertPitch")
+show_fps_button = NodePath("ShowFps")
+
+[node name="Vibration" type="Button" parent="."]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "VIBRATION: ON"
+
+[node name="InvertPitch" type="Button" parent="."]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "INVERT PITCH: OFF"
+
+[node name="ShowFps" type="Button" parent="."]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "SHOW FPS: OFF"

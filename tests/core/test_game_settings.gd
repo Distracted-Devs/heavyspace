@@ -47,9 +47,18 @@ func test_setting_the_same_value_does_nothing() -> void:
 func test_saved_settings_load_back() -> void:
 	_settings.vibration = false
 	_settings.invert_pitch = true
+	_settings.show_fps = true
 	var reloaded := _make()
 	assert_false(reloaded.vibration)
 	assert_true(reloaded.invert_pitch)
+	assert_true(reloaded.show_fps)
+
+
+func test_show_fps_starts_off_and_notifies_its_change() -> void:
+	assert_false(_settings.show_fps)
+	watch_signals(_settings)
+	_settings.show_fps = true
+	assert_signal_emit_count(_settings, "changed", 1)
 
 
 func test_a_value_that_isnt_a_bool_is_ignored() -> void:

@@ -3,8 +3,9 @@
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_menu"]
 [ext_resource type="Theme" path="res://resources/ui/holo_theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://scripts/ui/controls_view.gd" id="3_view"]
+[ext_resource type="PackedScene" path="res://scenes/ui/options_list.tscn" id="4_options"]
 
-[node name="PauseMenu" type="CanvasLayer" node_paths=PackedStringArray("header", "view", "resume_button", "restart_button", "quit_button")]
+[node name="PauseMenu" type="CanvasLayer" node_paths=PackedStringArray("header", "view", "resume_button", "restart_button", "options_button", "quit_button", "controls_panel", "options_panel", "options_list", "options_back_button")]
 layer = 20
 visible = false
 script = ExtResource("1_menu")
@@ -12,7 +13,12 @@ header = NodePath("Centre/Column/Panel/Rows/Header")
 view = NodePath("Centre/Column/Panel/Rows/ViewCentre/ControlsView")
 resume_button = NodePath("Centre/Column/Buttons/Resume")
 restart_button = NodePath("Centre/Column/Buttons/Restart")
+options_button = NodePath("Centre/Column/Buttons/Options")
 quit_button = NodePath("Centre/Column/Buttons/Quit")
+controls_panel = NodePath("Centre/Column/Panel")
+options_panel = NodePath("Centre/Column/OptionsPanel")
+options_list = NodePath("Centre/Column/OptionsPanel/Rows/OptionsList")
+options_back_button = NodePath("Centre/Column/OptionsPanel/Rows/Back")
 
 [node name="Backdrop" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -65,6 +71,26 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_view")
 
+[node name="OptionsPanel" type="PanelContainer" parent="Centre/Column"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"HoloPanel"
+
+[node name="Rows" type="VBoxContainer" parent="Centre/Column/OptionsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="OptionsList" parent="Centre/Column/OptionsPanel/Rows" instance=ExtResource("4_options")]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="Centre/Column/OptionsPanel/Rows"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"HoloButton"
+text = "BACK"
+
 [node name="Buttons" type="HBoxContainer" parent="Centre/Column"]
 layout_mode = 2
 theme_override_constants/separation = 16
@@ -81,6 +107,12 @@ custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 theme_type_variation = &"HoloButton"
 text = "RESTART"
+
+[node name="Options" type="Button" parent="Centre/Column/Buttons"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+theme_type_variation = &"HoloButton"
+text = "OPTIONS"
 
 [node name="Quit" type="Button" parent="Centre/Column/Buttons"]
 custom_minimum_size = Vector2(150, 40)

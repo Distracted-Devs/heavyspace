@@ -230,6 +230,7 @@ scene.
 - Endgame build as an option on the title screen.
 
 ## Decision
+- 2026-11-25: done. The prototype was deleted.
 - 2026-11-25: accepted, moving to the rewrite.
 
 ## Contracts
@@ -637,6 +638,47 @@ to go ahead with every step, being told of each new or changed contract.
 - `restart` leaves the control labels, so the pause menu's pictures don't
   show it; the crash screen prompts it.
 
+### Show FPS (`scripts/core/game_settings.gd`, `scripts/ui/title_menu.gd`)
+- Asked for 2026-11-25, after the feature was done. `GameSettings` gains
+  `show_fps` (false), saved and loaded like the other options and
+  emitting `changed` the same way. `TitleMenu`'s options page gains
+  `show_fps_button` (`SHOW FPS: ON/OFF`), which flips it.
+
+### FpsOverlay (`scripts/ui/fps_overlay.gd`)
+- The `FpsCounter` autoload: a `CanvasLayer` (layer 50) with a dim label
+  in the bottom-right corner, running while paused. `settings` defaults to
+  the `Settings` autoload (tests give their own); `refresh_interval > 0`
+  (0.25 s; a bad value is reported and ignored).
+- It shows exactly when `settings.show_fps` is on, following every
+  `changed`. While shown, every `refresh_interval` `shown_fps` becomes
+  `Engine.get_frames_per_second()` rounded, and the label shows it.
+
+### OptionsList (`scripts/ui/options_list.gd`, `scenes/ui/options_list.tscn`)
+- Asked for 2026-11-25: the options in the pause menu too. One
+  `VBoxContainer` of the option buttons, used by both menus: VIBRATION,
+  INVERT PITCH and SHOW FPS (each `NAME: ON/OFF`), as `vibration_button`,
+  `invert_pitch_button` and `show_fps_button`, with `first_button()` for
+  focus. `settings` defaults to the `Settings` autoload and `rumble` to
+  `Rumble`; it requires settings once in the tree.
+- Pressing an option flips its setting and relabels it; turning
+  vibration on pulses 0.3 / 0.5 for 0.15 s. It relabels on every
+  `settings.changed`, so both menus always agree.
+
+### TitleMenu (changed)
+- Its options page holds an `OptionsList` (`options_list`) and BACK; the
+  option buttons and test pulse move to the list. The rest is unchanged.
+
+### PauseMenu (changed, see [pre-juice polish](16_pre_juice_polish.md))
+- An OPTIONS button swaps the controls panel for an options panel (an
+  `OptionsList` and BACK, the first option focused); BACK, pad B or
+  `ui_cancel` there go back to the controls (OPTIONS focused), and pad B
+  on the controls still resumes. Opening the menu always shows the
+  controls. Invariant: exactly one of the two panels shows while open.
+- QUIT goes to the title screen (`title_scene`, the main scene): it
+  unpauses, puts the time scale back to 1 and changes scene (with
+  `quit_on_request`; tests turn it off). It still emits `quit_requested`.
+  The title's EXIT still quits the game.
+
 ## Steps
 The rewrite's steps, each with a **Done:** line. Ticked (✅) when done. The
 user agreed the split on 2026-11-25.
@@ -748,6 +790,43 @@ Asked for by the user on 2026-11-25, after the rewrite:
 
 ## Performance evaluation
 The load measured, the budget, and each option weighed:
+
+**Load** (agreed 2026-11-25): the generated level, seed 12345, 30 frames
+to warm up, then the ship boosting flat out and yawing under its own
+physics for 600 frames (every effect running; it reaches 137 u/s). Then one
+warp out, a crash (the lost-game frame, then 180 frames of slow motion and
+bounce), 12 shop purchases with a full bank (9 nodes revealed) and 60
+frames of their tweens, and 300 frames of the title screen.
+`benchmarks/game_feel/bench.gd` (keys `contracts=0|1`, and `gpu=1` for a
+windowed GPU run). Each effect is switched off and its update called by
+hand, so it's timed on its own.
+
+**Budget** (agreed): the game feel's own CPU work ≤ 0.5 ms a frame (mean)
+in flight; a crash or shop moment ≤ 2 ms as a spike; the title ≤ 1 ms.
+The particles and blur ≤ 1.5 ms GPU, measured by the user in a window.
+
+**Baseline** (headless, the user's machine), mean / p95 / worst in ms:
+
+| Measure | Contracts off | Contracts on | Budget |
+| ------- | ------------- | ------------ | ------ |
+| effects in flight (all 11) | 0.081 / 0.113 / 0.207 | 0.090 / 0.130 / 0.167 | 0.5 ✅ |
+| effects during the warp | 0.072 / 0.096 / 0.152 | 0.077 / 0.114 / 0.128 | 0.5 ✅ |
+| crash frame (spike) | 0.06 | 0.07 | 2 ✅ |
+| effects in the slow motion | 0.064 / 0.085 / 0.094 | 0.066 / 0.087 / 0.097 | 0.5 ✅ |
+| shop juice per purchase | 0.141 / 0.170 / 0.182 | 0.124 / 0.157 / 0.164 | 2 ✅ |
+| shop tweens per frame | 0.013 / 0.059 / 0.068 | 0.012 / 0.049 / 0.055 | 0.5 ✅ |
+| title camera | 0.016 / 0.020 / 0.035 | 0.017 / 0.021 / 0.032 | 1 ✅ |
+| whole engine frame, flight | 2.45 / 3.94 / 7.97 | 2.73 / 4.27 / 6.84 | (16.6) |
+| whole engine frame, title | 1.96 / 2.60 / 4.13 | 2.14 / 3.01 / 4.61 | (16.6) |
+
+Per effect in flight (mean, contracts off): camera follow 0.012, speed
+lines 0.010, thrust 0.009, radial blur 0.008, engine meter 0.008, camera
+shake 0.008, rumble mixer 0.006, bank 0.006, thrust rumble 0.006, space
+dust 0.005, warp rumble 0.003. Nothing stands out: each is a few
+microseconds of GDScript.
+
+For scale: the shop's own refresh (not this feature) is 0.62 / 1.19 /
+1.76 per purchase; the juice adds 0.14 to it.
 
 | Option | Before (ms) | After (ms) | Flexibility cost | Decision |
 | ------ | ----------- | ---------- | ---------------- | -------- |

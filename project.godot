@@ -23,6 +23,7 @@ InputDevice="*res://scripts/input/device_tracker.gd"
 Settings="*res://scripts/core/game_settings.gd"
 Rumble="*res://scripts/core/rumble_mixer.gd"
 Endgame="*res://scripts/levels/endgame_build.gd"
+FpsCounter="*res://scripts/ui/fps_overlay.gd"
 
 [display]
 

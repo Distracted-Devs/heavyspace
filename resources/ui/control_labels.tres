@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ControlLabels" format=3]
+[gd_resource type="Resource" script_class="ControlLabels" format=3 uid="uid://b5etiew8dwcbl"]
 
-[ext_resource type="Script" path="res://scripts/ui/control_labels.gd" id="1_labels"]
+[ext_resource type="Script" uid="uid://dr0i1r1yybaid" path="res://scripts/ui/control_labels.gd" id="1_labels"]
 
 [resource]
 script = ExtResource("1_labels")
