@@ -29,6 +29,7 @@ to keep, the tuned values the user liked, and what was tried and dropped.
   code. The rewrite imports them, with the loop set in the import instead.
 
 ## Decision
+- 2026-11-26: done. The prototype was deleted.
 Accepted on 2026-11-26. During the rewrite the user asked for every test
 that pins a tuned value to go: tests that only checked shipped or default
 values were deleted, and "bad value is ignored" tests now compare with the
@@ -104,3 +105,8 @@ The load measured, the budget, and each option weighed:
 
 | Option | Before (ms) | After (ms) | Flexibility cost | Decision |
 | ------ | ----------- | ---------- | ---------------- | -------- |
+
+Skipped by the user on 2026-11-26 as unnecessary. The feature adds one
+streamed `AudioStreamPlayer` and a signal per session, with no per-frame
+script work; the only cost is a wait of about 20 ms at quit, until the
+audio server's next mix.
