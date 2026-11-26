@@ -76,6 +76,7 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var amount := _effect.amount
 	_effect.amount = 0
 	assert_push_error("amount must be at least 1")
 	_effect.edge_fade = 1.0
@@ -84,4 +85,4 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("alpha must be within [0, 1]")
 	_effect.mote_length = 0.0
 	assert_push_error("mote_length must be positive")
-	assert_eq(_effect.amount, 250)
+	assert_eq(_effect.amount, amount)

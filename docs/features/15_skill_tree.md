@@ -465,6 +465,8 @@ The rewrite's steps, each with a **Done:** line. Ticked (✅) when done.
 - **Done:** `tests/progression/test_skill_node.gd` and
   `test_skill_tree.gd` pass (unique ids, amounts summed per effect), and a
   test checks the tuned tree's values.
+- Changed in [music](18_music.md): the test pinning the tuned tree's
+  values is gone; `test_the_tuned_tree_is_valid` stays.
 
 ### 5.16 Progression buys skill nodes ✅
 - `Progression.player_level()`, `is_unlocked`, `is_maxed`, `can_buy` and

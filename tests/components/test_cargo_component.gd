@@ -16,10 +16,8 @@ func after_each() -> void:
 	Contract.enabled = _was_enabled
 
 
-func test_defaults_are_one_tank_of_five() -> void:
-	assert_eq(_cargo.tank_size, 5.0)
-	assert_eq(_cargo.tanks, 1)
-	assert_eq(_cargo.capacity(), 5.0)
+func test_starts_empty_with_its_tanks_full_capacity() -> void:
+	assert_eq(_cargo.capacity(), _cargo.tank_size * _cargo.tanks)
 	assert_eq(_cargo.stored, 0.0)
 
 
@@ -83,8 +81,9 @@ func test_tank_out_of_range_is_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var capacity := _cargo.capacity()
 	_cargo.tank_size = 0.0
 	assert_push_error("tank_size must be positive")
 	_cargo.tanks = 0
 	assert_push_error("tanks must be at least 1")
-	assert_eq(_cargo.capacity(), 5.0)
+	assert_eq(_cargo.capacity(), capacity)

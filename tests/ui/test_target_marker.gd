@@ -93,8 +93,9 @@ func test_it_ignores_the_mouse() -> void:
 
 
 func test_negative_margin_is_reported_and_ignored() -> void:
+	var margin := _marker.margin
 	_marker.margin = -1.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: margin must not be negative"
 	)
-	assert_eq(_marker.margin, 70.0)
+	assert_eq(_marker.margin, margin)

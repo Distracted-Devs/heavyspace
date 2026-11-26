@@ -4,20 +4,34 @@ const TITLE_SCENE := preload("res://scenes/title/title_screen.tscn")
 
 var _was_enabled: bool
 var _title: TitleScreen
+var _events: GameEvents
+var _sessions_started := 0
 
 
 func before_all() -> void:
 	_was_enabled = Contract.enabled
 	Contract.enabled = true
+	_events = GameEvents.new()
+	add_child(_events)
+	_events.session_started.connect(
+		func() -> void:
+			_sessions_started += 1,
+	)
 	_title = TITLE_SCENE.instantiate()
+	_title.events = _events
 	add_child(_title)
 	await wait_physics_frames(2)
 
 
 func after_all() -> void:
 	_title.free()
+	_events.free()
 	Engine.time_scale = 1.0
 	Contract.enabled = _was_enabled
+
+
+func test_loading_starts_one_session() -> void:
+	assert_eq(_sessions_started, 1)
 
 
 func test_the_level_behind_uses_the_title_seed() -> void:

@@ -79,7 +79,8 @@ func test_speed_scales_how_fast_time_passes() -> void:
 func test_a_negative_speed_is_reported_and_ignored() -> void:
 	var was := Contract.enabled
 	Contract.enabled = true
+	var speed := _clock.speed
 	_clock.speed = -1.0
 	assert_push_error("speed must not be negative")
-	assert_eq(_clock.speed, 1.0)
+	assert_eq(_clock.speed, speed)
 	Contract.enabled = was

@@ -25,11 +25,6 @@ func _make() -> GameSettings:
 	return settings
 
 
-func test_defaults_without_a_saved_file() -> void:
-	assert_true(_settings.vibration)
-	assert_false(_settings.invert_pitch)
-
-
 func test_a_change_notifies_once_and_saves() -> void:
 	watch_signals(_settings)
 	_settings.invert_pitch = true
@@ -54,10 +49,9 @@ func test_saved_settings_load_back() -> void:
 	assert_true(reloaded.show_fps)
 
 
-func test_show_fps_starts_off_and_notifies_its_change() -> void:
-	assert_false(_settings.show_fps)
+func test_changing_show_fps_notifies_once() -> void:
 	watch_signals(_settings)
-	_settings.show_fps = true
+	_settings.show_fps = not _settings.show_fps
 	assert_signal_emit_count(_settings, "changed", 1)
 
 

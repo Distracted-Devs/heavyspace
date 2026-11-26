@@ -32,9 +32,10 @@ func test_a_missing_warp_is_reported() -> void:
 
 func test_bad_settings_are_reported_and_ignored() -> void:
 	var rumble: WarpRumble = _add(WarpRumble.new())
+	var strong_power := rumble.strong_power
 	rumble.strong_power = 0.0
 	assert_push_error("strong_power must be positive")
-	assert_eq(rumble.strong_power, 3.0)
+	assert_eq(rumble.strong_power, strong_power)
 
 
 func test_the_shop_pausing_at_the_end_of_a_warp_stops_the_rumble() -> void:

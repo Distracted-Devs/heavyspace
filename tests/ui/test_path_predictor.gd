@@ -302,9 +302,10 @@ func test_the_current_drift_carries_on_in_the_prediction() -> void:
 
 
 func test_non_positive_falloff_exponent_is_reported_and_ignored() -> void:
+	var falloff_exponent := _predictor.falloff_exponent
 	_predictor.falloff_exponent = 0.0
 	assert_push_error("falloff_exponent must be positive")
-	assert_eq(_predictor.falloff_exponent, 2.0)
+	assert_eq(_predictor.falloff_exponent, falloff_exponent)
 
 
 func test_a_step_that_jumps_through_a_body_still_forecasts_an_impact() -> void:

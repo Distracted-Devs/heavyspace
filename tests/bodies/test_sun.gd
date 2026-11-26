@@ -90,8 +90,9 @@ func test_zero_direction_is_reported_and_ignored() -> void:
 
 
 func test_negative_light_is_reported_and_ignored() -> void:
+	var light_intensity := _sun.light_intensity
 	_sun.light_intensity = -1.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: light_intensity must not be negative"
 	)
-	assert_eq(_sun.light_intensity, 3.0)
+	assert_eq(_sun.light_intensity, light_intensity)

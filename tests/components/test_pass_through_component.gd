@@ -116,6 +116,7 @@ func test_without_a_pool_nothing_is_passable() -> void:
 
 
 func test_negative_reach_is_reported_and_ignored() -> void:
+	var reach := _pass_through.reach
 	_pass_through.reach = -1.0
 	assert_push_error("reach must not be negative")
-	assert_eq(_pass_through.reach, 5.0)
+	assert_eq(_pass_through.reach, reach)

@@ -31,19 +31,21 @@ func test_mass_reaches_the_gravity_component() -> void:
 
 
 func test_non_positive_radius_breaks_pre_condition_and_is_ignored() -> void:
+	var radius := _body.radius
 	_body.radius = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: radius must be positive"
 	)
-	assert_eq(_body.radius, 50.0)
-	assert_eq(_body.mesh.scale, Vector3.ONE * 50.0)
+	assert_eq(_body.radius, radius)
+	assert_eq(_body.mesh.scale, Vector3.ONE * radius)
 
 
 func test_non_positive_mass_breaks_pre_condition_and_is_ignored() -> void:
+	var mass := _body.mass
 	_body.mass = -1.0
 	assert_push_error("[Contract] Pre-condition broken: mass must be positive")
-	assert_eq(_body.mass, 10000.0)
-	assert_eq(_body.gravity.mass, 10000.0)
+	assert_eq(_body.mass, mass)
+	assert_eq(_body.gravity.mass, mass)
 
 
 func test_bodies_share_the_mesh_but_own_their_collider_sphere() -> void:

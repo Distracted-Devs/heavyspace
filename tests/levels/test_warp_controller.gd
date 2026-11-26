@@ -156,12 +156,14 @@ func test_the_warp_out_action_warps() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var warp_spend := _warp.warp_spend
 	_warp.warp_spend = -1.0
 	assert_push_error("warp_spend must not be negative")
+	var tanks_to_warp := _warp.tanks_to_warp
 	_warp.tanks_to_warp = -1
 	assert_push_error("tanks_to_warp must not be negative")
-	assert_eq(_warp.warp_spend, 0.0)
-	assert_eq(_warp.tanks_to_warp, 1)
+	assert_eq(_warp.warp_spend, warp_spend)
+	assert_eq(_warp.tanks_to_warp, tanks_to_warp)
 
 
 func test_a_player_without_a_cargo_is_reported() -> void:

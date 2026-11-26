@@ -90,6 +90,7 @@ func test_the_exponent_scales_how_much_mass_slows_the_ship() -> void:
 
 
 func test_negative_exponent_is_reported_and_ignored() -> void:
+	var momentum_exponent := _momentum.momentum_exponent
 	_momentum.momentum_exponent = -1.0
 	assert_push_error("momentum_exponent must not be negative")
-	assert_eq(_momentum.momentum_exponent, 1.0)
+	assert_eq(_momentum.momentum_exponent, momentum_exponent)

@@ -24,6 +24,8 @@ Settings="*res://scripts/core/game_settings.gd"
 Rumble="*res://scripts/core/rumble_mixer.gd"
 Endgame="*res://scripts/levels/endgame_build.gd"
 FpsCounter="*res://scripts/ui/fps_overlay.gd"
+Events="*res://scripts/core/game_events.gd"
+Music="*res://scripts/audio/music_player.gd"
 
 [display]
 

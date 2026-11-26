@@ -110,9 +110,11 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var cargo_weight := _weight.cargo_weight
 	_weight.cargo_weight = -1.0
 	assert_push_error("cargo_weight must not be negative")
+	var mass_exponent := _weight.mass_exponent
 	_weight.mass_exponent = -1.0
 	assert_push_error("mass_exponent must not be negative")
-	assert_eq(_weight.cargo_weight, 0.1)
-	assert_eq(_weight.mass_exponent, 1.0)
+	assert_eq(_weight.cargo_weight, cargo_weight)
+	assert_eq(_weight.mass_exponent, mass_exponent)

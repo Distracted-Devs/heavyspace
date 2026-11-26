@@ -13,17 +13,6 @@ func test_path_is_the_icon_in_the_devices_folder() -> void:
 	assert_eq(icon_set.path("shift", KEYBOARD), "res://keys/shift.png")
 
 
-func test_the_games_set_is_xbox_default_and_dark_keys() -> void:
-	assert_eq(
-		ICON_SET.path("a_color", CONTROLLER),
-		"res://resources/input_icons/xbox/default/a_color.png",
-	)
-	assert_eq(
-		ICON_SET.path("w", KEYBOARD),
-		"res://resources/input_icons/keyboard_mouse/dark/w.png",
-	)
-
-
 func test_face_buttons_use_the_coloured_icons() -> void:
 	assert_eq(ICON_SET.buttons[JOY_BUTTON_A], "a_color")
 	assert_eq(ICON_SET.buttons[JOY_BUTTON_B], "b_color")

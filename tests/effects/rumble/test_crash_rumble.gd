@@ -17,8 +17,9 @@ func test_a_crash_rumbles_hard_then_fades() -> void:
 
 func test_bad_settings_are_reported_and_ignored() -> void:
 	var crash: CrashRumble = _add(CrashRumble.new())
+	var level := crash.level
 	crash.level = -0.1
 	assert_push_error("level must be within [0, 1]")
 	crash.duration = 0.0
 	assert_push_error("duration must be positive")
-	assert_eq(crash.level, 1.0)
+	assert_eq(crash.level, level)

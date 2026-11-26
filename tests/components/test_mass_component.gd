@@ -69,8 +69,9 @@ func test_a_run_starts_at_starting_mass_times_start_multiplier() -> void:
 
 
 func test_non_positive_start_multiplier_is_reported_and_ignored() -> void:
+	var start_multiplier := _mass.start_multiplier
 	_mass.start_multiplier = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: start_multiplier must be positive"
 	)
-	assert_eq(_mass.start_multiplier, 1.0)
+	assert_eq(_mass.start_multiplier, start_multiplier)

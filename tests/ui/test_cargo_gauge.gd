@@ -141,12 +141,15 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("gap_px must not be negative")
 	_gauge.ready_flash_hz = 0.0
 	assert_push_error("ready_flash_hz must be positive")
+	var tanks_per_row := _gauge.tanks_per_row
 	_gauge.tanks_per_row = 0
 	assert_push_error("tanks_per_row must be at least 1")
+	var row_gap_px := _gauge.row_gap_px
 	_gauge.row_gap_px = -1.0
 	assert_push_error("row_gap_px must not be negative")
+	var tank_gap_ratio := _gauge.tank_gap_ratio
 	_gauge.tank_gap_ratio = 0.5
 	assert_push_error("tank_gap_ratio must be within [0, 0.5)")
-	assert_eq(_gauge.tanks_per_row, 5)
-	assert_eq(_gauge.row_gap_px, 3.0)
-	assert_eq(_gauge.tank_gap_ratio, 0.08)
+	assert_eq(_gauge.tanks_per_row, tanks_per_row)
+	assert_eq(_gauge.row_gap_px, row_gap_px)
+	assert_eq(_gauge.tank_gap_ratio, tank_gap_ratio)

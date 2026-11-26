@@ -44,8 +44,9 @@ func test_a_missing_meter_is_reported() -> void:
 
 func test_bad_settings_are_reported_and_ignored() -> void:
 	var thrust: ThrustRumble = _add(ThrustRumble.new())
+	var max_weak := thrust.max_weak
 	thrust.max_weak = 1.5
 	assert_push_error("max_weak must be within [0, 1]")
 	thrust.max_accel = 1.0
 	assert_push_error("max_accel must be above min_accel")
-	assert_eq(thrust.max_weak, 0.35)
+	assert_eq(thrust.max_weak, max_weak)

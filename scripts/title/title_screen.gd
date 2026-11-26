@@ -30,6 +30,9 @@ const CAMERA_FAR := 1e6
 @export_range(-30.0, 30.0, 0.1) var orbit_speed_degrees := 1.5
 @export var framing := TitleFraming.new()
 
+@export_group("Events")
+@export var events: GameEvents
+
 var level: Node3D
 var menu: TitleMenu
 var camera: Camera3D
@@ -56,6 +59,7 @@ func _ready() -> void:
 	add_child(menu)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	update(0.0)
+	_start_session()
 
 
 func _process(delta: float) -> void:
@@ -81,6 +85,13 @@ func update(delta: float) -> void:
 
 func start() -> void:
 	get_tree().change_scene_to_file(game_scene)
+
+
+func _start_session() -> void:
+	if events == null:
+		events = get_node_or_null(^"/root/Events") as GameEvents
+	if events != null:
+		events.start_session()
 
 
 func _add_level() -> void:

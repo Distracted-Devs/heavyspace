@@ -24,8 +24,9 @@ func test_the_pulse_has_a_snappy_tail() -> void:
 
 func test_bad_settings_are_reported_and_ignored() -> void:
 	var pickup: PickupRumble = _add(PickupRumble.new())
+	var duration := pickup.duration
 	pickup.duration = 0.0
 	assert_push_error("duration must be positive")
 	pickup.strong = 2.0
 	assert_push_error("strong must be within [0, 1]")
-	assert_eq(pickup.duration, 0.1)
+	assert_eq(pickup.duration, duration)

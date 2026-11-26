@@ -131,6 +131,7 @@ func test_missing_components_are_reported() -> void:
 func test_bad_settings_are_reported_and_ignored() -> void:
 	_effect.idle_level = 1.5
 	assert_push_error("idle_level must be within [0, 1]")
+	var spool_up := _effect.spool_up
 	_effect.spool_up = 0.0
 	assert_push_error("spool_up must be positive")
 	_effect.spool_down = -1.0
@@ -139,4 +140,4 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("idle_amount must be within [0, 1]")
 	_effect.boost_velocity = -1.0
 	assert_push_error("boost_velocity must not be negative")
-	assert_eq(_effect.spool_up, 6.0)
+	assert_eq(_effect.spool_up, spool_up)

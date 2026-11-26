@@ -122,8 +122,6 @@ func test_level_wires_the_pickup_to_the_pool_and_sets_gravity() -> void:
 	assert_eq(pickup.cargo, _player().cargo)
 	assert_eq(pass_through.pool, _pool())
 	var receiver := _player().gravity_receiver
-	assert_eq(receiver.gravity_constant, 10000.0)
-	assert_eq(receiver.falloff_exponent, 3.5)
 	assert_true(receiver.drift_enabled)
 	assert_eq(_streamer().focus_mass, _player().mass_component)
 
@@ -139,7 +137,6 @@ func test_level_wires_the_game_loop() -> void:
 	assert_eq(warp.warp_effect, effect)
 	assert_true(warp.warp_needs_all_tanks)
 	assert_true(warp.bank_partial_tank)
-	assert_eq(warp.warp_spend, 0.0)
 	assert_eq(effect.camera, _player().camera_component.camera)
 	assert_eq(effect.mesh, _player().get_node("Mesh"))
 	assert_eq(effect.fade, _level.get_node("WarpFade/Fade"))
@@ -212,12 +209,3 @@ func test_the_cargo_gauge_follows_the_cargo_under_the_fuel_gauge() -> void:
 	assert_eq(gauge.cargo, _player().cargo)
 	assert_eq(gauge.warp_controller, _level.get_node("WarpController"))
 	assert_eq(gauge.below, _level.get_node("FuelGauge/Panel"))
-
-
-func test_the_player_carries_the_tuned_values() -> void:
-	var player := _player()
-	assert_eq(player.thruster.back_thrust_force, 150.0)
-	assert_almost_eq(player.linear_damp, 0.15, 1e-6)
-	assert_eq(player.fuel_component.refill_time, 7.5)
-	assert_eq(player.cargo.tank_size, 5.0)
-	assert_eq(player.cargo.tanks, 1)

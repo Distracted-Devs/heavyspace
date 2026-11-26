@@ -130,9 +130,10 @@ func test_works_without_a_pickup() -> void:
 
 func test_non_positive_exponent_is_rejected() -> void:
 	var growth := GrowthComponent.new()
+	var size_exponent := growth.size_exponent
 	growth.size_exponent = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: size_exponent must be positive"
 	)
-	assert_eq(growth.size_exponent, 0.3333)
+	assert_eq(growth.size_exponent, size_exponent)
 	growth.free()

@@ -75,11 +75,12 @@ func test_it_runs_before_the_thruster() -> void:
 
 func test_a_negative_bonus_is_reported_and_ignored() -> void:
 	_start(1.0)
+	var bonus_per_missing := _boost.bonus_per_missing
 	_boost.bonus_per_missing = -1.0
 	assert_push_error(
 		"Pre-condition broken: bonus_per_missing must not be negative"
 	)
-	assert_eq(_boost.bonus_per_missing, 1.0)
+	assert_eq(_boost.bonus_per_missing, bonus_per_missing)
 
 
 func test_missing_references_are_reported_and_leave_it_inactive() -> void:

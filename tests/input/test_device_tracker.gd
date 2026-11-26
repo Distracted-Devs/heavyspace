@@ -84,11 +84,12 @@ func test_it_keeps_tracking_while_paused() -> void:
 
 
 func test_switch_deadzone_outside_zero_to_one_is_reported_and_ignored() -> void:
+	var switch_deadzone := _tracker.switch_deadzone
 	_tracker.switch_deadzone = 1.5
 	assert_push_error(
 		"[Contract] Pre-condition broken: switch_deadzone must be within [0, 1]"
 	)
-	assert_eq(_tracker.switch_deadzone, 0.2)
+	assert_eq(_tracker.switch_deadzone, switch_deadzone)
 
 
 func test_the_project_has_one_tracker_as_input_device() -> void:

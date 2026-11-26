@@ -166,6 +166,7 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var follow_speed := _effect.follow_speed
 	_effect.follow_speed = 0.0
 	assert_push_error("follow_speed must be positive")
 	_effect.pull_ramp_time = 0.0
@@ -174,4 +175,4 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("camera_roll must be within [0, 1]")
 	_effect.fov_kick = -1.0
 	assert_push_error("fov_kick must not be negative")
-	assert_eq(_effect.follow_speed, 2.0)
+	assert_eq(_effect.follow_speed, follow_speed)

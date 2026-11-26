@@ -83,13 +83,14 @@ func test_thrust_acceleration_drops_to_zero_off_the_boost() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var reference_force := _meter.reference_force
 	_meter.reference_force = 0.0
 	assert_push_error("reference_force must be positive")
 	_meter.max_strength = 0.5
 	assert_push_error("max_strength must be at least 1")
 	_meter.accel_smoothing = 0.0
 	assert_push_error("accel_smoothing must be positive")
-	assert_eq(_meter.reference_force, 150.0)
+	assert_eq(_meter.reference_force, reference_force)
 
 
 func test_a_missing_component_is_reported() -> void:

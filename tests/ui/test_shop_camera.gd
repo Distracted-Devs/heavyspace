@@ -94,11 +94,13 @@ func test_bad_input_is_reported_and_changes_nothing() -> void:
 
 
 func test_bad_exports_are_reported_and_ignored() -> void:
+	var smooth_time := _camera.smooth_time
 	_camera.smooth_time = 0.0
+	var max_zoom := _camera.max_zoom
 	_camera.max_zoom = 0.1
 	_camera.wheel_step = 1.0
 	assert_push_error("smooth_time must be positive")
 	assert_push_error("max_zoom must be at least min_zoom")
 	assert_push_error("wheel_step must be above 1")
-	assert_eq(_camera.smooth_time, 0.25)
-	assert_eq(_camera.max_zoom, 2.2)
+	assert_eq(_camera.smooth_time, smooth_time)
+	assert_eq(_camera.max_zoom, max_zoom)

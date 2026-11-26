@@ -102,11 +102,12 @@ func test_devices_default_to_the_input_device_autoload() -> void:
 
 
 func test_non_positive_icon_size_is_reported_and_ignored() -> void:
+	var icon_size := _prompt.icon_size
 	_prompt.icon_size = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: icon_size must be positive"
 	)
-	assert_eq(_prompt.icon_size, 32.0)
+	assert_eq(_prompt.icon_size, icon_size)
 
 
 func test_the_holo_theme_has_the_hud_look() -> void:

@@ -38,15 +38,19 @@ func test_a_node_without_an_id_or_effect_is_invalid() -> void:
 
 func test_bad_numbers_are_reported_and_ignored() -> void:
 	var node := _node()
+	var step := node.step
 	node.step = -1.0
+	var cost := node.cost
 	node.cost = 0.0
+	var max_buys := node.max_buys
 	node.max_buys = 0
+	var required_level := node.required_level
 	node.required_level = -1
 	assert_push_error("step must not be negative")
 	assert_push_error("cost must be positive")
 	assert_push_error("max_buys must be at least 1")
 	assert_push_error("required_level must not be negative")
-	assert_eq(node.step, 0.2)
-	assert_eq(node.cost, 10.0)
-	assert_eq(node.max_buys, 1)
-	assert_eq(node.required_level, 0)
+	assert_eq(node.step, step)
+	assert_eq(node.cost, cost)
+	assert_eq(node.max_buys, max_buys)
+	assert_eq(node.required_level, required_level)

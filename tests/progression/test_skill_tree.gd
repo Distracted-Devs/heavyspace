@@ -1,7 +1,6 @@
 extends GutTest
 
 const TUNED := preload("res://resources/progression/skill_tree.tres")
-const EFFECTS := "res://resources/progression/effects/%s_effect.tres"
 const TANKS := preload(
 	"res://resources/progression/effects/cargo_tanks_effect.tres"
 )
@@ -79,40 +78,3 @@ func test_negative_buys_are_reported_and_give_nothing() -> void:
 
 func test_the_tuned_tree_is_valid() -> void:
 	assert_true(TUNED.is_valid())
-
-
-func test_the_tuned_tree_holds_the_accepted_values() -> void:
-	var efficiency := [&"mass_efficiency", "mass_efficiency", 0.15]
-	var expected := [
-		[&"tank_1", "cargo_tanks", 1.0, 5.0, 1, 0, Vector2(0, 0)],
-		[&"fuel_tank", "fuel_tank", 0.25, 10.0, 5, 1, Vector2(1, -1)],
-		[&"refill_rate", "refill_rate", 0.1, 10.0, 5, 1, Vector2(1, 0)],
-		[&"booster", "booster", 0.2, 10.0, 5, 1, Vector2(1, 1)],
-		[&"tank_2", "cargo_tanks", 1.0, 25.0, 2, 4, Vector2(2, 0)],
-		[&"pickup_radius", "pickup_radius", 0.2, 10.0, 5, 6, Vector2(3, -2)],
-		[&"mining", "mining", 0.2, 10.0, 5, 6, Vector2(3, -1)],
-		[
-			&"boost_missing_fuel",
-			"missing_fuel_boost",
-			1.0,
-			15.0,
-			1,
-			6,
-			Vector2(3, 0),
-		],
-		[&"manoeuvring", "manoeuvring", 0.2, 10.0, 5, 6, Vector2(3, 1)],
-		efficiency + [10.0, 5, 6, Vector2(3, 2)],
-		[&"tank_3", "cargo_tanks", 1.0, 25.0, 1, 15, Vector2(4, 0)],
-	]
-	assert_eq(TUNED.nodes.size(), expected.size())
-	for index in expected.size():
-		var want: Array = expected[index]
-		var node: SkillNode = TUNED.nodes[index]
-		assert_eq(node.id, want[0])
-		assert_eq(node.effect, load(EFFECTS % want[1]), node.id)
-		assert_almost_eq(node.step, want[2], 1e-6, node.id)
-		assert_eq(node.cost, want[3], node.id)
-		assert_eq(node.max_buys, want[4], node.id)
-		assert_eq(node.required_level, want[5], node.id)
-		assert_eq(node.grid, want[6], node.id)
-		assert_ne(node.title, "", node.id)

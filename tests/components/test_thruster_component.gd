@@ -157,8 +157,9 @@ func test_the_thrust_multiplier_scales_the_force() -> void:
 
 
 func test_a_negative_thrust_multiplier_is_reported_and_ignored() -> void:
+	var thrust_multiplier := _thruster.thrust_multiplier
 	_thruster.thrust_multiplier = -1.0
 	assert_push_error(
 		"Pre-condition broken: thrust_multiplier must not be negative"
 	)
-	assert_eq(_thruster.thrust_multiplier, 1.0)
+	assert_eq(_thruster.thrust_multiplier, thrust_multiplier)

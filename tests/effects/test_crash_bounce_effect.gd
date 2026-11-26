@@ -89,10 +89,11 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var restitution := _effect.restitution
 	_effect.restitution = 1.5
 	assert_push_error("restitution must be within [0, 1]")
 	_effect.min_speed = -1.0
 	assert_push_error("min_speed must not be negative")
 	_effect.drag = -1.0
 	assert_push_error("drag must not be negative")
-	assert_eq(_effect.restitution, 0.5)
+	assert_eq(_effect.restitution, restitution)

@@ -80,10 +80,11 @@ func test_negative_trauma_is_reported_and_ignored() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var shake_decay := _effect.shake_decay
 	_effect.shake_decay = 0.0
 	assert_push_error("shake_decay must be positive")
 	_effect.death_shake = -1.0
 	assert_push_error("death_shake must not be negative")
 	_effect.shake_frequency = 0.0
 	assert_push_error("shake_frequency must be positive")
-	assert_eq(_effect.shake_decay, 1.2)
+	assert_eq(_effect.shake_decay, shake_decay)

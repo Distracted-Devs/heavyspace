@@ -85,11 +85,12 @@ func test_the_velocity_follows_the_ship_as_it_turns() -> void:
 
 
 func test_alignment_outside_unit_is_reported_and_ignored() -> void:
+	var alignment := _arcade.alignment
 	_arcade.alignment = 1.5
 	assert_push_error(
 		"[Contract] Pre-condition broken: alignment must be within [0, 1]"
 	)
-	assert_eq(_arcade.alignment, 1.0)
+	assert_eq(_arcade.alignment, alignment)
 
 
 func test_missing_body_is_reported_and_changes_nothing() -> void:

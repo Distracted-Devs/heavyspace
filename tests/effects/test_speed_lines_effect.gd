@@ -120,6 +120,7 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var max_accel := _effect.max_accel
 	_effect.max_accel = 1.0
 	assert_push_error("max_accel must be above min_accel")
 	_effect.lifetime = 0.0
@@ -128,4 +129,4 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("max_alpha must be within [0, 1]")
 	_effect.warp_stretch = 0.5
 	assert_push_error("warp_stretch must be at least 1")
-	assert_eq(_effect.max_accel, 150.0)
+	assert_eq(_effect.max_accel, max_accel)

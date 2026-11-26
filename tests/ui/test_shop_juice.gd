@@ -120,10 +120,11 @@ func test_a_missing_shop_is_reported() -> void:
 func test_bad_settings_are_reported_and_ignored() -> void:
 	_juice.slot_punch_scale = 0.5
 	assert_push_error("slot_punch_scale must be at least 1")
+	var punch_time := _juice.punch_time
 	_juice.punch_time = 0.0
 	assert_push_error("punch_time must be positive")
 	_juice.reveal_from_scale = 0.0
 	assert_push_error("reveal_from_scale must be within (0, 1]")
 	_juice.rumble_strong = 2.0
 	assert_push_error("rumble_strong must be within [0, 1]")
-	assert_eq(_juice.punch_time, 0.35)
+	assert_eq(_juice.punch_time, punch_time)

@@ -77,11 +77,12 @@ func test_missing_ship_is_reported() -> void:
 
 
 func test_non_positive_lifetime_is_reported_and_ignored() -> void:
+	var lifetime := _effect.lifetime
 	_effect.lifetime = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: lifetime must be positive"
 	)
-	assert_eq(_effect.lifetime, 5.0)
+	assert_eq(_effect.lifetime, lifetime)
 
 
 func test_the_explosion_follows_the_ship() -> void:

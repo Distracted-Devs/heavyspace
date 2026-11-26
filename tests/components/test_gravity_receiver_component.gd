@@ -201,6 +201,7 @@ func test_reset_drift_clears_it() -> void:
 
 
 func test_non_positive_exponent_is_reported_and_ignored() -> void:
+	var falloff_exponent := _receiver.falloff_exponent
 	_receiver.falloff_exponent = 0.0
 	assert_push_error("falloff_exponent must be positive")
-	assert_eq(_receiver.falloff_exponent, 2.0)
+	assert_eq(_receiver.falloff_exponent, falloff_exponent)

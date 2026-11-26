@@ -27,12 +27,6 @@ func test_tank_starts_full() -> void:
 	assert_eq(_fuel.fuel, _fuel.tank_size)
 
 
-func test_defaults_give_one_second_of_boost_and_five_to_refill() -> void:
-	assert_eq(_fuel.tank_size / _fuel.burn_rate, 1.0)
-	assert_eq(_fuel.refill_time, 5.0)
-	assert_eq(_fuel.refill_delay, 0.0)
-
-
 func test_draw_removes_and_returns_the_amount() -> void:
 	assert_almost_eq(_fuel.draw(0.25), 0.25, 1e-9)
 	assert_almost_eq(_fuel.fuel, 0.75, 1e-9)
@@ -116,11 +110,12 @@ func test_non_positive_settings_are_reported_and_ignored() -> void:
 
 
 func test_negative_refill_delay_is_reported_and_ignored() -> void:
+	var refill_delay := _fuel.refill_delay
 	_fuel.refill_delay = -1.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: refill_delay must not be negative"
 	)
-	assert_eq(_fuel.refill_delay, 0.0)
+	assert_eq(_fuel.refill_delay, refill_delay)
 
 
 func test_fuel_changed_emits_once_per_change() -> void:

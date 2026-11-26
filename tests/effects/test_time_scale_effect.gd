@@ -72,6 +72,7 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("hitstop_scale must be within (0, 1]")
 	_effect.slowmo_scale = 1.5
 	assert_push_error("slowmo_scale must be within (0, 1]")
+	var slowmo_time := _effect.slowmo_time
 	_effect.slowmo_time = -1.0
 	assert_push_error("slowmo_time must be positive")
-	assert_eq(_effect.slowmo_time, 2.0)
+	assert_eq(_effect.slowmo_time, slowmo_time)

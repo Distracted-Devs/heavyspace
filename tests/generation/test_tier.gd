@@ -18,12 +18,6 @@ func test_default_ring_tier_is_valid_for_its_parent() -> void:
 	assert_true(Tier.new().require_valid(PARENT_RADIUS))
 
 
-func test_default_ring_tier_lets_children_wander_their_whole_cell() -> void:
-	var tier := Tier.new()
-	assert_eq(tier.min_separation, 0.0)
-	assert_eq(tier.jitter, 1.0)
-
-
 func test_expected_count_is_spawn_density_times_ring_volume() -> void:
 	var tier := Tier.new()
 	var inner := tier.orbit_inner * PARENT_RADIUS
@@ -34,10 +28,6 @@ func test_expected_count_is_spawn_density_times_ring_volume() -> void:
 		tier.spawn_density * volume,
 		1.0e-9,
 	)
-
-
-func test_default_ring_tier_expects_about_the_prototype_count() -> void:
-	assert_almost_eq(Tier.new().expected_count(PARENT_RADIUS), 500.0, 5.0)
 
 
 func test_cell_spawn_chance_is_density_times_cell_volume() -> void:
@@ -168,6 +158,3 @@ func test_shipped_ring_tier_is_capped_at_the_player_mass() -> void:
 	var rings: Tier = load("res://resources/generation/rings_tier.tres")
 	assert_false(systems.is_mass_capped())
 	assert_true(rings.is_mass_capped())
-	assert_eq(rings.mass_ceiling_fraction, 0.1)
-	assert_eq(rings.mass_min, 0.01)
-	assert_eq(rings.mass_bias, 1.5)

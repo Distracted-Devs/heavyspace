@@ -77,8 +77,9 @@ func test_missing_components_are_reported() -> void:
 func test_bad_settings_are_reported_and_ignored() -> void:
 	_effect.bank_per_yaw_rate = -1.0
 	assert_push_error("bank_per_yaw_rate must not be negative")
+	var max_bank_degrees := _effect.max_bank_degrees
 	_effect.max_bank_degrees = 95.0
 	assert_push_error("max_bank_degrees must be within [0, 90]")
 	_effect.bank_speed = 0.0
 	assert_push_error("bank_speed must be positive")
-	assert_eq(_effect.max_bank_degrees, 60.0)
+	assert_eq(_effect.max_bank_degrees, max_bank_degrees)

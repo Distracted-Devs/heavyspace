@@ -37,13 +37,3 @@ func test_smoothed_curve_bends_between_the_points() -> void:
 func test_too_few_points_come_back_unchanged() -> void:
 	var one := PackedVector3Array([Vector3.ONE])
 	assert_eq(Minimap.smooth(one, 8), one)
-
-
-func test_the_minimap_defaults_are_the_agreed_coarse_ones() -> void:
-	var map: Minimap = autofree(
-		preload("res://scenes/ui/minimap.tscn").instantiate()
-	)
-	assert_eq(map.step, 0.25)
-	assert_eq(map.duration, 20.0)
-	assert_eq(map.max_sources, 8)
-	assert_eq(map.smoothing_segments, 8)

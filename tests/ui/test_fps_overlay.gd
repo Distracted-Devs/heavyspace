@@ -49,6 +49,7 @@ func test_it_only_refreshes_every_interval() -> void:
 
 
 func test_a_bad_interval_is_reported_and_ignored() -> void:
+	var refresh_interval := _overlay.refresh_interval
 	_overlay.refresh_interval = 0.0
 	assert_push_error("refresh_interval must be positive")
-	assert_eq(_overlay.refresh_interval, 0.25)
+	assert_eq(_overlay.refresh_interval, refresh_interval)

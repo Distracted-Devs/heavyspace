@@ -253,18 +253,21 @@ func test_without_a_pool_collect_does_nothing() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var pickup_radius := _pickup.pickup_radius
 	_pickup.pickup_radius = -1.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: pickup_radius must not be negative"
 	)
+	var mass_conversion := _pickup.mass_conversion
 	_pickup.mass_conversion = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: mass_conversion must be positive"
 	)
+	var size_scale := _pickup.size_scale
 	_pickup.size_scale = 0.0
 	assert_push_error(
 		"[Contract] Pre-condition broken: size_scale must be positive"
 	)
-	assert_eq(_pickup.pickup_radius, 8.0)
-	assert_eq(_pickup.mass_conversion, 1.0)
-	assert_eq(_pickup.size_scale, 1.0)
+	assert_eq(_pickup.pickup_radius, pickup_radius)
+	assert_eq(_pickup.mass_conversion, mass_conversion)
+	assert_eq(_pickup.size_scale, size_scale)

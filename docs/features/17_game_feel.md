@@ -626,6 +626,8 @@ to go ahead with every step, being told of each new or changed contract.
 - Each frame the camera circles the hierarchy's root body at
   `orbit_speed_degrees`, framed by `TitleCamera.frame`.
 - START changes to `game_scene`; EXIT quits.
+- Changed in [music](18_music.md): exports `events: GameEvents` (the
+  `/root/Events` autoload) and calls `events.start_session()` on ready.
 
 ### PauseController (changed, see [pause](08_pause.md))
 - Asked for 2026-11-25: Select no longer restarts; X restarts on a crash.

@@ -69,8 +69,9 @@ func test_the_strongest_sources_are_kept() -> void:
 
 
 func test_negative_max_sources_is_reported_and_ignored() -> void:
+	var max_sources := _predictor.max_sources
 	_predictor.max_sources = -1
 	assert_push_error(
 		"[Contract] Pre-condition broken: max_sources must not be negative"
 	)
-	assert_eq(_predictor.max_sources, 0)
+	assert_eq(_predictor.max_sources, max_sources)

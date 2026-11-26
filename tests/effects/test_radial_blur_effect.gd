@@ -105,6 +105,7 @@ func test_missing_components_are_reported() -> void:
 
 
 func test_bad_settings_are_reported_and_ignored() -> void:
+	var blur_strength := _effect.blur_strength
 	_effect.blur_strength = -1.0
 	assert_push_error("blur_strength must not be negative")
 	_effect.clear_radius = 2.0
@@ -113,4 +114,4 @@ func test_bad_settings_are_reported_and_ignored() -> void:
 	assert_push_error("falloff must be positive")
 	_effect.blur_speed = 0.0
 	assert_push_error("blur_speed must be positive")
-	assert_eq(_effect.blur_strength, 2.0)
+	assert_eq(_effect.blur_strength, blur_strength)

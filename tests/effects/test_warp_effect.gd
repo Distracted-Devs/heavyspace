@@ -39,8 +39,8 @@ func _values() -> Array[float]:
 func test_reaches_its_end_values_at_the_duration() -> void:
 	_effect.play()
 	_effect.advance(_effect.warp_duration)
-	assert_almost_eq(_camera.fov, 130.0, 1e-4)
-	assert_almost_eq(_mesh.scale.z, 12.0, 1e-4)
+	assert_almost_eq(_camera.fov, _effect.warp_fov, 1e-4)
+	assert_almost_eq(_mesh.scale.z, 2.0 * _effect.stretch, 1e-4)
 	assert_almost_eq(_mesh.position.z, 1.0 - 400.0, 1e-3)
 	assert_almost_eq(_fade.color.a, 1.0, 1e-6)
 	assert_false(_effect.playing)
@@ -75,8 +75,8 @@ func test_every_value_only_moves_towards_its_end() -> void:
 func test_the_stretch_and_fov_finish_at_the_stretch_fraction() -> void:
 	_effect.play()
 	_effect.advance(_effect.warp_duration * _effect.stretch_fraction)
-	assert_almost_eq(_camera.fov, 130.0, 1e-4)
-	assert_almost_eq(_mesh.scale.z, 12.0, 1e-4)
+	assert_almost_eq(_camera.fov, _effect.warp_fov, 1e-4)
+	assert_almost_eq(_mesh.scale.z, 2.0 * _effect.stretch, 1e-4)
 	assert_true(_effect.playing)
 
 
@@ -116,9 +116,11 @@ func test_missing_parts_are_reported_and_nothing_plays() -> void:
 
 
 func test_bad_values_are_reported_and_ignored() -> void:
+	var warp_duration := _effect.warp_duration
 	_effect.warp_duration = 0.0
 	_effect.warp_fov = 180.0
 	_effect.warp_distance = -1.0
+	var stretch := _effect.stretch
 	_effect.stretch = 0.5
 	_effect.stretch_fraction = 0.0
 	_effect.fade_start = 1.0
@@ -128,8 +130,8 @@ func test_bad_values_are_reported_and_ignored() -> void:
 	assert_push_error("stretch must be at least 1")
 	assert_push_error("stretch_fraction must be within (0, 1]")
 	assert_push_error("fade_start must be within [0, 1)")
-	assert_eq(_effect.warp_duration, 1.5)
-	assert_eq(_effect.stretch, 6.0)
+	assert_eq(_effect.warp_duration, warp_duration)
+	assert_eq(_effect.stretch, stretch)
 
 
 func _reset_pose() -> void:
@@ -141,8 +143,8 @@ func _reset_pose() -> void:
 
 func test_warp_in_starts_at_the_warp_outs_end_pose() -> void:
 	_effect.play_in()
-	assert_almost_eq(_camera.fov, 130.0, 1e-4)
-	assert_almost_eq(_mesh.scale.z, 12.0, 1e-4)
+	assert_almost_eq(_camera.fov, _effect.warp_fov, 1e-4)
+	assert_almost_eq(_mesh.scale.z, 2.0 * _effect.stretch, 1e-4)
 	assert_almost_eq(_mesh.position.z, 1.0 - 400.0, 1e-3)
 	assert_almost_eq(_fade.color.a, 1.0, 1e-6)
 	assert_true(_effect.playing)
